@@ -1,7 +1,7 @@
 
 # mec2
 
-*mec2* is a javascript library for simulating and analysing planar mechanisms like linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Cattos principle of [sequential impulses](http://box2d.org/downloads/), often used by gaming physics engines.
+*mec2* is a javascript library for simulating and analysing planar mechanisms like linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Catto's principle of [sequential impulses](http://box2d.org/downloads/), often used by gaming physics engines.
 
 Its API is minimal and easy to understand. The library is tiny and fast. Mechanisms are described using a simple JSON format.
 
