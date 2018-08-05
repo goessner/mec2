@@ -139,7 +139,7 @@ mec.model = {
         get hasGravity() { 
             return this.gravity === true
                 || this.gravity
-                && (this.gravity.x !== 0 || this.gravity.y !== 0);
+                && (this.gravity.x !== 0 ||  this.gravity.y !== 0);
         },
 
         get dirty() { return this.state.dirty; },  // deprecated !!
