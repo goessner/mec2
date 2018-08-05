@@ -7,7 +7,7 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 ## Example
 
-![first](./img/4bar.png)
+![first](./img/4bar.gif)
 
 ## JSON
 
