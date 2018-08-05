@@ -1,3 +1,193 @@
+# Final concept
+
+Library `mec2.js` does not depend on other modules (except `g2.js`). It particularly does not depend on the DOM.
+
+# public API
+
+## model
+
+```js
+{
+    id: String
+    nodes: Array
+    constraints: Array
+    loads: Array
+​    shapes: Array
+​
+    state: Object { valid: Boolean, direc: Number, … }
+​    timer: Object { t: Number, dt: Number }
+
+    dof: Number
+    isActive: Boolean
+
+    init()
+    pose()
+    reset()
+    stop()
+    tick(dt:Number)
+    draw(g:Object)
+}
+```
+
+## node
+
+```js
+{
+    id: String
+    base: Boolean
+    m: Number
+    x: Number
+    xt: Number
+    xtt: Number
+    y: Number
+    yt: Number
+    ytt: Number
+
+    Qx: Number
+    Qy: Number
+}
+```
+## constraint
+
+```js
+{
+    id: String
+    p1: Node
+    p2: Node
+    ori: Object
+    len: Object
+    r: Number
+    rt: Number
+    rtt: Number
+    w: Number
+    wt: Number
+    wtt: Number
+
+    type: String
+    dof: Number
+    force: Number
+    moment: Number
+}
+```
+## load
+
+```js
+{
+    id: String
+    type: String
+}
+```
+depending on its `load.type` loads become one of these objects:
+
+### load.force
+
+```js
+{
+    id: String
+    type: String
+
+    p: Node
+    value: Number
+    wref: Constraint
+    w0: Number
+    mode: String
+
+    Qx: Number
+    Qy: Number
+}
+```
+
+### load.spring
+
+*- not yet implemented -*
+
+## shape
+
+```js
+{
+    type: String
+}
+```
+
+depending on its `shape.type` shapes become one of these objects:
+
+### shape.fix
+
+```js
+{
+    type: String
+    p: Node
+    w0: Number
+}
+```
+
+### shape.flt
+
+```js
+{
+    type: String
+    p: Node
+    w0: Number
+}
+```
+
+### shape.slider
+
+```js
+{
+    type: String
+    p: Node
+    wref: Constraint
+    w0: Number
+}
+```
+
+### shape.bar
+
+```js
+{
+    type: String
+    p1: Node
+    p2: Node
+}
+```
+### shape.beam
+
+```js
+{
+    type: String
+    p: Node
+    wref: Constraint
+    len: Number
+}
+```
+### shape.wheel
+
+```js
+{
+    type: String
+    p: Node
+    wref: Constraint
+    w0: Number
+    r: Number
+}
+```
+### shape.img
+
+```js
+{
+    type: String
+    uri: String
+    p: Node
+    wref: Constraint
+    w0: Number
+    xoff: Number
+    yoff: Number
+    scl: Number
+}
+```
+
+
 # Changes 03/08/18
 
 * Commenting the requirement for `app` to provide a `cartesian` getter (see `mec.microapp.js`)
@@ -18,6 +208,12 @@
 
 # Changes 04/08/18
 * Adding a `static` type to drive functions, which is for velocity-less actuating positions.
-* `model.dirty` flag isn't used anymore.
+* `model.dirty` flag isn't used anymore. It's flagged as `depricated`.
 
+# Changes 05/08/18
+* Rename `model.pos()` and `model.vel()` to `model.posStep()` and `model.velStep()`.
+* Rename `constraint.pos()` and `constraint.vel()` to `constraint.posStep()` and `constraint.velStep()`.
+* Change `constraint.type` from object member to getter.
+* Eliminate ambiguity of `shape.bar` definition by defining `{type:'bar',p1,p2}` and new `shape.beam` by `{type:'beam',p,wref,len}`
+* Split `mec.load` into `mec.load` and `mec.load.force`, to add other load types easier later.
 

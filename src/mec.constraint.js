@@ -70,12 +70,6 @@ mec.constraint = {
             else if (len.type === 'ref')   this.init_len_ref(len);
             else if (len.type === 'drive') this.init_len_drive(len);
 
-            this.type = ori.type === 'free' && len.type === 'free' ? 'free'
-                      : ori.type === 'free' && len.type !== 'free' ? 'rot'
-                      : ori.type !== 'free' && len.type === 'free' ? 'tran'
-                      : ori.type !== 'free' && len.type !== 'free' ? 'ctrl'
-                      : 'invalid';
-
             // lagrange identifiers
             this.lambda_r = this.dlambda_r = 0;
             this.lambda_w = this.dlambda_w = 0;
@@ -87,9 +81,17 @@ mec.constraint = {
             this.lambda_r = this.dlambda_r = 0;
             this.lambda_w = this.dlambda_w = 0;
         },
+        get type() {
+            return ori.type === 'free' && len.type === 'free' ? 'free'
+                 : ori.type === 'free' && len.type !== 'free' ? 'rot'
+                 : ori.type !== 'free' && len.type === 'free' ? 'tran'
+                 : ori.type !== 'free' && len.type !== 'free' ? 'ctrl'
+                 : 'invalid';
+        },
         get initialized() { return typeof this.p1 === 'object' },
         get dof() {
-            return (this.ori.type === 'free' ? 1 : 0) + (this.len.type === 'free' ? 1 : 0);
+            return (this.ori.type === 'free' ? 1 : 0) + 
+                   (this.len.type === 'free' ? 1 : 0);
         },
         /**
          * Force value in [N]
