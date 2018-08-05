@@ -243,7 +243,8 @@ mec.model = {
          * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
          */
         removeNode(node) {
-            const dependency = this.nodes.includes(node) && this.hasDependencies(node);
+            const idx = this.nodes.indexOf(node),
+                  dependency = this.nodes.includes(node) && this.hasDependencies(node);
             if (!dependency)
                 this.nodes.splice(idx,1);  // finally remove node from array.
 
