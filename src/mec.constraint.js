@@ -82,6 +82,7 @@ mec.constraint = {
             this.lambda_w = this.dlambda_w = 0;
         },
         get type() {
+            const ori = this.ori, len = this.len;
             return ori.type === 'free' && len.type === 'free' ? 'free'
                  : ori.type === 'free' && len.type !== 'free' ? 'rot'
                  : ori.type !== 'free' && len.type === 'free' ? 'tran'

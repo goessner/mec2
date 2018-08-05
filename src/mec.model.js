@@ -137,8 +137,9 @@ mec.model = {
          * @type {boolean | object}
          */
         get hasGravity() { 
-            return !!this.gravity 
-                || this.gravity.x === 0
+            return this.gravity === true
+                || this.gravity
+                && this.gravity.x === 0
                 && this.gravity.y === 0;
         },
 
@@ -429,7 +430,7 @@ mec.model = {
         posStep() {
             let valid = true;  // pre-assume valid constraints positions ...
             for (const constraint of this.constraints)
-                valid = constraint.pos() && valid;
+                valid = constraint.posStep() && valid;
             return valid;
         },
         /**
@@ -455,7 +456,7 @@ mec.model = {
 //            console.log('dt='+this.dt)
             for (const constraint of this.constraints) {
 //                console.log(constraint.vel(this.timer.dt)+ '&&'+ valid)
-                valid = constraint.vel(this.timer.dt) && valid;
+                valid = constraint.velStep(this.timer.dt) && valid;
             }
             return valid;
         },
