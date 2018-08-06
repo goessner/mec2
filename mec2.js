@@ -669,12 +669,13 @@ mec.constraint = {
                  : false;
         },
         velStep(dt) {
+            let res;
 //            console.log(dt)
             return this.type === 'free' ? true
                  : this.type === 'rot'  ? this.len_vel(dt)
                  : this.type === 'tran' ? this.ori_vel(dt)
-                 : this.type === 'ctrl' ? !!((+this.ori_vel(dt))*(+this.len_vel(dt)))
-//                 : this.type === 'ctrl' ? (res = this.ori_vel(dt), (this.len_vel(dt) && res))
+//                 : this.type === 'ctrl' ? !!((+this.ori_vel(dt))*(+this.len_vel(dt)))
+                 : this.type === 'ctrl' ? (res = this.ori_vel(dt), (this.len_vel(dt) && res))
                  : false;
         },
         pre(dt) {
@@ -693,12 +694,15 @@ mec.constraint = {
             this.p2.dyt +=  cw * this.p2.im * impulse_w;
 
             this.dlambda_r = this.dlambda_w = 0; // important !!
+            if (this.ori.type === 'ref') { // surprise .. need to investigate further ..
+                this.ori.ref.lambda_w = 0;
+            }
         },
         post(dt) {
             this.lambda_r += this.dlambda_r;
             this.lambda_w += this.dlambda_w;
-            if (this.ori.type === 'ref') { // surprise .. that way it works ..
-                this.ori.ref.lambda_w -= this.ori.ratio*this.dlambda_w;
+            if (this.ori.type === 'ref') { // surprise .. need to investigate further ..
+                this.ori.ref.lambda_w += this.ori.ratio*this.dlambda_w;
             }
         },
         get ori_C() { 
@@ -754,7 +758,8 @@ mec.constraint = {
             return (imc ? 1/imc : 0) * this.r0**2/(this.ax**2 + this.ay**2); 
         },
         len_pos() {
-            const C = mec.clamp(this.len_C,-mec.maxLinCorrect,mec.maxLinCorrect), 
+//            const C = mec.clamp(this.len_C,-mec.maxLinCorrect,mec.maxLinCorrect), 
+            const C = this.len_C, 
                   impulse = -this.len_mc * C;
 
 //console.log('h: '+this.len_mc)

@@ -72,6 +72,7 @@ mec.model = {
                 constraint.reset();
             for (const load of this.loads)  // do for all shapes ...
                 load.reset();
+            Object.assign(this.state,{valid:true,direc:1,itrpos:0,itrvel:0});
             return this;
         },
         /**

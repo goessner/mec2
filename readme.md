@@ -1,9 +1,12 @@
+[![License](http://img.shields.io/:license-mit-blue.svg)](https://github.com/goessner/mec2/license.txt)
+[![npm](https://img.shields.io/npm/v/mec2.svg)](https://www.npmjs.com/package/mec2)
+[![npm](https://img.shields.io/npm/dt/mec2.svg)](https://www.npmjs.com/package/mec2)
 
 # mec2
 
-*mec2* is a javascript library for simulating and analysing planar mechanisms like linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Catto's principle of [sequential impulses](http://box2d.org/downloads/), often used by gaming physics engines.
+*mec2* is a javascript library for simulating and analysing planar mechanisms or linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Catto's principle of [sequential impulses](http://box2d.org/downloads/), often used by gaming physics engines.
 
-Its API is minimal and easy to understand. The library is tiny and fast. Mechanisms are described using a simple JSON format.
+Its API is minimal and easy to understand. The library is tiny and fast. Mechanisms are described using an easy to read JSON format.
 
 ## Example
 
