@@ -168,7 +168,16 @@ from_kgm(x) { return x/mec.m_u/mec.m_u; },
  */
 isEps(a,eps) {
     return a < (eps || mec.EPS) && a > -(eps || mec.EPS);
- },
+},
+/**
+ * If the absolute value of a number `a` is smaller than eps, it is set to zero.
+ * @param {number} a Value to test.
+ * @param {number} [eps=mec.EPS]  used epsilon.
+ * @returns {number} original value or zero.
+ */
+toZero(a,eps) {
+    return a < (eps || mec.EPS) && a > -(eps || mec.EPS) ? 0 : a;
+},
 /**
  * Clamps a numerical value within the provided bounds.
  * @param {number} val Value to clamp.

@@ -337,16 +337,19 @@ mec.constraint = {
                   r = this.r, rt = this.rt;
             return { x: this.axt - rt*cw + r*wt*sw,
                      y: this.ayt - rt*sw - r*wt*cw };
-        }, 
-        get ori_mc() { return 1/(this.p1.im + this.p2.im); },
+        },
+        get ori_mc() { 
+            let imc = mec.toZero(this.p1.im + this.p2.im);
+            return imc ? 1/imc : 0;
+        },
         ori_pos() {
             const C = this.ori_C,
-                  factor = Math.max(Math.abs(C.x)/mec.maxLinCorrect,
-                                    Math.abs(C.y)/mec.maxLinCorrect,1),
+                  factor = 1, // Math.max(Math.abs(C.x)/mec.maxLinCorrect,
+                              //      Math.abs(C.y)/mec.maxLinCorrect,1),
                   mc = this.ori_mc,
                   impulse = { x: -mc * (C.x /= factor), 
                               y: -mc * (C.y /= factor) };
-//console.log(C)
+
             this.p1.x += -this.p1.im * impulse.x;
             this.p1.y += -this.p1.im * impulse.y;
             this.p2.x +=  this.p2.im * impulse.x;
@@ -372,11 +375,15 @@ mec.constraint = {
         },
         get len_C() { return (this.ax**2 + this.ay**2 - this.r**2)/(2*this.r0); },
         get len_Ct() { return (this.ax*this.axt + this.ay*this.ayt - this.r*this.rt)/this.r0; },
-        get len_mc() { return this.r0**2/((this.p1.im + this.p2.im)*(this.ax**2 + this.ay**2)); },
+        get len_mc() {
+            let imc = mec.toZero(this.p1.im + this.p2.im);
+            return (imc ? 1/imc : 0) * this.r0**2/(this.ax**2 + this.ay**2); 
+        },
         len_pos() {
             const C = mec.clamp(this.len_C,-mec.maxLinCorrect,mec.maxLinCorrect), 
                   impulse = -this.len_mc * C;
 
+//console.log('h: '+this.len_mc)
             this.p1.x += -this.ax/this.r0 * this.p1.im * impulse;
             this.p1.y += -this.ay/this.r0 * this.p1.im * impulse;
             this.p2.x +=  this.ax/this.r0 * this.p2.im * impulse;

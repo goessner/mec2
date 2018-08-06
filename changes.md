@@ -221,3 +221,6 @@ depending on its `shape.type` shapes become one of these objects:
 * Rename `model.hasDependencies()` to the semantic more correct `model.hasDependents()`.
 * Add `model.dependentsOf(elem)` to get a dictionary object of all dependents.
 * Add `model.purgeElements(elems)` to purge all elements in a dictionary object.
+* Add a new function `mec.toZero(a,eps)` to `mec.core.js`. If amount of `a` is smaller than `eps` 
+the result is `0` else `a`.
+* Avoid constraint masses to get *infinite*.
