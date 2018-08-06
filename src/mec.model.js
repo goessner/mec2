@@ -326,7 +326,7 @@ mec.model = {
          * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
          */
         removeConstraint(constraint) {
-            const dependency = this.hasDependencies(constraint);
+            const dependency = this.hasDependents(constraint);
             if (!dependency)
                 this.constraints.splice(this.constraints.indexOf(constraint),1);  // finally remove node from array.
 
