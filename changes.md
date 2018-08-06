@@ -217,3 +217,7 @@ depending on its `shape.type` shapes become one of these objects:
 * Eliminate ambiguity of `shape.bar` definition by defining `{type:'bar',p1,p2}` and new `shape.beam` by `{type:'beam',p,wref,len}`
 * Split `mec.load` into `mec.load` and `mec.load.force`, to add other load types easier later.
 
+# Changes 06/08/18
+* Rename `model.hasDependencies()` to the semantic more correct `model.hasDependents()`.
+* Add `model.dependentsOf(elem)` to get a dictionary object of all dependents.
+* Add `model.purgeElements(elems)` to purge all elements in a dictionary object.

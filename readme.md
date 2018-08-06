@@ -37,6 +37,10 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 # Change Log
 
+### 0.7.2 - 2018-08-06
+
+* some minor bug fixes.
+
 ### 0.7.0 - 2018-08-05
 
 * first commit.

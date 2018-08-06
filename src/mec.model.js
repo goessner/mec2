@@ -202,12 +202,12 @@ mec.model = {
             return idle;
         },
         /**
-         * Check for dependencies on specified element. Nodes do not have dependencies.
+         * Check, if other elements are dependent on specified element.
          * @method
          * @param {object} elem - element.
-         * @returns {boolean} true in case of existing dependencies.
+         * @returns {boolean} true in case of existing dependents.
          */
-        hasDependencies(elem) {
+        hasDependents(elem) {
             let dependency = false;
             for (const constraint of this.constraints) 
                 dependency = constraint.dependsOn(elem) || dependency;
@@ -216,6 +216,40 @@ mec.model = {
             for (const shape of this.shapes)
                 dependency = shape.dependsOn(elem) || dependency;
             return dependency;
+        },
+        /**
+         * Get dependents of a specified element.
+         * As a result a dictionary object containing dependent elements is created:
+         * `{constraints:[], loads:[], shapes:[]}`
+         * @method
+         * @param {object} elem - element.
+         * @returns {object} dictionary object containing dependent elements.
+         */
+        dependentsOf(elem) {
+            const deps = {constraints:[],loads:[],shapes:[]};
+            for (const constraint of this.constraints)
+                if (constraint.dependsOn(elem))
+                    deps.constraints.push(constraint);
+            for (const load of this.loads)
+                if (load.dependsOn(elem))
+                    deps.loads.push(load);
+            for (const shape of this.shapes)
+                if (shape.dependsOn(elem))
+                    deps.shapes.push(shape);
+            return deps;
+        },
+        /**
+         * Purge all elements in an element dictionary.
+         * @method
+         * @param {object} elems - element dictionary.
+         */
+        purgeElements(elems) {
+            for (const constraint of elems.constraints)
+                this.constraints.splice(this.constraints.indexOf(constraint),1);
+            for (const load of elems.loads)
+                this.loads.splice(this.loads.indexOf(load),1);
+            for (const shape of this.shapes)
+                this.shapes.splice(this.shapes.indexOf(shape),1);
         },
         /**
          * Add node to model.
@@ -238,33 +272,28 @@ mec.model = {
         },
         /**
          * Remove node, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `node` is in fact an entry of 
+         * the `model.nodes` array.
          * @method
          * @param {object} node - node to remove.
          * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
          */
         removeNode(node) {
-            const idx = this.nodes.indexOf(node),
-                  dependency = this.nodes.includes(node) && this.hasDependencies(node);
+            const dependency = this.hasDependents(node);
             if (!dependency)
-                this.nodes.splice(idx,1);  // finally remove node from array.
+                this.nodes.splice(this.nodes.indexOf(node),1);  // finally remove node from array.
 
             return !dependency;
         },
         /**
          * Delete node and all depending elements from model.
+         * The calling app has to ensure, that `node` is in fact an entry of 
+         * the `model.nodes` array.
          * @method
          * @param {object} node - node to remove.
          */
         purgeNode(node) {
-            for (const constraint of this.constraints) 
-                if (constraint.dependsOn(node))
-                    this.purgeConstraint(constraint);
-            for (const load of this.loads)
-                if (load.dependsOn(node))
-                    this.purgeLoad(load);
-            for (const shape of this.shapes)
-                if (shape.dependsOn(node))
-                    this.purgeShape(shape);
+            this.purgeElements(this.dependentsOf(node));
             this.nodes.splice(this.nodes.indexOf(node),1);
         },
         /**
@@ -278,7 +307,8 @@ mec.model = {
         /**
          * Get constraint by id.
          * @method
-         * @param {object} constraint - constraint to find.
+         * @param {object} id - constraint id.
+         * @returns {object} constraint to find.
          */
         constraintById(id) {
             for (const constraint of this.constraints)
@@ -288,30 +318,28 @@ mec.model = {
         },
         /**
          * Remove constraint, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `constraint` is in fact an entry of 
+         * the `model.constraints` array.
          * @method
          * @param {object} constraint - constraint to remove.
          * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
          */
         removeConstraint(constraint) {
-            const idx = this.constraints.indexOf(constraint), 
-                  dependency = idx >= 0 && this.hasDependencies(constraint);
+            const dependency = this.hasDependencies(constraint);
             if (!dependency)
-                this.constraints.splice(idx,1);  // finally remove node from array.
+                this.constraints.splice(this.constraints.indexOf(constraint),1);  // finally remove node from array.
 
             return !dependency;
         },
         /**
          * Delete constraint and all depending elements from model.
+         * The calling app has to ensure, that `constraint` is in fact an entry of 
+         * the `model.constraints` array.
          * @method
          * @param {object} constraint - constraint to remove.
          */
         purgeConstraint(constraint) {
-            for (const load of this.loads)
-                if (load.dependsOn(constraint))
-                    this.purgeLoad(load);
-            for (const shape of this.shapes)
-                if (shape.dependsOn(constraint))
-                    this.purgeShape(shape);
+            this.purgeElements(this.dependentsOf(constraint));
             this.constraints.splice(this.constraints.indexOf(constraint),1);
         },
         /**
@@ -325,7 +353,8 @@ mec.model = {
         /**
          * Get load by id.
          * @method
-         * @param {object} load - load to find.
+         * @param {object} id - load id.
+         * @returns {object} load to find.
          */
         loadById(id) {
             for (const load of this.nodes)
@@ -334,27 +363,29 @@ mec.model = {
             return false;
         },
         /**
-         * Remove load, if there are no dependencies to other objects.
+         * Remove load, if there are no other objects depending on it.
+         * The calling app has to ensure, that `load` is in fact an entry of 
+         * the `model.loads` array.
          * @method
          * @param {object} node - load to remove.
-         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
+         * @returns {boolean} true, the node was removed, otherwise other objects depend on it.
          */
         removeLoad(load) {
-            const idx = this.loads.indexOf(load), 
-                  dependency = idx >= 0 && this.hasDependencies(load);
+            const dependency = this.hasDependents(load);
             if (!dependency)
-                this.loads.splice(idx,1);  // finally remove node from array.
-
+                this.loads.splice(this.loads.indexOf(load),1);
             return !dependency;
         },
         /**
-         * Delete load from model.
-         * No elements depend on loads at current.
+         * Delete load and all depending elements from model.
+         * The calling app has to ensure, that `load` is in fact an entry of 
+         * the `model.loads` array.
          * @method
          * @param {object} load - load to delete.
          */
         purgeLoad(load) {
-            this.loads.splice(this.loads.indexOf(load),1);  // finally remove node from array.
+            this.purgeElements(this.dependentsOf(load));
+            this.loads.splice(this.loads.indexOf(load),1);
         },
         /**
          * Add shape to model.
@@ -365,25 +396,27 @@ mec.model = {
             this.shapes.push(shape);
         },
         /**
-         * Remove shape. Shapes have no other elements depending on it.
+         * Remove shape, if there are no other objects depending on it.
+         * The calling app has to ensure, that `shape` is in fact an entry of 
+         * the `model.shapes` array.
          * @method
-         * @param {object} load - load to remove.
-         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
+         * @param {object} shape - shape to remove.
          */
         removeShape(shape) {
             const idx = this.shapes.indexOf(shape);
             if (idx >= 0)
-                this.shapes.splice(idx,1);  // finally remove node from array.
-            return true;
+                this.shapes.splice(idx,1);
         },
         /**
-         * Delete shape from model.
-         * No elements depend on shapesat current.
+         * Delete shape and all dependent elements from model.
+         * The calling app has to ensure, that `shape` is in fact an entry of 
+         * the `model.shapes` array.
          * @method
          * @param {object} shape - shape to delete.
          */
         purgeShape(shape) {
-            this.loads.splice(this.shapes.indexOf(shape),1);
+            this.purgeElements(this.dependentsOf(shape));
+            this.shapes.splice(this.shapes.indexOf(shape),1);
         },
         /**
          * Apply loads to their nodes.
