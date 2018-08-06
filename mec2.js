@@ -435,12 +435,6 @@ mec.constraint = {
             else if (len.type === 'ref')   this.init_len_ref(len);
             else if (len.type === 'drive') this.init_len_drive(len);
 
-            this.type = ori.type === 'free' && len.type === 'free' ? 'free'
-                      : ori.type === 'free' && len.type !== 'free' ? 'rot'
-                      : ori.type !== 'free' && len.type === 'free' ? 'tran'
-                      : ori.type !== 'free' && len.type !== 'free' ? 'ctrl'
-                      : 'invalid';
-
             // lagrange identifiers
             this.lambda_r = this.dlambda_r = 0;
             this.lambda_w = this.dlambda_w = 0;
@@ -452,9 +446,18 @@ mec.constraint = {
             this.lambda_r = this.dlambda_r = 0;
             this.lambda_w = this.dlambda_w = 0;
         },
+        get type() {
+            const ori = this.ori, len = this.len;
+            return ori.type === 'free' && len.type === 'free' ? 'free'
+                 : ori.type === 'free' && len.type !== 'free' ? 'rot'
+                 : ori.type !== 'free' && len.type === 'free' ? 'tran'
+                 : ori.type !== 'free' && len.type !== 'free' ? 'ctrl'
+                 : 'invalid';
+        },
         get initialized() { return typeof this.p1 === 'object' },
         get dof() {
-            return (this.ori.type === 'free' ? 1 : 0) + (this.len.type === 'free' ? 1 : 0);
+            return (this.ori.type === 'free' ? 1 : 0) + 
+                   (this.len.type === 'free' ? 1 : 0);
         },
         /**
          * Force value in [N]
@@ -947,83 +950,86 @@ mec.drive = {
  */
 mec.load = {
     extend(load) { 
-        Object.setPrototypeOf(load, this.prototype); 
-        load.constructor(); 
+        if (load.type && mec.load[load.type]) {
+            Object.setPrototypeOf(load, mec.load[load.type]);
+            load.constructor(); 
+        }
         return load; 
-    },
-    prototype: {
-        constructor() {}, // always parameterless .. !
-        init(model) {
-            this.model = model;
-            if (!this.type) this.type = 'force';
-            if (this.type === 'force') this.init_force(model);
-        },
-        init_force(model) {
-            if (typeof this.p === 'string')
-                this.p = model.nodeById(this.p);
-            if (typeof this.wref === 'string')
-                this.wref = model.constraintById(this.wref);
-            this.value = mec.from_N(this.value || 1);
-            this.w0 = typeof this.w0 === 'number' ? this.w0 : 0;
-        },
-        /**
-         * Check load for dependencies on another element.
-         * @method
-         * @param {object} elem - element to test dependency for.
-         * @returns {boolean} true, dependency exists.
-         */
-        dependsOn(elem) {
-            return this.p === elem || this.wref === elem;
-        },
+    }
+}
 
-        // cartesian components
-        get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
-        get Qx() { return this.value*Math.cos(this.w)},
-        get Qy() { return this.value*Math.sin(this.w)},
-        reset() {},
-        apply() {
-            if (this.type === 'force' && !this.p.base) {
-                this.p.Qx += mec.from_N(this.Qx);
-                this.p.Qy += mec.from_N(this.Qy);
-            }
-        },
-        // interaction
-        get isSolid() { return false },
-        get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
-        hitContour({x,y,eps}) {
-            const len = 45,   // const length for all force arrows
-                  p = this.p,
-                  cw = Math.cos(this.w), sw = Math.sin(this.w),
-                  off = 2*mec.node.radius;
-            return g2.isPntOnLin({x,y},{x:p.x+off*cw, y:p.y+off*sw},
-                                       {x:p.x+(len+off)*cw,y:p.y+(len+off)*sw},eps);
-        },
-        g2() {
-            if (this.type === 'force') {
-                const w = this.w,
-                      cw = Math.cos(w), sw = Math.sin(w),
-                      p = this.p,
-                      len = mec.load.forceLength,
-                      off = 2*mec.node.radius,
-                      idsign = this.mode === 'push' ? -1 : 1,
-                      xid = p.x + idsign*25*cw - 12*sw, 
-                      yid = p.y + idsign*25*sw + 12*cw,
-                      x = this.mode === 'push' ? () => p.x - (len+off)*cw
-                                               : () => p.x + off*cw,
-                      y = this.mode === 'push' ? () => p.y - (len+off)*sw
-                                               : () => p.y + off*sw,
-                      g = g2().beg({x,y,w,scl:1,lw:2,ls:mec.forceColor,
-                                    lc:'round',sh:()=>this.sh,fs:'@ls'})
-                              .drw({d:mec.load.forceArrow,lsh:true})
-                              .end();
-                if (mec.showLoadLabels)
-                    g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle'});
-                return g;
-            }
+mec.load.force = {
+    constructor() {}, // always parameterless .. !
+    init(model) {
+        this.model = model;
+        if (!this.type) this.type = 'force';
+        if (this.type === 'force') this.init_force(model);
+    },
+    init_force(model) {
+        if (typeof this.p === 'string')
+            this.p = model.nodeById(this.p);
+        if (typeof this.wref === 'string')
+            this.wref = model.constraintById(this.wref);
+        this.value = mec.from_N(this.value || 1);
+        this.w0 = typeof this.w0 === 'number' ? this.w0 : 0;
+    },
+    /**
+     * Check load for dependencies on another element.
+     * @method
+     * @param {object} elem - element to test dependency for.
+     * @returns {boolean} true, dependency exists.
+     */
+    dependsOn(elem) {
+        return this.p === elem || this.wref === elem;
+    },
+
+    // cartesian components
+    get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
+    get Qx() { return this.value*Math.cos(this.w)},
+    get Qy() { return this.value*Math.sin(this.w)},
+    reset() {},
+    apply() {
+        if (this.type === 'force' && !this.p.base) {
+            this.p.Qx += mec.from_N(this.Qx);
+            this.p.Qy += mec.from_N(this.Qy);
         }
     },
-    forceLength: 45,   // draw all forces of length ...
-    forceArrow: 'M0,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    // interaction
+    get isSolid() { return false },
+    get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    hitContour({x,y,eps}) {
+        const len = 45,   // const length for all force arrows
+                p = this.p,
+                cw = Math.cos(this.w), sw = Math.sin(this.w),
+                off = 2*mec.node.radius;
+        return g2.isPntOnLin({x,y},{x:p.x+off*cw, y:p.y+off*sw},
+                                    {x:p.x+(len+off)*cw,y:p.y+(len+off)*sw},eps);
+    },
+    g2() {
+        if (this.type === 'force') {
+            const w = this.w,
+                    cw = Math.cos(w), sw = Math.sin(w),
+                    p = this.p,
+                    len = mec.load.force.arrowLength,
+                    off = 2*mec.node.radius,
+                    idsign = this.mode === 'push' ? -1 : 1,
+                    xid = p.x + idsign*25*cw - 12*sw, 
+                    yid = p.y + idsign*25*sw + 12*cw,
+                    x = this.mode === 'push' ? () => p.x - (len+off)*cw
+                                            : () => p.x + off*cw,
+                    y = this.mode === 'push' ? () => p.y - (len+off)*sw
+                                            : () => p.y + off*sw,
+                    g = g2().beg({x,y,w,scl:1,lw:2,ls:mec.forceColor,
+                                lc:'round',sh:()=>this.sh,fs:'@ls'})
+                            .drw({d:mec.load.force.arrow,lsh:true})
+                            .end();
+            if (mec.showLoadLabels)
+                g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle'});
+            return g;
+        }
+    },
+    arrowLength: 45,   // draw all forces of length ...
+    arrow: 'M0,0 35,0M45,0 36,-3 37,0 36,3 Z'
 }
 /**
  * mec.shape (c) 2018 Stefan Goessner
@@ -1040,7 +1046,7 @@ mec.load = {
 /**
  * @method
  * @param {object} - plain javascript shape object.
- * @property {string} type - shape type ['fix'|'flt'|'slider'|'bar'|'wheel'|'img'].
+ * @property {string} type - shape type ['fix'|'flt'|'slider'|'bar'|'beam'|'wheel'|'img'].
  */
 mec.shape = {
     extend(shape) {
@@ -1124,35 +1130,51 @@ mec.shape.slider = {
 
 /**
  * @param {object} - bar shape.
- * @property {string} [p1] - referenced node id for start point position, and ...
- * @property {string} [p2] - referenced node id for end point position, or ...
- * @property {string} [p] - referenced node id for point position, and ...
- * @property {string} [wref] - referenced constraint id for orientation and ...
- * @property {number} [len] - bar length
+ * @property {string} [p1] - referenced node id for start point position.
+ * @property {string} [p2] - referenced node id for end point position.
  */
 mec.shape.bar = {
     init(model) {
-        if (typeof this.p === 'string' && typeof this.wref === 'string' && this.len > 0) {
-            this.p = model.nodeById(this.p);
-            this.wref = model.constraintById(this.wref);
-        }
-        else if (typeof this.p1 === 'string' && typeof this.p2 === 'string') {
+        if (typeof this.p1 === 'string' && typeof this.p2 === 'string') {
             this.p1 = model.nodeById(this.p1);
             this.p2 = model.nodeById(this.p2);
         }
     },
     dependsOn(elem) {
-        return this.p === elem || this.p1 === elem || this.p2 === elem || this.wref === elem;
+        return this.p1 === elem || this.p2 === elem;
     },
     draw(g) {
-        const x1 = this.p1 ? () => this.p1.x : () => this.p.x,
-              y1 = this.p1 ? () => this.p1.y : () => this.p.y,
-              x2 = this.p2 ? () => this.p2.x 
-                 : this.wref && this.len ? () => this.p.x + this.len*Math.cos(this.wref.w)
-                 : this.p1.x,
-              y2 = this.p2 ? () => this.p2.y 
-                 : this.wref && this.len ? () => this.p.y + this.len*Math.sin(this.wref.w)
-                 : this.p1.y;
+        const x1 = () => this.p1.x,
+              y1 = () => this.p1.y,
+              x2 = () => this.p2.x,
+              y2 = () => this.p2.y;
+        g.lin({x1,y1,x2,y2,ls:"@nodcolor",lw:8,lc:"round"})
+         .lin({x1,y1,x2,y2,ls:"@nodfill2",lw:5.5,lc:"round"})
+         .lin({x1,y1,x2,y2,ls:"@nodfill",lw:3,lc:"round"})
+    }
+}
+
+/**
+ * @param {object} - beam shape.
+ * @property {string} [p] - referenced node id for start point position.
+ * @property {string} [wref] - referenced constraint id for orientation.
+ * @property {number} [len] - beam length
+ */
+mec.shape.beam = {
+    init(model) {
+        if (typeof this.wref === 'string' && this.len > 0) {
+            this.p = model.nodeById(this.p);
+            this.wref = model.constraintById(this.wref);
+        }
+    },
+    dependsOn(elem) {
+        return this.p === elem || this.wref === elem;
+    },
+    draw(g) {
+        const x1 = () => this.p.x,
+              y1 = () => this.p.y,
+              x2 = () => this.p.x + this.len*Math.cos(this.wref.w),
+              y2 = () => this.p.y + this.len*Math.sin(this.wref.w);
         g.lin({x1,y1,x2,y2,ls:"@nodcolor",lw:8,lc:"round"})
          .lin({x1,y1,x2,y2,ls:"@nodfill2",lw:5.5,lc:"round"})
          .lin({x1,y1,x2,y2,ls:"@nodfill",lw:3,lc:"round"})
