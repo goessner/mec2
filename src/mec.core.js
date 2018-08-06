@@ -155,7 +155,7 @@ to_kgm2(x) { return x*mec.m_u*mec.m_u; },
  * convert [kgm^2] => [kgu^2]
  * @return {number} Value in [kgu^2]
  */
-from_kgm(x) { return x/mec.m_u/mec.m_u; },
+from_kgm2(x) { return x/mec.m_u/mec.m_u; },
 
 /**
  * Helper functions
