@@ -188,6 +188,32 @@ depending on its `shape.type` shapes become one of these objects:
 ```
 
 
+# Changes 07/08/18
+
+* Add `mec.gravity = {x:0,y:-10,active:false}` as default gravity vector and mode to `mec.cor.js`. This is in order to switch gravity comfortable on and off, without affecting its vector.
+
+# Changes 06/08/18
+
+* Rename `model.hasDependencies()` to the semantic more correct `model.hasDependents()`.
+* Add `model.dependentsOf(elem)` to get a dictionary object of all dependents.
+* Add `model.purgeElements(elems)` to purge all elements in a dictionary object.
+* Add a new function `mec.toZero(a,eps)` to `mec.core.js`. If amount of `a` is smaller than `eps` 
+the result is `0` else `a`.
+* Avoid constraint masses to get *infinite*.
+
+# Changes 05/08/18
+
+* Rename `model.pos()` and `model.vel()` to `model.posStep()` and `model.velStep()`.
+* Rename `constraint.pos()` and `constraint.vel()` to `constraint.posStep()` and `constraint.velStep()`.
+* Change `constraint.type` from object member to getter.
+* Eliminate ambiguity of `shape.bar` definition by defining `{type:'bar',p1,p2}` and new `shape.beam` by `{type:'beam',p,wref,len}`
+* Split `mec.load` into `mec.load` and `mec.load.force`, to add other load types easier later.
+
+# Changes 04/08/18
+
+* Adding a `static` type to drive functions, which is for velocity-less actuating positions.
+* `model.dirty` flag isn't used anymore. It's flagged as `depricated`.
+
 # Changes 03/08/18
 
 * Commenting the requirement for `app` to provide a `cartesian` getter (see `mec.microapp.js`)
@@ -205,22 +231,3 @@ depending on its `shape.type` shapes become one of these objects:
 * drives with different start times are working now (see example `mec.somecranks`)
 * drives in constraints get additional boolean `bounce` property (see example `mec.crank`).
 * drives in constraints get additional integer `repeat` property (see example `mec.crank`).
-
-# Changes 04/08/18
-* Adding a `static` type to drive functions, which is for velocity-less actuating positions.
-* `model.dirty` flag isn't used anymore. It's flagged as `depricated`.
-
-# Changes 05/08/18
-* Rename `model.pos()` and `model.vel()` to `model.posStep()` and `model.velStep()`.
-* Rename `constraint.pos()` and `constraint.vel()` to `constraint.posStep()` and `constraint.velStep()`.
-* Change `constraint.type` from object member to getter.
-* Eliminate ambiguity of `shape.bar` definition by defining `{type:'bar',p1,p2}` and new `shape.beam` by `{type:'beam',p,wref,len}`
-* Split `mec.load` into `mec.load` and `mec.load.force`, to add other load types easier later.
-
-# Changes 06/08/18
-* Rename `model.hasDependencies()` to the semantic more correct `model.hasDependents()`.
-* Add `model.dependentsOf(elem)` to get a dictionary object of all dependents.
-* Add `model.purgeElements(elems)` to purge all elements in a dictionary object.
-* Add a new function `mec.toZero(a,eps)` to `mec.core.js`. If amount of `a` is smaller than `eps` 
-the result is `0` else `a`.
-* Avoid constraint masses to get *infinite*.

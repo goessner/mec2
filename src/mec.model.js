@@ -53,7 +53,7 @@ mec.model = {
                 mec.shape.extend(shape).init(this);
 
             if (this.gravity === true)
-                this.gravity = {x:0,y:-10};
+                this.gravity = Object.assign({},mec.gravity,{active:true});
 
             return this;
         },
@@ -135,13 +135,9 @@ mec.model = {
         },
         /**
          * Gravity (vector) value.
-         * @type {boolean | object}
+         * @type {boolean}
          */
-        get hasGravity() { 
-            return this.gravity === true
-                || this.gravity
-                && (this.gravity.x !== 0 || this.gravity.y !== 0);
-        },
+        get hasGravity() { return this.gravity.active; },
 
         get dirty() { return this.state.dirty; },  // deprecated !!
         set dirty(q) { this.state.dirty = q; },

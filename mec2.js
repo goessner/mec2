@@ -10,16 +10,6 @@
  */
 const mec = {
 /**
- * mec library version
- * @const
- * @type {string}
- */
-VERSION: "0.70",
-/**
- * Reference to the global context. In browsers this will be 'window'.
- */
-global: this,
-/**
  * minimal float difference to 1.0
  * @const
  * @type {number}
@@ -97,6 +87,12 @@ invalidConstraintColor: '#b11',
  */
 forceColor: 'orange',
 
+/**
+ * default gravity.
+ * @const
+ * @type {object}
+ */
+gravity: {x:0,y:-10,active:false},
 /**
  * unit specifiers and relations
  */
@@ -1322,7 +1318,7 @@ mec.model = {
                 mec.shape.extend(shape).init(this);
 
             if (this.gravity === true)
-                this.gravity = {x:0,y:-10};
+                this.gravity = Object.assign({},mec.gravity,{active:true});
 
             return this;
         },
@@ -1404,13 +1400,9 @@ mec.model = {
         },
         /**
          * Gravity (vector) value.
-         * @type {boolean | object}
+         * @type {boolean}
          */
-        get hasGravity() { 
-            return this.gravity === true
-                || this.gravity
-                && (this.gravity.x !== 0 || this.gravity.y !== 0);
-        },
+        get hasGravity() { return this.gravity.active; },
 
         get dirty() { return this.state.dirty; },  // deprecated !!
         set dirty(q) { this.state.dirty = q; },
@@ -1595,7 +1587,7 @@ mec.model = {
          * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
          */
         removeConstraint(constraint) {
-            const dependency = this.hasDependencies(constraint);
+            const dependency = this.hasDependents(constraint);
             if (!dependency)
                 this.constraints.splice(this.constraints.indexOf(constraint),1);  // finally remove node from array.
 

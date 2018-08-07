@@ -10,16 +10,6 @@
  */
 const mec = {
 /**
- * mec library version
- * @const
- * @type {string}
- */
-VERSION: "0.70",
-/**
- * Reference to the global context. In browsers this will be 'window'.
- */
-global: this,
-/**
  * minimal float difference to 1.0
  * @const
  * @type {number}
@@ -97,6 +87,12 @@ invalidConstraintColor: '#b11',
  */
 forceColor: 'orange',
 
+/**
+ * default gravity.
+ * @const
+ * @type {object}
+ */
+gravity: {x:0,y:-10,active:false},
 /**
  * unit specifiers and relations
  */
