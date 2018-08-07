@@ -54,6 +54,8 @@ mec.model = {
 
             if (this.gravity === true)
                 this.gravity = Object.assign({},mec.gravity,{active:true});
+            else if (!this.gravity)
+                this.gravity = Object.assign({},mec.gravity,{active:false});
 
             return this;
         },
