@@ -133,10 +133,6 @@ to_Nm(x) { return x*mec.m_u*mec.m_u; },
  */
 from_Nm(x) { return x/mec.m_u/mec.m_u; },
 /**
- * convert [kgu/m^2] => [kgm^2/s^2] = [J]
- * @return {number} Value in [N]
- */
-/**
  * convert [N/m] => [kg/s^2] = [N/m] (spring rate)
  * @return {number} Value in [N/m]
  */
