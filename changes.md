@@ -208,6 +208,9 @@ depending on its `shape.type` shapes become one of these objects:
 * Add `mec.load.spring`.
 * Remove hilite bug with `mec.load.force`.
 * Add `mec.gravity = {x:0,y:-10,active:false}` as default gravity vector and mode to `mec.cor.js`. This is in order to switch gravity comfortable on and off, without affecting its vector.
+* Added a toJSON method to model and to all element types. model.toJSON() invokes .toJSON() on each element in the model returns a canonical JSON-representation of the model
+* Implemented a global darkmode flag (default false) for darker canvas backgrounds. Most colors are now centralized as getters in mec.core.
+* Added a different shading for elements when they are selected and not just hovered over.
 
 # Changes 06/08/18
 
