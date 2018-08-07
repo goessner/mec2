@@ -1,6 +1,4 @@
-[![License](http://img.shields.io/:license-mit-blue.svg)](https://github.com/goessner/mec2/license.txt)
 [![npm](https://img.shields.io/npm/v/mec2.svg)](https://www.npmjs.com/package/mec2)
-[![npm](https://img.shields.io/npm/dt/mec2.svg)](https://www.npmjs.com/package/mec2)
 
 # mec2
 
