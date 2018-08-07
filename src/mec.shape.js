@@ -9,7 +9,6 @@
  */
 "use strict";
 
-//  { type:<string>},
 /**
  * @method
  * @param {object} - plain javascript shape object.

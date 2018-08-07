@@ -84,7 +84,7 @@ depending on its `load.type` loads become one of these objects:
 ```js
 {
     id: String
-    type: String
+    type: 'force'
 
     p: Node
     value: Number
@@ -92,6 +92,8 @@ depending on its `load.type` loads become one of these objects:
     w0: Number
     mode: String
 
+    len: Number
+    force: Number
     Qx: Number
     Qy: Number
 }
@@ -99,7 +101,20 @@ depending on its `load.type` loads become one of these objects:
 
 ### load.spring
 
-*- not yet implemented -*
+```js
+{
+    id: String
+    type: 'spring'
+
+    p1: Node
+    p2: Node
+    k: Number
+    len0: Constraint
+
+    Qx: Number
+    Qy: Number
+}
+```
 
 ## shape
 
@@ -115,7 +130,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'fix'
     p: Node
     w0: Number
 }
@@ -125,7 +140,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'flt'
     p: Node
     w0: Number
 }
@@ -135,7 +150,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'slider'
     p: Node
     wref: Constraint
     w0: Number
@@ -146,7 +161,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'bar'
     p1: Node
     p2: Node
 }
@@ -155,7 +170,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'beam'
     p: Node
     wref: Constraint
     len: Number
@@ -165,7 +180,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'wheel'
     p: Node
     wref: Constraint
     w0: Number
@@ -176,7 +191,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 ```js
 {
-    type: String
+    type: 'img'
     uri: String
     p: Node
     wref: Constraint
@@ -190,6 +205,8 @@ depending on its `shape.type` shapes become one of these objects:
 
 # Changes 07/08/18
 
+* Add `mec.load.spring`.
+* Remove hilite bug with `mec.load.force`.
 * Add `mec.gravity = {x:0,y:-10,active:false}` as default gravity vector and mode to `mec.cor.js`. This is in order to switch gravity comfortable on and off, without affecting its vector.
 
 # Changes 06/08/18
