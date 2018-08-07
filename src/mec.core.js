@@ -75,17 +75,52 @@ showNodeLabels: false,
 showConstraintLabels: true,
 showLoadLabels: true,
 /**
- * color for drawing valid constraints.
+ * flag for darkmode.
+ * @const
+ * @type {boolean}
  */
-validConstraintColor: '#777',
+darkmode: false,
+/**
+ * color for drawing valid constraints.
+ * @return {string}
+ */
+get validConstraintColor() { return this.darkmode ? '#ffffff99' : '#777' },
 /**
  * color for drawing invalid constraints.
+ * @const
+ * @type {string}
  */
 invalidConstraintColor: '#b11',
 /**
  * color for drawing forces.
+ * @return {string}
  */
-forceColor: 'orange',
+get forceColor() { return this.darkmode ? 'crimson' : 'orange' },
+/**
+ * color for drawing springs.
+ * @return {string}
+ */
+get springColor() { return this.darkmode ? 'lightslategray' : '@linkcolor' },
+/**
+ * color for vectortypes of constraints.
+ * @return {string}
+ */
+get constraintVectorColor() { return this.darkmode ? 'orange' : 'green' },
+/**
+ * hovered element shading color.
+ * @return {string}
+ */
+get hoveredElmColor() { return this.darkmode ? 'white' : 'gray' },
+/**
+ * selected element shading color.
+ * @return {string}
+ */
+get selectedElmColor() { return this.darkmode ? 'yellow': 'blue' },
+/**
+ * color for g2.txt (ls).
+ * @return {string}
+ */
+get txtColor() { return this.darkmode ? 'white' : 'black' },
 
 /**
  * default gravity.
@@ -173,9 +208,9 @@ from_kgm2(x) { return x/mec.m_u/mec.m_u; },
  * @returns {boolean} test result.
  */
 isEps(a,eps) {
-    return a < (eps || mec.EPS) && a > -(eps || mec.EPS);
-},
-/**
+    return a < (eps || mec.EPS) && a > -(eps || mec.EPS); 
+ },
+ /**
  * If the absolute value of a number `a` is smaller than eps, it is set to zero.
  * @param {number} a Value to test.
  * @param {number} [eps=mec.EPS]  used epsilon.
@@ -215,4 +250,4 @@ mixin(obj, ...protos) {
     })
     return obj;
 }
-};
+}
