@@ -341,7 +341,7 @@ mec.constraint = {
                   r = this.r, rt = this.rt;
             return { x: this.axt - rt*cw + r*wt*sw,
                      y: this.ayt - rt*sw - r*wt*cw };
-        },
+        }, 
         get ori_mc() { 
             let imc = mec.toZero(this.p1.im + this.p2.im);
             return imc ? 1/imc : 0;
@@ -412,9 +412,42 @@ mec.constraint = {
             for (const key in getters) 
                 Object.defineProperty(this, key, { get: getters[key], enumerable:true, configurable:true });
         },
+        toJSON() {
+            const obj = {
+                id: this.id,
+                p1: this.p1.id,
+                p2: this.p2.id
+            };
+
+            if (this.len)
+                obj.len = { type: this.len.type };
+            if (this.len.type === 'ref')
+                obj.len.ref = this.len.ref.id;
+            if (this.ori.type === 'drive') {
+                obj.len.func = this.len.func;
+                obj.len.Dt = this.len.Dt;
+                obj.len.Dw = this.len.Dw;
+                obj.len.input = this.len.input;
+                obj.len.output = this.len.output;
+            };
+
+            if (this.ori)
+                obj.ori = { type: this.ori.type };
+            if (this.ori.type === 'ref')
+                obj.ori.ref = this.ori.ref.id;
+            if (this.ori.type === 'drive') {
+                obj.ori.func = this.ori.func;
+                obj.ori.Dt = this.ori.Dt;
+                obj.ori.Dw = this.ori.Dw;
+                obj.ori.input = this.ori.input;
+                obj.ori.output = this.ori.output;
+            };
+
+            return obj;
+        },
         // interaction
         get isSolid() { return false },
-        get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+        get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
         hitContour({x,y,eps}) {
             const p1 = this.p1, p2 = this.p2,
                   dx = this.p2.x - this.p1.x, dy = this.p2.y - this.p1.y,
@@ -426,9 +459,9 @@ mec.constraint = {
         g2() {
             const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this,
                   g = g2().beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                                ls:'green',fs:'@ls',lc:'round',sh:()=>this.sh})
+                                ls:mec.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
                             .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
-                                     lw:lw+1,lsh:true})
+                                    lw:lw+1,lsh:true})
                             .drw({d:mec.constraint.arrow[type],lsh:true})
                           .end();
 
@@ -440,10 +473,10 @@ mec.constraint = {
                     idstr += '('+ this.ori.ref.id+')';
                     xid -= 3*sw;
                     yid += 3*cw;
-                }                    
-                g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle'})
+                }  
+                g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle', ls:mec.txtColor})
             }
-
+            
             return g;
         }
     },

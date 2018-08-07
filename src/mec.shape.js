@@ -31,7 +31,7 @@ mec.shape = {
 /**
  * @param {object} - fixed node shape.
  * @property {string} p - referenced node id for position.
- * @property {number} w0 - initial angle.
+ * @property {number} [w0] - initial angle.
  */
 mec.shape.fix = {
     init(model) {
@@ -41,6 +41,17 @@ mec.shape.fix = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+        };
+
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+
+        return obj;
+    },
     draw(g) {
         g.use({grp:'nodfix',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
     }
@@ -49,7 +60,7 @@ mec.shape.fix = {
 /**
  * @param {object} - floating node shape.
  * @property {string} p - referenced node id for position.
- * @property {number} w0 - initial angle.
+ * @property {number} [w0] - initial angle.
  */
 mec.shape.flt = {
     init(model) {
@@ -58,6 +69,17 @@ mec.shape.flt = {
     },
     dependsOn(elem) {
         return this.p === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+        };
+
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+
+        return obj;
     },
     draw(g) {
         g.use({grp:'nodflt',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
@@ -68,7 +90,7 @@ mec.shape.flt = {
  * @param {object} - slider shape.
  * @property {string} p - referenced node id for position.
  * @property {string} [wref] - referenced constraint id for orientation.
- * @property {number} w0 - initial angle / -difference.
+ * @property {number} [w0] - initial angle / -difference.
  */
 mec.shape.slider = {
     init(model) {
@@ -86,6 +108,19 @@ mec.shape.slider = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+        };
+
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+        if (this.wref)
+            obj.wref = this.wref.id;
+
+        return obj;
+    },
     draw(g) {
         const w = this.wref ? ()=>this.wref.w : this.w0 || 0;
         g.beg({x:()=>this.p.x,y:()=>this.p.y,w})
@@ -96,8 +131,8 @@ mec.shape.slider = {
 
 /**
  * @param {object} - bar shape.
- * @property {string} [p1] - referenced node id for start point position.
- * @property {string} [p2] - referenced node id for end point position.
+ * @property {string} p1 - referenced node id for start point position.
+ * @property {string} p2 - referenced node id for end point position.
  */
 mec.shape.bar = {
     init(model) {
@@ -108,6 +143,15 @@ mec.shape.bar = {
     },
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p1: this.p1.id,
+            p2: this.p2.id,
+        };
+
+        return obj;
     },
     draw(g) {
         const x1 = () => this.p1.x,
@@ -122,19 +166,31 @@ mec.shape.bar = {
 
 /**
  * @param {object} - beam shape.
- * @property {string} [p] - referenced node id for start point position.
- * @property {string} [wref] - referenced constraint id for orientation.
- * @property {number} [len] - beam length
+ * @property {string} p - referenced node id for start point position.
+ * @property {string} wref - referenced constraint id for orientation.
+ * @property {number} len - beam length
  */
 mec.shape.beam = {
     init(model) {
         if (typeof this.wref === 'string' && this.len > 0) {
             this.p = model.nodeById(this.p);
             this.wref = model.constraintById(this.wref);
+        } else {
+            console.log('invalid definition of beam shape in model');
         }
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+            wref: this.wref.id,
+            len: this.len
+        };
+
+        return obj;
     },
     draw(g) {
         const x1 = () => this.p.x,
@@ -149,10 +205,10 @@ mec.shape.beam = {
 
 /**
  * @param {object} - wheel shape.
- * @property {string} [p] - referenced node id for center point position, and ...
+ * @property {string} p - referenced node id for center point position, and ...
  * @property {string} [wref] - referenced constraint id for orientation and ...
- * @property {number} [w0] - start / offset angle [rad].
- * @property {number} [r] - radius
+ * @property {number} w0 - start / offset angle [rad].
+ * @property {number} r - radius
  */
 mec.shape.wheel = {
     init(model) {
@@ -163,6 +219,19 @@ mec.shape.wheel = {
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+            w0: this.w0,
+            r: this.r
+        };
+
+        if (this.wref)
+            obj.wref = this.wref.id;
+
+        return obj;
     },
     draw(g) {
         const w = this.wref ? ()=>this.wref.w : this.w0 || 0, r = this.r, 
@@ -189,8 +258,8 @@ mec.shape.wheel = {
 
 /**
  * @param {object} - image shape.
- * @property {string} [uri] - image uri
- * @property {string} [p] - referenced node id for center point position.
+ * @property {string} uri - image uri
+ * @property {string} p - referenced node id for center point position.
  * @property {string} [wref] - referenced constraint id for orientation.
  * @property {number} [w0] - start / offset angle [rad].
  * @property {number} [xoff] - x offset value.
@@ -206,6 +275,26 @@ mec.shape.img = {
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            uri: this.uri,
+            p: this.p.id
+        };
+
+        if (this.wref)
+            obj.wref = this.wref.id;
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+        if (this.xoff && !(this.xoff === 0))
+            obj.xoff = this.xoff;
+        if (this.yoff && !(this.yoff === 0))
+            obj.yoff = this.yoff;
+        if (this.scl && !(this.scl === 1))
+            obj.scl = this.scl;
+
+        return obj;
     },
     draw(g) {
         const w0 = this.w0 || 0, w = this.wref ? ()=>this.wref.w + w0 : w0; 

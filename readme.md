@@ -41,6 +41,9 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 ### 0.7.5 - 2018-08-07
 
 * spring load element added.
+* added a toJSON method to model and to all element types. model.toJSON() invokes .toJSON() on each element in the model returns a canonical JSON-representation of the model
+* implemented a global darkmode flag (default false) for darker canvas backgrounds
+* added a different shading for elements when they are selected and not just hovered over
 * some minor bug fixes.
 
 ### 0.7.3 - 2018-08-06

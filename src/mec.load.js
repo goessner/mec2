@@ -58,8 +58,24 @@ mec.load.force = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            id: this.id,
+            p: this.p.id
+        };
 
-    // cartesian components
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+        if (this.wref)
+            obj.wref = this.wref;
+        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)  // if (this.value && !(mec.to_N(this.value) === 1))  
+            obj.value = mec.to_N(this.value);
+
+        return obj;
+    },
+
+ // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
     get Qx() { return this.value*Math.cos(this.w)},
     get Qy() { return this.value*Math.sin(this.w)},
@@ -70,7 +86,8 @@ mec.load.force = {
     },
     // interaction
     get isSolid() { return false },
-    get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    // get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, 'white'] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
     hitContour({x,y,eps}) {
         const len = 45,   // const length for all force arrows
               p = this.p,
@@ -98,10 +115,10 @@ mec.load.force = {
                                        : () => p.y + off*sw,
               g = g2().beg({x,y,w,scl:1,lw:2,ls:mec.forceColor,
                             lc:'round',sh:()=>this.sh,fs:'@ls'})
-                        .drw({d:mec.load.force.arrow,lsh:true})
+                      .drw({d:mec.load.force.arrow,lsh:true})
                       .end();
         if (mec.showLoadLabels)
-            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle'});
+            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
         return g;
     },
     arrowLength: 45,   // draw all forces of length ...
@@ -141,6 +158,21 @@ mec.load.spring = {
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            id: this.id,
+            p1: this.p1.id,
+            p2: this.p2.id
+        };
+console.log(Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)));
+        if (this.k && !(mec.to_N_m(this.k) === 0.01))
+            obj.k = mec.to_N_m(this.k);
+        if (this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001)
+            obj.len0 = this.len0;
+
+        return obj;
+    },
 
     // cartesian components
     get len() { return Math.hypot(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
@@ -159,7 +191,8 @@ mec.load.spring = {
     },
     // interaction
     get isSolid() { return false },
-    get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    // get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, 'white'] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
     hitContour({x,y,eps}) {
         const p1 = this.p1, p2 = this.p2,
               cw = Math.cos(this.w), sw = Math.sin(this.w),
@@ -184,6 +217,6 @@ mec.load.spring = {
                    .l({x:xm+( ux/6-uy/2)*h,y:ym+( uy/6+ux/2)*h})
                    .l({x:xm+ux*h/2,y:ym+uy*h/2})
                    .l({x:x2-ux*off,y:y2-uy*off})
-                   .stroke(Object.assign({}, {ls:'@linkcolor'},this,{fs:'transparent',lc:'round',                                lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
+                   .stroke(Object.assign({}, {ls:mec.springColor},this,{fs:'transparent',lc:'round',lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
     }
 }

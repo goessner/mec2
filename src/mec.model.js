@@ -98,7 +98,7 @@ mec.model = {
         },
         /**
          * Perform timer tick.
-         * Model time is incremented bei `dt`.
+         * Model time is incremented by `dt`.
          * Model time is independent of system time.
          * Input elements may set simulation time and `dt` explicite.
          * `model.tick()` is then called with `dt = 0`.
@@ -171,7 +171,7 @@ mec.model = {
          * Nodes are not moving anymore (zero velocities) and no drives active.
          * @type {boolean}
          */
-         get isActive() {
+        get isActive() {
             return !this.hasActiveDrives // node velocities are not necessarily zero with drives
                 &&  this.isSleeping;
         },
@@ -416,6 +416,51 @@ mec.model = {
         purgeShape(shape) {
             this.purgeElements(this.dependentsOf(shape));
             this.shapes.splice(this.shapes.indexOf(shape),1);
+        },
+        /**
+         * Return a canonical JSON-representation of the model
+         * @method
+         * @returns {object} model as JSON.
+         */
+        toJSON() {
+            const obj = {};
+
+            if (this.id)
+                obj.id = this.id;
+            obj.dirty = true; // needed?
+            if (this.dt)
+                obj.dt = this.dt;
+            obj.gravity = this.hasGravity ? true : false;
+
+            if (this.nodes && this.nodes.length > 0) {
+                const nodearr = [];
+                for (const node of this.nodes)
+                    nodearr.push(node.toJSON());
+                obj.nodes = nodearr;
+            };
+
+            if (this.constraints && this.constraints.length > 0) {
+                const constraintarr = [];
+                for (const constraint of this.constraints)
+                    constraintarr.push(constraint.toJSON());
+                obj.constraints = constraintarr;
+            };
+
+            if (this.loads && this.loads.length > 0) {
+                const loadarr = [];
+                for (const load of this.loads)
+                    loadarr.push(load.toJSON());
+                obj.loads = loadarr;
+            };
+
+            if (this.shapes && this.shapes.length > 0) {
+                const shapearr = [];
+                for (const shape of this.shapes)
+                    shapearr.push(shape.toJSON());
+                obj.shapes = shapearr;
+            };
+
+            return obj;
         },
         /**
          * Apply loads to their nodes.
