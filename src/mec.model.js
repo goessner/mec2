@@ -356,7 +356,7 @@ mec.model = {
          * @returns {object} load to find.
          */
         loadById(id) {
-            for (const load of this.nodes)
+            for (const load of this.loads)
                 if (load.id === id)
                     return load;
             return false;
