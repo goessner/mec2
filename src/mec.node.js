@@ -116,9 +116,23 @@ mec.node = {
             this.xtt = this.dxt/dt;
             this.ytt = this.dyt/dt;
         },
+        toJSON() {
+            const obj = {
+                id: this.id,
+                x: this.x,
+                y: this.y
+            };
+            if (this.base)
+                obj.base = true;
+            if (this.idloc)
+                obj.idloc = this.idloc;
+
+            return obj;
+        },
         // interaction
         get isSolid() { return true },
-        get sh() { return this.state & g2.OVER ? [0,0,5,"black"] : false },
+        get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
+        _info() { return `x:${this.x}<br>y:${this.y}` },
         hitInner({x,y,eps}) {
             return g2.isPntInCir({x,y},this,eps);
         },
@@ -152,7 +166,7 @@ mec.node = {
                     : g2().cir({x:()=>this.x,y:()=>this.y,r:this.r,
                                 ls:'#333',fs:'#eee',sh:()=>this.sh});
             if (mec.showNodeLabels)
-                g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle'});
+                g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
             return g;
         }
     },
