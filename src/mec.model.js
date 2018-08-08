@@ -182,8 +182,7 @@ mec.model = {
         get isSleeping() {
             let sleeping = true;
             for (const node of this.nodes)
-                if (sleeping && !node.isSleeping)
-                    sleeping = false;
+                sleeping = sleeping && node.isSleeping;
             return sleeping;
         },
         /**
