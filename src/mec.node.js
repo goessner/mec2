@@ -116,6 +116,12 @@ mec.node = {
             this.xtt = this.dxt/dt;
             this.ytt = this.dyt/dt;
         },
+        asJSON() {
+            return '{ "id":"'+this.id+'","x":'+this.x0+',"y":'+this.y0
+                 + (this.base ? ',"base":true' : '')
+                 + (this.idloc ? ',"idloc":"'+this.idloc : '')
+                 + ' }';
+        },
         toJSON() {
             const obj = {
                 id: this.id,

@@ -418,6 +418,25 @@ mec.model = {
             this.shapes.splice(this.shapes.indexOf(shape),1);
         },
         /**
+         * Return a JSON-string of the model
+         * @method
+         * @returns {string} model as JSON-string.
+         */
+        asJSON() {
+            // dynamically create a JSON output string ...
+            const nodeCnt = this.nodes.length;
+            const comma = (i,n) => i < n-1 ? ',' : '';
+            const str = '{'
+                      + '\n  "id":"'+this.id+'"'
+                      + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
+                      + (nodeCnt ? ',\n  "nodes": [\n' : '')
+                      + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
+                      + (nodeCnt ? '  ]\n' : '')
+                      + '}';
+            console.log(str);
+            return str;
+        },
+            /**
          * Return a canonical JSON-representation of the model
          * @method
          * @returns {object} model as JSON.
