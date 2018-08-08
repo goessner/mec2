@@ -119,7 +119,7 @@ mec.node = {
         asJSON() {
             return '{ "id":"'+this.id+'","x":'+this.x0+',"y":'+this.y0
                  + (this.base ? ',"base":true' : '')
-                 + (this.idloc ? ',"idloc":"'+this.idloc : '')
+                 + (this.idloc ? ',"idloc":"'+this.idloc+'"' : '')
                  + ' }';
         },
         toJSON() {
