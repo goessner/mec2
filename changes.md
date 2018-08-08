@@ -202,6 +202,11 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 08/08/18
+
+* Bug removed in `mec.model.isActive`. The negated result was returned. (Changes in app required !)
+* Bug removed in `mec.model.hasActiveDrives`.
+
 
 # Changes 07/08/18
 

@@ -75,17 +75,52 @@ showNodeLabels: false,
 showConstraintLabels: true,
 showLoadLabels: true,
 /**
- * color for drawing valid constraints.
+ * flag for darkmode.
+ * @const
+ * @type {boolean}
  */
-validConstraintColor: '#777',
+darkmode: false,
+/**
+ * color for drawing valid constraints.
+ * @return {string}
+ */
+get validConstraintColor() { return this.darkmode ? '#ffffff99' : '#777' },
 /**
  * color for drawing invalid constraints.
+ * @const
+ * @type {string}
  */
 invalidConstraintColor: '#b11',
 /**
  * color for drawing forces.
+ * @return {string}
  */
-forceColor: 'orange',
+get forceColor() { return this.darkmode ? 'crimson' : 'orange' },
+/**
+ * color for drawing springs.
+ * @return {string}
+ */
+get springColor() { return this.darkmode ? 'lightslategray' : '@linkcolor' },
+/**
+ * color for vectortypes of constraints.
+ * @return {string}
+ */
+get constraintVectorColor() { return this.darkmode ? 'orange' : 'green' },
+/**
+ * hovered element shading color.
+ * @return {string}
+ */
+get hoveredElmColor() { return this.darkmode ? 'white' : 'gray' },
+/**
+ * selected element shading color.
+ * @return {string}
+ */
+get selectedElmColor() { return this.darkmode ? 'yellow': 'blue' },
+/**
+ * color for g2.txt (ls).
+ * @return {string}
+ */
+get txtColor() { return this.darkmode ? 'white' : 'black' },
 
 /**
  * default gravity.
@@ -133,10 +168,6 @@ to_Nm(x) { return x*mec.m_u*mec.m_u; },
  */
 from_Nm(x) { return x/mec.m_u/mec.m_u; },
 /**
- * convert [kgu/m^2] => [kgm^2/s^2] = [J]
- * @return {number} Value in [N]
- */
-/**
  * convert [N/m] => [kg/s^2] = [N/m] (spring rate)
  * @return {number} Value in [N/m]
  */
@@ -177,9 +208,9 @@ from_kgm2(x) { return x/mec.m_u/mec.m_u; },
  * @returns {boolean} test result.
  */
 isEps(a,eps) {
-    return a < (eps || mec.EPS) && a > -(eps || mec.EPS);
-},
-/**
+    return a < (eps || mec.EPS) && a > -(eps || mec.EPS); 
+ },
+ /**
  * If the absolute value of a number `a` is smaller than eps, it is set to zero.
  * @param {number} a Value to test.
  * @param {number} [eps=mec.EPS]  used epsilon.
@@ -219,8 +250,7 @@ mixin(obj, ...protos) {
     })
     return obj;
 }
-};
-/**
+}/**
  * mec.node (c) 2018 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
@@ -338,9 +368,23 @@ mec.node = {
             this.xtt = this.dxt/dt;
             this.ytt = this.dyt/dt;
         },
+        toJSON() {
+            const obj = {
+                id: this.id,
+                x: this.x,
+                y: this.y
+            };
+            if (this.base)
+                obj.base = true;
+            if (this.idloc)
+                obj.idloc = this.idloc;
+
+            return obj;
+        },
         // interaction
         get isSolid() { return true },
-        get sh() { return this.state & g2.OVER ? [0,0,5,"black"] : false },
+        get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
+        _info() { return `x:${this.x}<br>y:${this.y}` },
         hitInner({x,y,eps}) {
             return g2.isPntInCir({x,y},this,eps);
         },
@@ -374,7 +418,7 @@ mec.node = {
                     : g2().cir({x:()=>this.x,y:()=>this.y,r:this.r,
                                 ls:'#333',fs:'#eee',sh:()=>this.sh});
             if (mec.showNodeLabels)
-                g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle'});
+                g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
             return g;
         }
     },
@@ -725,7 +769,7 @@ mec.constraint = {
                   r = this.r, rt = this.rt;
             return { x: this.axt - rt*cw + r*wt*sw,
                      y: this.ayt - rt*sw - r*wt*cw };
-        },
+        }, 
         get ori_mc() { 
             let imc = mec.toZero(this.p1.im + this.p2.im);
             return imc ? 1/imc : 0;
@@ -796,9 +840,42 @@ mec.constraint = {
             for (const key in getters) 
                 Object.defineProperty(this, key, { get: getters[key], enumerable:true, configurable:true });
         },
+        toJSON() {
+            const obj = {
+                id: this.id,
+                p1: this.p1.id,
+                p2: this.p2.id
+            };
+
+            if (this.len)
+                obj.len = { type: this.len.type };
+            if (this.len.type === 'ref')
+                obj.len.ref = this.len.ref.id;
+            if (this.ori.type === 'drive') {
+                obj.len.func = this.len.func;
+                obj.len.Dt = this.len.Dt;
+                obj.len.Dw = this.len.Dw;
+                obj.len.input = this.len.input;
+                obj.len.output = this.len.output;
+            };
+
+            if (this.ori)
+                obj.ori = { type: this.ori.type };
+            if (this.ori.type === 'ref')
+                obj.ori.ref = this.ori.ref.id;
+            if (this.ori.type === 'drive') {
+                obj.ori.func = this.ori.func;
+                obj.ori.Dt = this.ori.Dt;
+                obj.ori.Dw = this.ori.Dw;
+                obj.ori.input = this.ori.input;
+                obj.ori.output = this.ori.output;
+            };
+
+            return obj;
+        },
         // interaction
         get isSolid() { return false },
-        get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+        get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
         hitContour({x,y,eps}) {
             const p1 = this.p1, p2 = this.p2,
                   dx = this.p2.x - this.p1.x, dy = this.p2.y - this.p1.y,
@@ -810,9 +887,9 @@ mec.constraint = {
         g2() {
             const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this,
                   g = g2().beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                                ls:'green',fs:'@ls',lc:'round',sh:()=>this.sh})
+                                ls:mec.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
                             .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
-                                     lw:lw+1,lsh:true})
+                                    lw:lw+1,lsh:true})
                             .drw({d:mec.constraint.arrow[type],lsh:true})
                           .end();
 
@@ -824,10 +901,10 @@ mec.constraint = {
                     idstr += '('+ this.ori.ref.id+')';
                     xid -= 3*sw;
                     yid += 3*cw;
-                }                    
-                g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle'})
+                }  
+                g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle', ls:mec.txtColor})
             }
-
+            
             return g;
         }
     },
@@ -837,8 +914,7 @@ mec.constraint = {
         'tran': 'M0,0 12,0M16,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z',
         'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
     }
-}
-/**
+}/**
  * mec.drive (c) 2018 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
@@ -1015,8 +1091,24 @@ mec.load.force = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            id: this.id,
+            p: this.p.id
+        };
 
-    // cartesian components
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+        if (this.wref)
+            obj.wref = this.wref;
+        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)  // if (this.value && !(mec.to_N(this.value) === 1))  
+            obj.value = mec.to_N(this.value);
+
+        return obj;
+    },
+
+ // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
     get Qx() { return this.value*Math.cos(this.w)},
     get Qy() { return this.value*Math.sin(this.w)},
@@ -1027,7 +1119,8 @@ mec.load.force = {
     },
     // interaction
     get isSolid() { return false },
-    get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    // get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, 'white'] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
     hitContour({x,y,eps}) {
         const len = 45,   // const length for all force arrows
               p = this.p,
@@ -1055,10 +1148,10 @@ mec.load.force = {
                                        : () => p.y + off*sw,
               g = g2().beg({x,y,w,scl:1,lw:2,ls:mec.forceColor,
                             lc:'round',sh:()=>this.sh,fs:'@ls'})
-                        .drw({d:mec.load.force.arrow,lsh:true})
+                      .drw({d:mec.load.force.arrow,lsh:true})
                       .end();
         if (mec.showLoadLabels)
-            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle'});
+            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
         return g;
     },
     arrowLength: 45,   // draw all forces of length ...
@@ -1098,6 +1191,21 @@ mec.load.spring = {
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            id: this.id,
+            p1: this.p1.id,
+            p2: this.p2.id
+        };
+console.log(Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)));
+        if (this.k && !(mec.to_N_m(this.k) === 0.01))
+            obj.k = mec.to_N_m(this.k);
+        if (this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001)
+            obj.len0 = this.len0;
+
+        return obj;
+    },
 
     // cartesian components
     get len() { return Math.hypot(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
@@ -1116,7 +1224,8 @@ mec.load.spring = {
     },
     // interaction
     get isSolid() { return false },
-    get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    // get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, 'white'] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
     hitContour({x,y,eps}) {
         const p1 = this.p1, p2 = this.p2,
               cw = Math.cos(this.w), sw = Math.sin(this.w),
@@ -1141,10 +1250,9 @@ mec.load.spring = {
                    .l({x:xm+( ux/6-uy/2)*h,y:ym+( uy/6+ux/2)*h})
                    .l({x:xm+ux*h/2,y:ym+uy*h/2})
                    .l({x:x2-ux*off,y:y2-uy*off})
-                   .stroke(Object.assign({}, {ls:'@linkcolor'},this,{fs:'transparent',lc:'round',                                lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
+                   .stroke(Object.assign({}, {ls:mec.springColor},this,{fs:'transparent',lc:'round',lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
     }
-}
-/**
+}/**
  * mec.shape (c) 2018 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
@@ -1177,7 +1285,7 @@ mec.shape = {
 /**
  * @param {object} - fixed node shape.
  * @property {string} p - referenced node id for position.
- * @property {number} w0 - initial angle.
+ * @property {number} [w0] - initial angle.
  */
 mec.shape.fix = {
     init(model) {
@@ -1187,6 +1295,17 @@ mec.shape.fix = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+        };
+
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+
+        return obj;
+    },
     draw(g) {
         g.use({grp:'nodfix',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
     }
@@ -1195,7 +1314,7 @@ mec.shape.fix = {
 /**
  * @param {object} - floating node shape.
  * @property {string} p - referenced node id for position.
- * @property {number} w0 - initial angle.
+ * @property {number} [w0] - initial angle.
  */
 mec.shape.flt = {
     init(model) {
@@ -1204,6 +1323,17 @@ mec.shape.flt = {
     },
     dependsOn(elem) {
         return this.p === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+        };
+
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+
+        return obj;
     },
     draw(g) {
         g.use({grp:'nodflt',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
@@ -1214,7 +1344,7 @@ mec.shape.flt = {
  * @param {object} - slider shape.
  * @property {string} p - referenced node id for position.
  * @property {string} [wref] - referenced constraint id for orientation.
- * @property {number} w0 - initial angle / -difference.
+ * @property {number} [w0] - initial angle / -difference.
  */
 mec.shape.slider = {
     init(model) {
@@ -1232,6 +1362,19 @@ mec.shape.slider = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+        };
+
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+        if (this.wref)
+            obj.wref = this.wref.id;
+
+        return obj;
+    },
     draw(g) {
         const w = this.wref ? ()=>this.wref.w : this.w0 || 0;
         g.beg({x:()=>this.p.x,y:()=>this.p.y,w})
@@ -1242,8 +1385,8 @@ mec.shape.slider = {
 
 /**
  * @param {object} - bar shape.
- * @property {string} [p1] - referenced node id for start point position.
- * @property {string} [p2] - referenced node id for end point position.
+ * @property {string} p1 - referenced node id for start point position.
+ * @property {string} p2 - referenced node id for end point position.
  */
 mec.shape.bar = {
     init(model) {
@@ -1254,6 +1397,15 @@ mec.shape.bar = {
     },
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p1: this.p1.id,
+            p2: this.p2.id,
+        };
+
+        return obj;
     },
     draw(g) {
         const x1 = () => this.p1.x,
@@ -1268,19 +1420,31 @@ mec.shape.bar = {
 
 /**
  * @param {object} - beam shape.
- * @property {string} [p] - referenced node id for start point position.
- * @property {string} [wref] - referenced constraint id for orientation.
- * @property {number} [len] - beam length
+ * @property {string} p - referenced node id for start point position.
+ * @property {string} wref - referenced constraint id for orientation.
+ * @property {number} len - beam length
  */
 mec.shape.beam = {
     init(model) {
         if (typeof this.wref === 'string' && this.len > 0) {
             this.p = model.nodeById(this.p);
             this.wref = model.constraintById(this.wref);
+        } else {
+            console.log('invalid definition of beam shape in model');
         }
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+            wref: this.wref.id,
+            len: this.len
+        };
+
+        return obj;
     },
     draw(g) {
         const x1 = () => this.p.x,
@@ -1295,10 +1459,10 @@ mec.shape.beam = {
 
 /**
  * @param {object} - wheel shape.
- * @property {string} [p] - referenced node id for center point position, and ...
+ * @property {string} p - referenced node id for center point position, and ...
  * @property {string} [wref] - referenced constraint id for orientation and ...
- * @property {number} [w0] - start / offset angle [rad].
- * @property {number} [r] - radius
+ * @property {number} w0 - start / offset angle [rad].
+ * @property {number} r - radius
  */
 mec.shape.wheel = {
     init(model) {
@@ -1309,6 +1473,19 @@ mec.shape.wheel = {
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            p: this.p.id,
+            w0: this.w0,
+            r: this.r
+        };
+
+        if (this.wref)
+            obj.wref = this.wref.id;
+
+        return obj;
     },
     draw(g) {
         const w = this.wref ? ()=>this.wref.w : this.w0 || 0, r = this.r, 
@@ -1335,8 +1512,8 @@ mec.shape.wheel = {
 
 /**
  * @param {object} - image shape.
- * @property {string} [uri] - image uri
- * @property {string} [p] - referenced node id for center point position.
+ * @property {string} uri - image uri
+ * @property {string} p - referenced node id for center point position.
  * @property {string} [wref] - referenced constraint id for orientation.
  * @property {number} [w0] - start / offset angle [rad].
  * @property {number} [xoff] - x offset value.
@@ -1353,12 +1530,31 @@ mec.shape.img = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    toJSON() {
+        const obj = {
+            type: this.type,
+            uri: this.uri,
+            p: this.p.id
+        };
+
+        if (this.wref)
+            obj.wref = this.wref.id;
+        if (this.w0 && !(this.w0 === 0))
+            obj.w0 = this.w0;
+        if (this.xoff && !(this.xoff === 0))
+            obj.xoff = this.xoff;
+        if (this.yoff && !(this.yoff === 0))
+            obj.yoff = this.yoff;
+        if (this.scl && !(this.scl === 1))
+            obj.scl = this.scl;
+
+        return obj;
+    },
     draw(g) {
         const w0 = this.w0 || 0, w = this.wref ? ()=>this.wref.w + w0 : w0; 
         g.img({uri:this.uri,x:()=>this.p.x,y:()=>this.p.y,w,scl:this.scl,xoff:this.xoff,yoff:this.yoff})
     }
-}
-/**
+}/**
  * mec.model (c) 2018 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
@@ -1406,7 +1602,7 @@ mec.model = {
                 if (!constraint.initialized)
                     mec.constraint.extend(constraint).init(this);
             if (!this.loads) this.loads = [];
-            for (const load of this.loads)  // do for all shapes ...
+            for (const load of this.loads)  // do for all loads ...
                 mec.load.extend(load).init(this);
             if (!this.shapes) this.shapes = [];
             for (const shape of this.shapes)  // do for all shapes ...
@@ -1458,7 +1654,7 @@ mec.model = {
         },
         /**
          * Perform timer tick.
-         * Model time is incremented bei `dt`.
+         * Model time is incremented by `dt`.
          * Model time is independent of system time.
          * Input elements may set simulation time and `dt` explicite.
          * `model.tick()` is then called with `dt = 0`.
@@ -1531,9 +1727,9 @@ mec.model = {
          * Nodes are not moving anymore (zero velocities) and no drives active.
          * @type {boolean}
          */
-         get isActive() {
-            return !this.hasActiveDrives // node velocities are not necessarily zero with drives
-                &&  this.isSleeping;
+        get isActive() {
+            return  this.hasActiveDrives // node velocities are not necessarily zero with drives
+                || !this.isSleeping;
         },
         /**
          * Test, if nodes are significantly moving 
@@ -1552,13 +1748,14 @@ mec.model = {
          * @type {boolean}
          */
         get hasActiveDrives() {
-            let idle = false;
+            let active = false;
             for (const constraint of this.constraints) 
-                idle =  constraint.ori.type === 'drive'
-                     && this.timer.t < constraint.ori.t0 + constraint.ori.Dt
-                     || constraint.len.type === 'drive'
-                     && this.timer.t < constraint.len.t0 + constraint.len.Dt;
-            return idle;
+                active = active
+                      || constraint.ori.type === 'drive'
+                      && this.timer.t < constraint.ori.t0 + constraint.ori.Dt
+                      || constraint.len.type === 'drive'
+                      && this.timer.t < constraint.len.t0 + constraint.len.Dt;
+            return active;
         },
         /**
          * Check, if other elements are dependent on specified element.
@@ -1716,7 +1913,7 @@ mec.model = {
          * @returns {object} load to find.
          */
         loadById(id) {
-            for (const load of this.nodes)
+            for (const load of this.loads)
                 if (load.id === id)
                     return load;
             return false;
@@ -1776,6 +1973,51 @@ mec.model = {
         purgeShape(shape) {
             this.purgeElements(this.dependentsOf(shape));
             this.shapes.splice(this.shapes.indexOf(shape),1);
+        },
+        /**
+         * Return a canonical JSON-representation of the model
+         * @method
+         * @returns {object} model as JSON.
+         */
+        toJSON() {
+            const obj = {};
+
+            if (this.id)
+                obj.id = this.id;
+            obj.dirty = true; // needed?
+            if (this.dt)
+                obj.dt = this.dt;
+            obj.gravity = this.hasGravity ? true : false;
+
+            if (this.nodes && this.nodes.length > 0) {
+                const nodearr = [];
+                for (const node of this.nodes)
+                    nodearr.push(node.toJSON());
+                obj.nodes = nodearr;
+            };
+
+            if (this.constraints && this.constraints.length > 0) {
+                const constraintarr = [];
+                for (const constraint of this.constraints)
+                    constraintarr.push(constraint.toJSON());
+                obj.constraints = constraintarr;
+            };
+
+            if (this.loads && this.loads.length > 0) {
+                const loadarr = [];
+                for (const load of this.loads)
+                    loadarr.push(load.toJSON());
+                obj.loads = loadarr;
+            };
+
+            if (this.shapes && this.shapes.length > 0) {
+                const shapearr = [];
+                for (const shape of this.shapes)
+                    shapearr.push(shape.toJSON());
+                obj.shapes = shapearr;
+            };
+
+            return obj;
         },
         /**
          * Apply loads to their nodes.

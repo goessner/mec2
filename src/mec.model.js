@@ -46,7 +46,7 @@ mec.model = {
                 if (!constraint.initialized)
                     mec.constraint.extend(constraint).init(this);
             if (!this.loads) this.loads = [];
-            for (const load of this.loads)  // do for all shapes ...
+            for (const load of this.loads)  // do for all loads ...
                 mec.load.extend(load).init(this);
             if (!this.shapes) this.shapes = [];
             for (const shape of this.shapes)  // do for all shapes ...
@@ -172,8 +172,8 @@ mec.model = {
          * @type {boolean}
          */
         get isActive() {
-            return !this.hasActiveDrives // node velocities are not necessarily zero with drives
-                &&  this.isSleeping;
+            return  this.hasActiveDrives // node velocities are not necessarily zero with drives
+                || !this.isSleeping;
         },
         /**
          * Test, if nodes are significantly moving 
@@ -192,13 +192,14 @@ mec.model = {
          * @type {boolean}
          */
         get hasActiveDrives() {
-            let idle = false;
+            let active = false;
             for (const constraint of this.constraints) 
-                idle =  constraint.ori.type === 'drive'
-                     && this.timer.t < constraint.ori.t0 + constraint.ori.Dt
-                     || constraint.len.type === 'drive'
-                     && this.timer.t < constraint.len.t0 + constraint.len.Dt;
-            return idle;
+                active = active
+                      || constraint.ori.type === 'drive'
+                      && this.timer.t < constraint.ori.t0 + constraint.ori.Dt
+                      || constraint.len.type === 'drive'
+                      && this.timer.t < constraint.len.t0 + constraint.len.Dt;
+            return active;
         },
         /**
          * Check, if other elements are dependent on specified element.
