@@ -38,6 +38,10 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 # Change Log
 
+### 0.7.7 - 2018-08-07
+
+* spring load element added.
+
 ### 0.7.6 - 2018-08-08
 
 * spring load element added.
