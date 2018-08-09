@@ -1,6 +1,6 @@
 {
   "name": "mec2",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "mec2 - a library for simulating planar mechanisms via corrective impulses",
   "keywords": [
     "vector",
@@ -16,8 +16,8 @@
   "main": "mec2.js",
   "scripts": {
     "build": "npm run minify && npm run jsdoc && npm run gzip && npm run cpsamp",
-    "concat": "type .\\src\\mec.core.js .\\src\\mec.node.js .\\src\\mec.constraint.js .\\src\\mec.drive.js .\\src\\mec.load.js .\\src\\mec.shape.js .\\src\\mec.model.js >mec2.js",
-    "minify": "uglifyjs ./src/mec.core.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.shape.js ./src/mec.model.js -o ./mec2.min.js --comments -m",
+    "concat": "type .\\src\\mec.core.js .\\src\\mec.node.js .\\src\\mec.constraint.js .\\src\\mec.drive.js .\\src\\mec.load.js .\\src\\mec.view.js .\\src\\mec.shape.js .\\src\\mec.model.js >mec2.js",
+    "minify": "uglifyjs ./src/mec.core.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.view.js ./src/mec.shape.js ./src/mec.model.js -o ./mec2.min.js --comments -m",
     "jsdoc": "jsdoc2md ./g2.js > ./api/readme.md",
     "gzip": "7z -tgzip a ./mec2.min.js.gz ./mec2.min.js",
     "cpsamp": "copyfiles -f ./examples/*.html ../goessner.github.io/g2/examples"

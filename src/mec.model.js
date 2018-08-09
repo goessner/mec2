@@ -48,6 +48,9 @@ mec.model = {
             if (!this.loads) this.loads = [];
             for (const load of this.loads)  // do for all loads ...
                 mec.load.extend(load).init(this);
+            if (!this.views) this.views = [];
+            for (const view of this.views)  // do for all views ...
+                mec.view.extend(view).init(this);
             if (!this.shapes) this.shapes = [];
             for (const shape of this.shapes)  // do for all shapes ...
                 mec.shape.extend(shape).init(this);
@@ -168,7 +171,7 @@ mec.model = {
         set direc(q) { this.state.direc = q; },
         /**
          * Test, if model is active.
-         * Nodes are not moving anymore (zero velocities) and no drives active.
+         * Nodes are moving (nonzero velocities) or active drives.
          * @type {boolean}
          */
         get isActive() {
@@ -212,6 +215,8 @@ mec.model = {
                 dependency = constraint.dependsOn(elem) || dependency;
             for (const load of this.loads)
                 dependency = load.dependsOn(elem) || dependency;
+            for (const view of this.views)
+                dependency = view.dependsOn(elem) || dependency;
             for (const shape of this.shapes)
                 dependency = shape.dependsOn(elem) || dependency;
             return dependency;
@@ -225,13 +230,16 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem) {
-            const deps = {constraints:[],loads:[],shapes:[]};
+            const deps = {constraints:[],loads:[],views:[],shapes:[]};
             for (const constraint of this.constraints)
                 if (constraint.dependsOn(elem))
                     deps.constraints.push(constraint);
             for (const load of this.loads)
                 if (load.dependsOn(elem))
                     deps.loads.push(load);
+            for (const view of this.views)
+                if (view.dependsOn(elem))
+                    deps.views.push(view);
             for (const shape of this.shapes)
                 if (shape.dependsOn(elem))
                     deps.shapes.push(shape);
@@ -247,6 +255,8 @@ mec.model = {
                 this.constraints.splice(this.constraints.indexOf(constraint),1);
             for (const load of elems.loads)
                 this.loads.splice(this.loads.indexOf(load),1);
+            for (const view of elems.views)
+                this.views.splice(this.views.indexOf(view),1);
             for (const shape of this.shapes)
                 this.shapes.splice(this.shapes.indexOf(shape),1);
         },
@@ -417,6 +427,50 @@ mec.model = {
             this.purgeElements(this.dependentsOf(shape));
             this.shapes.splice(this.shapes.indexOf(shape),1);
         },
+        /**
+         * Add view to model.
+         * @method
+         * @param {object} view - view to add.
+         */
+        addView(view) {
+            this.views.push(view);
+        },
+        /**
+         * Get view by id.
+         * @method
+         * @param {object} id - view id.
+         * @returns {object} view to find.
+         */
+        viewById(id) {
+            for (const view of this.views)
+                if (view.id === id)
+                    return view;
+            return false;
+        },
+        /**
+         * Remove view, if there are no other objects depending on it.
+         * The calling app has to ensure, that `view` is in fact an entry of 
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to remove.
+         */
+        removeView(view) {
+            const idx = this.views.indexOf(view);
+            if (idx >= 0)
+                this.views.splice(idx,1);
+        },
+        /**
+         * Delete view and all dependent elements from model.
+         * The calling app has to ensure, that `view` is in fact an entry of 
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to delete.
+         */
+        purgeView(view) {
+            this.purgeElements(this.dependentsOf(view));
+            this.views.splice(this.views.indexOf(view),1);
+        },
+
         /**
          * Return a JSON-string of the model
          * @method
@@ -611,6 +665,8 @@ mec.model = {
         draw(g) {
             for (const shape of this.shapes)
                 shape.draw(g);
+            for (const view of this.views)
+                view.draw(g);
             for (const load of this.loads)
                 g.ins(load);
             for (const constraint of this.constraints)

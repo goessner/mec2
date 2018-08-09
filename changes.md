@@ -202,6 +202,11 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 09/08/18
+
+* view container added to model.
+* vector view implemented.
+
 # Changes 08/08/18
 
 * Bug removed in `mec.model.isActive`. The negated result was returned. (Changes in app required !)

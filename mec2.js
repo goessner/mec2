@@ -74,6 +74,9 @@ priority: 'velocity',
 showNodeLabels: false,
 showConstraintLabels: true,
 showLoadLabels: true,
+/*
+ * color conventions
+ */
 /**
  * flag for darkmode.
  * @const
@@ -121,6 +124,16 @@ get selectedElmColor() { return this.darkmode ? 'yellow': 'blue' },
  * @return {string}
  */
 get txtColor() { return this.darkmode ? 'white' : 'black' },
+/**
+ * color for velocity arrow (ls).
+ * @return {string}
+ */
+get velColor() { return this.darkmode ? 'lightblue' : 'mediumblue' },
+/**
+ * color for acceleration arrow (ls).
+ * @return {string}
+ */
+get accColor() { return this.darkmode ? 'wheat' : 'saddlebrown' },
 
 /**
  * default gravity.
@@ -197,7 +210,14 @@ to_kgm2(x) { return x*mec.m_u*mec.m_u; },
  * @return {number} Value in [kgu^2]
  */
 from_kgm2(x) { return x/mec.m_u/mec.m_u; },
-
+/*
+ * scale factors
+ */
+velScale: 1/4, 
+/*
+ * scale factors
+ */
+accScale: 1/10, 
 /**
  * Helper functions
  */
@@ -220,13 +240,24 @@ toZero(a,eps) {
     return a < (eps || mec.EPS) && a > -(eps || mec.EPS) ? 0 : a;
 },
 /**
- * Clamps a numerical value within the provided bounds.
+ * Clamps a numerical value linearly within the provided bounds.
  * @param {number} val Value to clamp.
  * @param {number} lo Lower bound.
  * @param {number} hi Upper bound.
  * @returns {number} Value within the bounds.
  */
 clamp(val,lo,hi) { return Math.min(Math.max(val, lo), hi); },
+/**
+ * Clamps a numerical value asymptotically within the provided bounds.
+ * @param {number} val Value to clamp.
+ * @param {number} lo Lower bound.
+ * @param {number} hi Upper bound.
+ * @returns {number} Value within the bounds.
+ */
+asympClamp(val,lo,hi) {
+    const dq = 0.5*(hi - lo);
+    return dq ? lo + 0.5*dq + Math.tanh(((Math.min(Math.max(val, lo), hi) - lo)/dq - 0.5)*5)*0.5*dq : lo;
+},
 /**
  * Convert angle from degrees to radians.
  * @param {number} deg Angle in degrees.
@@ -371,7 +402,7 @@ mec.node = {
         asJSON() {
             return '{ "id":"'+this.id+'","x":'+this.x0+',"y":'+this.y0
                  + (this.base ? ',"base":true' : '')
-                 + (this.idloc ? ',"idloc":"'+this.idloc : '')
+                 + (this.idloc ? ',"idloc":"'+this.idloc+'"' : '')
                  + ' }';
         },
         toJSON() {
@@ -387,6 +418,13 @@ mec.node = {
 
             return obj;
         },
+        // analysis methods
+        force() { return {x:this.Qx,y:this.Qy}; },
+        vel() { return {x:this.xt,y:this.yt}; },
+        acc() { return {x:this.xtt,y:this.ytt}; },
+        forceAbs() { return Math.hypot(this.Qx,this.Qy); },
+        velAbs() { return Math.hypot(this.xt,this.yt); },
+        accAbs() { return Math.hypot(this.xtt,this.ytt); },
         // interaction
         get isSolid() { return true },
         get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
@@ -1272,6 +1310,57 @@ console.log(Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-thi
 /**
  * @method
  * @param {object} - plain javascript shape object.
+ * @property {string} id - view id.
+ * @property {string} type - view type ['vector'].
+ */
+mec.view = {
+    extend(view) {
+        if (view.type && mec.view[view.type]) {
+            Object.setPrototypeOf(view, mec.view[view.type]);
+            view.constructor();
+        }
+        return view; 
+    }
+}
+
+/**
+ * @param {object} - vector view.
+ * @property {string} p - referenced node id.
+ * @property {string} [value] - node value to view.
+ */
+mec.view.vector = {
+    constructor() {}, // always parameterless .. !
+    init(model) {
+        if (typeof this.p === 'string')
+            this.p = model.nodeById(this.p);
+        if (this.value && this.p[this.value]) ; // node analysis value exists ? error handling required .. !
+    },
+    dependsOn(elem) {
+        return this.p === elem;
+    },
+    draw(g) {
+        g.vec({ x1:()=>this.p.x,
+                y1:()=>this.p.y,
+                x2:()=>this.p.x+this.p[this.value]().x,
+                y2:()=>this.p.y+this.p[this.value]().y,
+                ls:mec.velColor,
+                lw:1.5});
+    }
+}
+/**
+ * mec.shape (c) 2018 Stefan Goessner
+ * @license MIT License
+ * @requires mec.core.js
+ * @requires mec.node.js
+ * @requires mec.constraint.js
+ * @requires mec.model.js
+ * @requires g2.js
+ */
+"use strict";
+
+/**
+ * @method
+ * @param {object} - plain javascript shape object.
  * @property {string} type - shape type ['fix'|'flt'|'slider'|'bar'|'beam'|'wheel'|'img'].
  */
 mec.shape = {
@@ -1610,6 +1699,9 @@ mec.model = {
             if (!this.loads) this.loads = [];
             for (const load of this.loads)  // do for all loads ...
                 mec.load.extend(load).init(this);
+            if (!this.views) this.views = [];
+            for (const view of this.views)  // do for all views ...
+                mec.view.extend(view).init(this);
             if (!this.shapes) this.shapes = [];
             for (const shape of this.shapes)  // do for all shapes ...
                 mec.shape.extend(shape).init(this);
@@ -1730,7 +1822,7 @@ mec.model = {
         set direc(q) { this.state.direc = q; },
         /**
          * Test, if model is active.
-         * Nodes are not moving anymore (zero velocities) and no drives active.
+         * Nodes are moving (nonzero velocities) or active drives.
          * @type {boolean}
          */
         get isActive() {
@@ -1774,6 +1866,8 @@ mec.model = {
                 dependency = constraint.dependsOn(elem) || dependency;
             for (const load of this.loads)
                 dependency = load.dependsOn(elem) || dependency;
+            for (const view of this.views)
+                dependency = view.dependsOn(elem) || dependency;
             for (const shape of this.shapes)
                 dependency = shape.dependsOn(elem) || dependency;
             return dependency;
@@ -1787,13 +1881,16 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem) {
-            const deps = {constraints:[],loads:[],shapes:[]};
+            const deps = {constraints:[],loads:[],views:[],shapes:[]};
             for (const constraint of this.constraints)
                 if (constraint.dependsOn(elem))
                     deps.constraints.push(constraint);
             for (const load of this.loads)
                 if (load.dependsOn(elem))
                     deps.loads.push(load);
+            for (const view of this.views)
+                if (view.dependsOn(elem))
+                    deps.views.push(view);
             for (const shape of this.shapes)
                 if (shape.dependsOn(elem))
                     deps.shapes.push(shape);
@@ -1809,6 +1906,8 @@ mec.model = {
                 this.constraints.splice(this.constraints.indexOf(constraint),1);
             for (const load of elems.loads)
                 this.loads.splice(this.loads.indexOf(load),1);
+            for (const view of elems.views)
+                this.views.splice(this.views.indexOf(view),1);
             for (const shape of this.shapes)
                 this.shapes.splice(this.shapes.indexOf(shape),1);
         },
@@ -1979,6 +2078,50 @@ mec.model = {
             this.purgeElements(this.dependentsOf(shape));
             this.shapes.splice(this.shapes.indexOf(shape),1);
         },
+        /**
+         * Add view to model.
+         * @method
+         * @param {object} view - view to add.
+         */
+        addView(view) {
+            this.views.push(view);
+        },
+        /**
+         * Get view by id.
+         * @method
+         * @param {object} id - view id.
+         * @returns {object} view to find.
+         */
+        viewById(id) {
+            for (const view of this.views)
+                if (view.id === id)
+                    return view;
+            return false;
+        },
+        /**
+         * Remove view, if there are no other objects depending on it.
+         * The calling app has to ensure, that `view` is in fact an entry of 
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to remove.
+         */
+        removeView(view) {
+            const idx = this.views.indexOf(view);
+            if (idx >= 0)
+                this.views.splice(idx,1);
+        },
+        /**
+         * Delete view and all dependent elements from model.
+         * The calling app has to ensure, that `view` is in fact an entry of 
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to delete.
+         */
+        purgeView(view) {
+            this.purgeElements(this.dependentsOf(view));
+            this.views.splice(this.views.indexOf(view),1);
+        },
+
         /**
          * Return a JSON-string of the model
          * @method
@@ -2173,6 +2316,8 @@ mec.model = {
         draw(g) {
             for (const shape of this.shapes)
                 shape.draw(g);
+            for (const view of this.views)
+                view.draw(g);
             for (const load of this.loads)
                 g.ins(load);
             for (const constraint of this.constraints)

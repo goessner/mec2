@@ -74,6 +74,9 @@ priority: 'velocity',
 showNodeLabels: false,
 showConstraintLabels: true,
 showLoadLabels: true,
+/*
+ * color conventions
+ */
 /**
  * flag for darkmode.
  * @const
@@ -121,6 +124,16 @@ get selectedElmColor() { return this.darkmode ? 'yellow': 'blue' },
  * @return {string}
  */
 get txtColor() { return this.darkmode ? 'white' : 'black' },
+/**
+ * color for velocity arrow (ls).
+ * @return {string}
+ */
+get velColor() { return this.darkmode ? 'lightblue' : 'mediumblue' },
+/**
+ * color for acceleration arrow (ls).
+ * @return {string}
+ */
+get accColor() { return this.darkmode ? 'wheat' : 'saddlebrown' },
 
 /**
  * default gravity.
@@ -197,7 +210,14 @@ to_kgm2(x) { return x*mec.m_u*mec.m_u; },
  * @return {number} Value in [kgu^2]
  */
 from_kgm2(x) { return x/mec.m_u/mec.m_u; },
-
+/*
+ * scale factors
+ */
+velScale: 1/4, 
+/*
+ * scale factors
+ */
+accScale: 1/10, 
 /**
  * Helper functions
  */
@@ -220,13 +240,24 @@ toZero(a,eps) {
     return a < (eps || mec.EPS) && a > -(eps || mec.EPS) ? 0 : a;
 },
 /**
- * Clamps a numerical value within the provided bounds.
+ * Clamps a numerical value linearly within the provided bounds.
  * @param {number} val Value to clamp.
  * @param {number} lo Lower bound.
  * @param {number} hi Upper bound.
  * @returns {number} Value within the bounds.
  */
 clamp(val,lo,hi) { return Math.min(Math.max(val, lo), hi); },
+/**
+ * Clamps a numerical value asymptotically within the provided bounds.
+ * @param {number} val Value to clamp.
+ * @param {number} lo Lower bound.
+ * @param {number} hi Upper bound.
+ * @returns {number} Value within the bounds.
+ */
+asympClamp(val,lo,hi) {
+    const dq = 0.5*(hi - lo);
+    return dq ? lo + 0.5*dq + Math.tanh(((Math.min(Math.max(val, lo), hi) - lo)/dq - 0.5)*5)*0.5*dq : lo;
+},
 /**
  * Convert angle from degrees to radians.
  * @param {number} deg Angle in degrees.
