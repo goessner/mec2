@@ -393,13 +393,13 @@ mec.node = {
 */
             // if applied forces are acting, set velocity diffs initially by forces.
 //console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
-            if (this.Qx || this.Qy) {
-                this.dxt = this.Qx*this.im * dt;
-                this.dyt = this.Qy*this.im * dt;
-            }
-            else
-                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
-        },
+if (this.Qx || this.Qy) {
+    this.dxt = this.Qx*this.im * dt;
+    this.dyt = this.Qy*this.im * dt;
+}
+else
+    this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
+},
         post(dt) {
             // symplectic euler ... partially
             this.xt += this.dxt;
@@ -907,6 +907,45 @@ mec.constraint = {
             for (const key in getters) 
                 Object.defineProperty(this, key, { get: getters[key], enumerable:true, configurable:true });
         },
+        asJSON() {
+            let jsonString = '{ "id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"';
+
+            if (this.len && !(this.len.type === 'free')) {
+                jsonString += (this.len.type === 'const' ? ',"len":{ "type":"const"' : '')
+                            + (this.len.type === 'ref' ? ',"len":{ "type":"ref","ref":"'+this.len.ref.id+'"' : '')
+                            + (this.len.type === 'drive' ? '"len":{ "type":"drive"' : '')
+                            + (this.len.r0 && this.len.r0 > 0.0001 ? ',"r0":"'+this.len.r0+'"' : '')
+                            + (this.len.refval ? ',"refval":"'+this.len.refval+'"' : '')
+                            + (this.len.ratio && Math.abs(this.len.ratio-1)>0.0001 ? ',"ratio":"'+this.len.ratio+'"' : '')
+                            + (this.len.func ? ',"func":"'+this.len.func+'"' : '')
+                            + (this.len.arg ? ',"arg":"'+this.len.arg+'"' : '')
+                            + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":"'+this.len.t0+'"' : '')
+                            + (this.len.Dt ? ',"Dt":"'+this.len.Dt+'"' : '')
+                            + (this.len.Dr ? ',"Dr":"'+this.len.Dr+'"' : '')
+                            + (this.len.input ? ',"input":true' : '')
+                            + ' }'
+            };
+
+            if (this.ori && !(this.ori.type === 'free')) {
+                jsonString += (this.ori.type === 'const' ? ',"ori":{ "type":"const"' : '')
+                            + (this.ori.type === 'ref' ? ',"ori":{ "type":"ref","ref":"'+this.ori.ref.id+'"' : '')
+                            + (this.ori.type === 'drive' ? '"ori":{ "type":"drive"' : '')
+                            + (this.ori.w0 && this.ori.w0 > 0.0001 ? ',"r0":"'+this.ori.w0+'"' : '')
+                            + (this.ori.refval ? ',"refval":"'+this.ori.refval+'"' : '')
+                            + (this.ori.ratio && Math.abs(this.ori.ratio-1)>0.0001 ? ',"ratio":"'+this.ori.ratio+'"' : '')
+                            + (this.ori.func ? ',"func":"'+this.ori.func+'"' : '')
+                            + (this.ori.arg ? ',"arg":"'+this.ori.arg+'"' : '')
+                            + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":"'+this.ori.t0+'"' : '')
+                            + (this.ori.Dt ? ',"Dt":"'+this.ori.Dt+'"' : '')
+                            + (this.ori.Dw ? ',"Dw":"'+this.ori.Dw+'"' : '')
+                            + (this.ori.input ? ',"input":true' : '')
+                            + ' }'
+            };
+
+            jsonString += ' }';
+
+            return jsonString;
+        },
         toJSON() {
             const obj = {
                 id: this.id,
@@ -1158,6 +1197,13 @@ mec.load.force = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"id":'+this.id+'","p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -1165,11 +1211,11 @@ mec.load.force = {
             p: this.p.id
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
         if (this.wref)
-            obj.wref = this.wref;
-        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)  // if (this.value && !(mec.to_N(this.value) === 1))  
+            obj.wref = this.wref.id;
+        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)
             obj.value = mec.to_N(this.value);
 
         return obj;
@@ -1258,6 +1304,12 @@ mec.load.spring = {
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"id":'+this.id+'","p1":'+this.p1.id+',"p2":'+this.p2.id
+                + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
+                + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -1265,7 +1317,7 @@ mec.load.spring = {
             p1: this.p1.id,
             p2: this.p2.id
         };
-console.log(Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)));
+
         if (this.k && !(mec.to_N_m(this.k) === 0.01))
             obj.k = mec.to_N_m(this.k);
         if (this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001)
@@ -1361,6 +1413,11 @@ mec.view.vector = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"id":'+this.id+',"p":'+this.p.id
+                + (this.value ? ',"value":'+this.value : '')
+                + ' }';
+    },
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
@@ -1435,13 +1492,18 @@ mec.shape.fix = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
             p: this.p.id,
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
 
         return obj;
@@ -1464,13 +1526,18 @@ mec.shape.flt = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
             p: this.p.id,
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
 
         return obj;
@@ -1502,13 +1569,19 @@ mec.shape.slider = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
             p: this.p.id,
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
         if (this.wref)
             obj.wref = this.wref.id;
@@ -1537,6 +1610,9 @@ mec.shape.bar = {
     },
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
+    },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p1":'+this.p1.id+',"p2":'+this.p2.id+' }';
     },
     toJSON() {
         const obj = {
@@ -1576,6 +1652,9 @@ mec.shape.beam = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id+',"wref":'+this.wref.id+',"len":'+this.len+' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -1613,6 +1692,11 @@ mec.shape.wheel = {
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id+',"w0":'+this.w0+',"r":'+this.r
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ' }';
     },
     toJSON() {
         const obj = {
@@ -1670,6 +1754,15 @@ mec.shape.img = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"uri":'+this.uri+',"p":'+this.p.id
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
+                + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
+                + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -1679,13 +1772,13 @@ mec.shape.img = {
 
         if (this.wref)
             obj.wref = this.wref.id;
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
-        if (this.xoff && !(this.xoff === 0))
+        if (this.xoff && Math.abs(this.xoff) > 0.0001)
             obj.xoff = this.xoff;
-        if (this.yoff && !(this.yoff === 0))
+        if (this.yoff && Math.abs(this.yoff) > 0.0001)
             obj.yoff = this.yoff;
-        if (this.scl && !(this.scl === 1))
+        if (this.scl && Math.abs(this.scl - 1) > 0.0001)
             obj.scl = this.scl;
 
         return obj;
@@ -2166,7 +2259,6 @@ mec.model = {
             this.purgeElements(this.dependentsOf(view));
             this.views.splice(this.views.indexOf(view),1);
         },
-
         /**
          * Return a JSON-string of the model
          * @method
@@ -2175,18 +2267,34 @@ mec.model = {
         asJSON() {
             // dynamically create a JSON output string ...
             const nodeCnt = this.nodes.length;
+            const contraintCnt = this.constraints.length;
+            const loadCnt = this.loads.length;
+            const shapeCnt = this.shapes.length;
+            const viewCnt = this.views.length;
             const comma = (i,n) => i < n-1 ? ',' : '';
             const str = '{'
                       + '\n  "id":"'+this.id+'"'
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
                       + (nodeCnt ? ',\n  "nodes": [\n' : '')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
-                      + (nodeCnt ? '  ]\n' : '')
+                      + (nodeCnt ? contraintCnt ? '  ],\n' : '  ]\n' : '')
+                      + (contraintCnt ? '  "constraints": [\n' : '')
+                      + (contraintCnt ? this.constraints.map((n,i) => '    '+n.asJSON()+comma(i,contraintCnt)+'\n').join('') : '')
+                      + (contraintCnt ? loadCnt ? '  ],\n' : '  ]\n' : '')
+                      + (loadCnt ? '  "loads": [\n' : '')
+                      + (loadCnt ? this.loads.map((n,i) => '    '+n.asJSON()+comma(i,loadCnt)+'\n').join('') : '')
+                      + (loadCnt ? shapeCnt ? '  ],\n' : '  ]\n' : '')
+                      + (shapeCnt ? '  "shapes": [\n' : '')
+                      + (shapeCnt ? this.shapes.map((n,i) => '    '+n.asJSON()+comma(i,shapeCnt)+'\n').join('') : '')
+                      + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
+                      + (viewCnt ? '  "views": [\n' : '')
+                      + (viewCnt ? this.views.map((n,i) => '    '+n.asJSON()+comma(i,viewCnt)+'\n').join('') : '')
+                      + (viewCnt ? '  ]\n' : '')
                       + '}';
-            console.log(str);
+
             return str;
         },
-            /**
+        /**
          * Return a canonical JSON-representation of the model
          * @method
          * @returns {object} model as JSON.
