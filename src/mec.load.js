@@ -58,6 +58,13 @@ mec.load.force = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":'+this.p.id+'"'
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
+                + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -65,11 +72,11 @@ mec.load.force = {
             p: this.p.id
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
         if (this.wref)
-            obj.wref = this.wref;
-        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)  // if (this.value && !(mec.to_N(this.value) === 1))  
+            obj.wref = this.wref.id;
+        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)
             obj.value = mec.to_N(this.value);
 
         return obj;
@@ -158,6 +165,12 @@ mec.load.spring = {
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"'
+                + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
+                + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -165,7 +178,7 @@ mec.load.spring = {
             p1: this.p1.id,
             p2: this.p2.id
         };
-console.log(Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)));
+
         if (this.k && !(mec.to_N_m(this.k) === 0.01))
             obj.k = mec.to_N_m(this.k);
         if (this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001)

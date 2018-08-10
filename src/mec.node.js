@@ -101,13 +101,13 @@ mec.node = {
 */
             // if applied forces are acting, set velocity diffs initially by forces.
 //console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
-            if (this.Qx || this.Qy) {
-                this.dxt = this.Qx*this.im * dt;
-                this.dyt = this.Qy*this.im * dt;
-            }
-            else
-                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
-        },
+if (this.Qx || this.Qy) {
+    this.dxt = this.Qx*this.im * dt;
+    this.dyt = this.Qy*this.im * dt;
+}
+else
+    this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
+},
         post(dt) {
             // symplectic euler ... partially
             this.xt += this.dxt;

@@ -207,6 +207,7 @@ depending on its `shape.type` shapes become one of these objects:
 * `trace` view added.
 * apply internal constraint forces to its nodes.
 * minor vector view bugs removed.
+* Elements as well as the model itself now have a asJSON() method, which returns a formatted JSON string. toJSON() will probably be removed in the future.
 
 # Changes 09/08/18
 

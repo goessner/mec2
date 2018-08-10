@@ -473,7 +473,6 @@ mec.model = {
             this.purgeElements(this.dependentsOf(view));
             this.views.splice(this.views.indexOf(view),1);
         },
-
         /**
          * Return a JSON-string of the model
          * @method
@@ -482,18 +481,34 @@ mec.model = {
         asJSON() {
             // dynamically create a JSON output string ...
             const nodeCnt = this.nodes.length;
+            const contraintCnt = this.constraints.length;
+            const loadCnt = this.loads.length;
+            const shapeCnt = this.shapes.length;
+            const viewCnt = this.views.length;
             const comma = (i,n) => i < n-1 ? ',' : '';
             const str = '{'
                       + '\n  "id":"'+this.id+'"'
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
                       + (nodeCnt ? ',\n  "nodes": [\n' : '')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
-                      + (nodeCnt ? '  ]\n' : '')
+                      + (nodeCnt ? contraintCnt ? '  ],\n' : '  ]\n' : '')
+                      + (contraintCnt ? '  "constraints": [\n' : '')
+                      + (contraintCnt ? this.constraints.map((n,i) => '    '+n.asJSON()+comma(i,contraintCnt)+'\n').join('') : '')
+                      + (contraintCnt ? loadCnt ? '  ],\n' : '  ]\n' : '')
+                      + (loadCnt ? '  "loads": [\n' : '')
+                      + (loadCnt ? this.loads.map((n,i) => '    '+n.asJSON()+comma(i,loadCnt)+'\n').join('') : '')
+                      + (loadCnt ? shapeCnt ? '  ],\n' : '  ]\n' : '')
+                      + (shapeCnt ? '  "shapes": [\n' : '')
+                      + (shapeCnt ? this.shapes.map((n,i) => '    '+n.asJSON()+comma(i,shapeCnt)+'\n').join('') : '')
+                      + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
+                      + (viewCnt ? '  "views": [\n' : '')
+                      + (viewCnt ? this.views.map((n,i) => '    '+n.asJSON()+comma(i,viewCnt)+'\n').join('') : '')
+                      + (viewCnt ? '  ]\n' : '')
                       + '}';
-            console.log(str);
+
             return str;
         },
-            /**
+        /**
          * Return a canonical JSON-representation of the model
          * @method
          * @returns {object} model as JSON.
