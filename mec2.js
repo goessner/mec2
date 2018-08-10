@@ -1334,7 +1334,7 @@ console.log(Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-thi
  * @method
  * @param {object} - plain javascript shape object.
  * @property {string} id - view id.
- * @property {string} type - view type ['vector'].
+ * @property {string} type - view type ['vector','trace'].
  */
 mec.view = {
     extend(view) {
@@ -1361,6 +1361,7 @@ mec.view.vector = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    reset() {},
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
@@ -1387,6 +1388,48 @@ mec.view.vector = {
                          x2:pts.p2.x,
                          y2:pts.p2.y,
                          ls:mec.color[this.value],
+                         lw:1.5,
+                         sh:this.sh
+        });
+    }
+}
+
+/**
+ * @param {object} - trace view.
+ * @property {string} p - referenced node id.
+ * @property {number} Dt - trace duration [s].
+ */
+mec.view.trace = {
+    constructor() {}, // always parameterless .. !
+    init(model) {
+        if (typeof this.p === 'string')
+            this.p = model.nodeById(this.p);
+        this.pts = [];
+        this.t0 = 0;
+        this.model = model;   // only used for timer access ... see below !
+    },
+    dependsOn(elem) {
+        return this.p === elem;
+    },
+    reset() {
+        this.pts.length = 0;
+        this.t0 = 0;
+    },
+    post(dt) {  // add model.timer.t to parameter list .. or use timer as parameter everywhere !
+        this.pts.push({x:this.p.x,y:this.p.y});
+        if (this.model.timer.t - this.t0 > this.Dt) // remove first trace point !
+            this.pts.shift();
+    },
+    // interaction
+    get isSolid() { return false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
+    hitContour({x,y,eps}) {
+        return false;
+    },
+    g2() {
+        return g2().ply({pts:this.pts,
+                         format:'{x,y}',
+                         ls:'navy',
                          lw:1.5,
                          sh:this.sh
         });
@@ -1771,8 +1814,10 @@ mec.model = {
                 node.reset();
             for (const constraint of this.constraints)
                 constraint.reset();
-            for (const load of this.loads)  // do for all shapes ...
+            for (const load of this.loads)
                 load.reset();
+            for (const view of this.views)
+                view.reset();
             Object.assign(this.state,{valid:true,direc:1,itrpos:0,itrvel:0});
             return this;
         },
@@ -2320,6 +2365,10 @@ mec.model = {
                 constraint.pre(this.timer.dt);
             // eliminate drift ...
             this.asmPos(this.timer.dt);
+            // pre process views
+            for (const view of this.views)
+                if (view.pre)
+                    view.pre(this.timer.dt);
 
             return this;
         },
@@ -2348,6 +2397,10 @@ mec.model = {
             for (const constraint of this.constraints)
                 constraint.post(this.timer.dt);
 // console.log('itr='+this.itrCnt.pos+'/'+this.itrCnt.vel);
+            // pre process views
+            for (const view of this.views)
+                if (view.post)
+                    view.post(this.timer.dt);
             return this;
         },
         /**

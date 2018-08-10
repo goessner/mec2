@@ -204,6 +204,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 # Changes 10/08/18
 
+* `trace` view added.
 * apply internal constraint forces to its nodes.
 * minor vector view bugs removed.
 

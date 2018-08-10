@@ -75,8 +75,10 @@ mec.model = {
                 node.reset();
             for (const constraint of this.constraints)
                 constraint.reset();
-            for (const load of this.loads)  // do for all shapes ...
+            for (const load of this.loads)
                 load.reset();
+            for (const view of this.views)
+                view.reset();
             Object.assign(this.state,{valid:true,direc:1,itrpos:0,itrvel:0});
             return this;
         },
@@ -175,8 +177,9 @@ mec.model = {
          * @type {boolean}
          */
         get isActive() {
-            return  this.hasActiveDrives // node velocities are not necessarily zero with drives
-                || !this.isSleeping;
+            return this.hasActiveDrives   // active drives
+                || this.dof > 0           // or can move by itself
+                && !this.isSleeping;      // and does that
         },
         /**
          * Test, if nodes are significantly moving 
@@ -624,6 +627,10 @@ mec.model = {
                 constraint.pre(this.timer.dt);
             // eliminate drift ...
             this.asmPos(this.timer.dt);
+            // pre process views
+            for (const view of this.views)
+                if (view.pre)
+                    view.pre(this.timer.dt);
 
             return this;
         },
@@ -652,6 +659,10 @@ mec.model = {
             for (const constraint of this.constraints)
                 constraint.post(this.timer.dt);
 // console.log('itr='+this.itrCnt.pos+'/'+this.itrCnt.vel);
+            // pre process views
+            for (const view of this.views)
+                if (view.post)
+                    view.post(this.timer.dt);
             return this;
         },
         /**

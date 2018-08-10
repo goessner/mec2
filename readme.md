@@ -38,9 +38,14 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 # Change Log
 
-### 0.7.7 - 2018-08-07
+### 0.7.8 - 2018-08-10
 
-* spring load element added.
+* trace view implemented.
+
+### 0.7.7 - 2018-08-09
+
+* vector view implemented.
+* view elements added.
 
 ### 0.7.6 - 2018-08-08
 

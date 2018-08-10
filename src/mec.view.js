@@ -13,7 +13,7 @@
  * @method
  * @param {object} - plain javascript shape object.
  * @property {string} id - view id.
- * @property {string} type - view type ['vector'].
+ * @property {string} type - view type ['vector','trace'].
  */
 mec.view = {
     extend(view) {
@@ -40,6 +40,7 @@ mec.view.vector = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    reset() {},
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
@@ -67,6 +68,50 @@ mec.view.vector = {
                          y2:pts.p2.y,
                          ls:mec.color[this.value],
                          lw:1.5,
+                         sh:this.sh
+        });
+    }
+}
+
+/**
+ * @param {object} - trace view.
+ * @property {string} p - referenced node id.
+ * @property {number} Dt - trace duration [s].
+ * @property {string} fill - web color.
+ */
+mec.view.trace = {
+    constructor() {}, // always parameterless .. !
+    init(model) {
+        if (typeof this.p === 'string')
+            this.p = model.nodeById(this.p);
+        this.pts = [];
+        this.t0 = 0;
+        this.model = model;   // only used for timer access ... see below !
+    },
+    dependsOn(elem) {
+        return this.p === elem;
+    },
+    reset() {
+        this.pts.length = 0;
+        this.t0 = 0;
+    },
+    post(dt) {  // add model.timer.t to parameter list .. or use timer as parameter everywhere !
+        this.pts.push({x:this.p.x,y:this.p.y});
+        if (this.model.timer.t - this.t0 > this.Dt) // remove first trace point !
+            this.pts.shift();
+    },
+    // interaction
+    get isSolid() { return false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
+    hitContour({x,y,eps}) {
+        return false;
+    },
+    g2() {
+        return g2().ply({pts:this.pts,
+                         format:'{x,y}',
+                         ls:'navy',
+                         lw:1.5,
+                         fs: this.fill || 'transparent',
                          sh:this.sh
         });
     }
