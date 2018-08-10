@@ -426,6 +426,45 @@ mec.constraint = {
             for (const key in getters) 
                 Object.defineProperty(this, key, { get: getters[key], enumerable:true, configurable:true });
         },
+        asJSON() {
+            let jsonString = '{ "id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"';
+
+            if (this.len && !(this.len.type === 'free')) {
+                jsonString += (this.len.type === 'const' ? ',"len":{ "type":"const"' : '')
+                            + (this.len.type === 'ref' ? ',"len":{ "type":"ref","ref":"'+this.len.ref.id+'"' : '')
+                            + (this.len.type === 'drive' ? '"len":{ "type":"drive"' : '')
+                            + (this.len.r0 && this.len.r0 > 0.0001 ? ',"r0":"'+this.len.r0+'"' : '')
+                            + (this.len.refval ? ',"refval":"'+this.len.refval+'"' : '')
+                            + (this.len.ratio && Math.abs(this.len.ratio-1)>0.0001 ? ',"ratio":"'+this.len.ratio+'"' : '')
+                            + (this.len.func ? ',"func":"'+this.len.func+'"' : '')
+                            + (this.len.arg ? ',"arg":"'+this.len.arg+'"' : '')
+                            + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":"'+this.len.t0+'"' : '')
+                            + (this.len.Dt ? ',"Dt":"'+this.len.Dt+'"' : '')
+                            + (this.len.Dr ? ',"Dr":"'+this.len.Dr+'"' : '')
+                            + (this.len.input ? ',"input":true' : '')
+                            + ' }'
+            };
+
+            if (this.ori && !(this.ori.type === 'free')) {
+                jsonString += (this.ori.type === 'const' ? ',"ori":{ "type":"const"' : '')
+                            + (this.ori.type === 'ref' ? ',"ori":{ "type":"ref","ref":"'+this.ori.ref.id+'"' : '')
+                            + (this.ori.type === 'drive' ? '"ori":{ "type":"drive"' : '')
+                            + (this.ori.w0 && this.ori.w0 > 0.0001 ? ',"r0":"'+this.ori.w0+'"' : '')
+                            + (this.ori.refval ? ',"refval":"'+this.ori.refval+'"' : '')
+                            + (this.ori.ratio && Math.abs(this.ori.ratio-1)>0.0001 ? ',"ratio":"'+this.ori.ratio+'"' : '')
+                            + (this.ori.func ? ',"func":"'+this.ori.func+'"' : '')
+                            + (this.ori.arg ? ',"arg":"'+this.ori.arg+'"' : '')
+                            + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":"'+this.ori.t0+'"' : '')
+                            + (this.ori.Dt ? ',"Dt":"'+this.ori.Dt+'"' : '')
+                            + (this.ori.Dw ? ',"Dw":"'+this.ori.Dw+'"' : '')
+                            + (this.ori.input ? ',"input":true' : '')
+                            + ' }'
+            };
+
+            jsonString += ' }';
+
+            return jsonString;
+        },
         toJSON() {
             const obj = {
                 id: this.id,

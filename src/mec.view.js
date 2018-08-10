@@ -40,6 +40,11 @@ mec.view.vector = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"id":'+this.id+',"p":'+this.p.id
+                + (this.value ? ',"value":'+this.value : '')
+                + ' }';
+    },
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },

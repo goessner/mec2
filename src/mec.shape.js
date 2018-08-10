@@ -41,13 +41,18 @@ mec.shape.fix = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
             p: this.p.id,
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
 
         return obj;
@@ -70,13 +75,18 @@ mec.shape.flt = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
             p: this.p.id,
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
 
         return obj;
@@ -108,13 +118,19 @@ mec.shape.slider = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
             p: this.p.id,
         };
 
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
         if (this.wref)
             obj.wref = this.wref.id;
@@ -143,6 +159,9 @@ mec.shape.bar = {
     },
     dependsOn(elem) {
         return this.p1 === elem || this.p2 === elem;
+    },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p1":'+this.p1.id+',"p2":'+this.p2.id+' }';
     },
     toJSON() {
         const obj = {
@@ -182,6 +201,9 @@ mec.shape.beam = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id+',"wref":'+this.wref.id+',"len":'+this.len+' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -219,6 +241,11 @@ mec.shape.wheel = {
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
+    },
+    asJSON() {
+        return '{ "type":"'+this.type+',"p":'+this.p.id+',"w0":'+this.w0+',"r":'+this.r
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ' }';
     },
     toJSON() {
         const obj = {
@@ -276,6 +303,15 @@ mec.shape.img = {
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
+    asJSON() {
+        return '{ "type":"'+this.type+',"uri":'+this.uri+',"p":'+this.p.id
+                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
+                + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
+                + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')
+                + ' }';
+    },
     toJSON() {
         const obj = {
             type: this.type,
@@ -285,13 +321,13 @@ mec.shape.img = {
 
         if (this.wref)
             obj.wref = this.wref.id;
-        if (this.w0 && !(this.w0 === 0))
+        if (this.w0 && this.w0 > 0.0001) // ~0.006°
             obj.w0 = this.w0;
-        if (this.xoff && !(this.xoff === 0))
+        if (this.xoff && Math.abs(this.xoff) > 0.0001)
             obj.xoff = this.xoff;
-        if (this.yoff && !(this.yoff === 0))
+        if (this.yoff && Math.abs(this.yoff) > 0.0001)
             obj.yoff = this.yoff;
-        if (this.scl && !(this.scl === 1))
+        if (this.scl && Math.abs(this.scl - 1) > 0.0001)
             obj.scl = this.scl;
 
         return obj;
