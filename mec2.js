@@ -63,10 +63,6 @@ itrMax: 256,
  * corrMax: fixed number of position correction steps.
  */
 corrMax: 64,
-/**
- * calculation target ['velocity'|'forces'], used for stopping iteration loop.
- */
-priority: 'velocity',
 /* graphics related */
 /**
  * place and show labels with elements
@@ -124,16 +120,29 @@ get selectedElmColor() { return this.darkmode ? 'yellow': 'blue' },
  * @return {string}
  */
 get txtColor() { return this.darkmode ? 'white' : 'black' },
-/**
- * color for velocity arrow (ls).
- * @return {string}
+/*
+ * colors for analyses
  */
-get velColor() { return this.darkmode ? 'lightblue' : 'mediumblue' },
-/**
- * color for acceleration arrow (ls).
- * @return {string}
- */
-get accColor() { return this.darkmode ? 'wheat' : 'saddlebrown' },
+color: {
+    /**
+     * color for velocity arrow (ls).
+     * @const
+     * @type {string}
+     */
+    get vel() { return mec.darkmode ? 'lightsteelblue' : 'steelblue' },
+    /**
+     * color for acceleration arrow (ls).
+     * @const
+     * @type {string}
+     */
+    get acc() { return mec.darkmode ? 'lightsalmon' : 'firebrick' },
+    /**
+     * color for acceleration arrow (ls).
+     * @const
+     * @type {string}
+     */
+    get force() { return mec.darkmode ? 'wheat' : 'saddlebrown' },
+},
 
 /**
  * default gravity.
@@ -141,6 +150,14 @@ get accColor() { return this.darkmode ? 'wheat' : 'saddlebrown' },
  * @type {object}
  */
 gravity: {x:0,y:-10,active:false},
+/*
+ * analysing values
+ */
+aly: {
+    vel: { get scl() {return 40*mec.m_u}, minlen:25, maxlen:150 },
+    acc: { get scl() {return  10*mec.m_u}, minlen:25, maxlen:150 },
+    force: { get scl() {return  5*mec.m_u}, minlen:25, maxlen:150 },
+},
 /**
  * unit specifiers and relations
  */
@@ -210,14 +227,6 @@ to_kgm2(x) { return x*mec.m_u*mec.m_u; },
  * @return {number} Value in [kgu^2]
  */
 from_kgm2(x) { return x/mec.m_u/mec.m_u; },
-/*
- * scale factors
- */
-velScale: 1/4, 
-/*
- * scale factors
- */
-accScale: 1/10, 
 /**
  * Helper functions
  */
@@ -255,7 +264,7 @@ clamp(val,lo,hi) { return Math.min(Math.max(val, lo), hi); },
  * @returns {number} Value within the bounds.
  */
 asympClamp(val,lo,hi) {
-    const dq = 0.5*(hi - lo);
+    const dq = hi - lo;
     return dq ? lo + 0.5*dq + Math.tanh(((Math.min(Math.max(val, lo), hi) - lo)/dq - 0.5)*5)*0.5*dq : lo;
 },
 /**
@@ -382,14 +391,14 @@ mec.node = {
                 delete this.usrDrag;  // avoid multiple evaluation .. !
             }
 */
-            // zero out velocity differences .. important !!
-            this.dxt = this.dyt = 0;
-
             // if applied forces are acting, set velocity diffs initially by forces.
+//console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
             if (this.Qx || this.Qy) {
                 this.dxt = this.Qx*this.im * dt;
                 this.dyt = this.Qy*this.im * dt;
             }
+            else
+                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
         },
         post(dt) {
             // symplectic euler ... partially
@@ -454,12 +463,12 @@ mec.node = {
                   xid = this.x + 3*this.r*loc[0], 
                   yid = this.y + 3*this.r*loc[1],
                   g = this.base 
-                    ? g2().beg({x:()=>this.x,y:()=>this.y,sh:()=>this.sh})
+                    ? g2().beg({x:this.x,y:this.y,sh:this.sh})
                           .cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
                           .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
                           .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"})
                           .end()
-                    : g2().cir({x:()=>this.x,y:()=>this.y,r:this.r,
+                    : g2().cir({x:this.x,y:this.y,r:this.r,
                                 ls:'#333',fs:'#eee',sh:()=>this.sh});
             if (mec.showNodeLabels)
                 g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
@@ -797,6 +806,20 @@ mec.constraint = {
             }
         },
         post(dt) {
+            const impulse_r = this.lambda_r * dt,
+                  impulse_w = this.lambda_w * dt,
+                  w = this.w, cw = Math.cos(w), sw = Math.sin(w);
+            // apply radial impulse
+            this.p1.Qx -= -cw * this.lambda_r;
+            this.p1.Qy -= -sw * this.lambda_r;
+            this.p2.Qx -=  cw * this.lambda_r;
+            this.p2.Qy -=  sw * this.lambda_r;
+            // apply angular impulse
+            this.p1.Qx -=  sw * this.lambda_w;
+            this.p1.Qy -= -cw * this.lambda_w;
+            this.p2.Qx -= -sw * this.lambda_w;
+            this.p2.Qy -=  cw * this.lambda_w;
+
             this.lambda_r += this.dlambda_r;
             this.lambda_w += this.dlambda_w;
             if (this.ori.type === 'ref') { // surprise .. need to investigate further ..
@@ -1333,18 +1356,40 @@ mec.view.vector = {
     init(model) {
         if (typeof this.p === 'string')
             this.p = model.nodeById(this.p);
-        if (this.value && this.p[this.value]) ; // node analysis value exists ? error handling required .. !
+//        if (this.value && this.p[this.value]) ; // node analysis value exists ? error handling required .. !
     },
     dependsOn(elem) {
         return this.p === elem;
     },
-    draw(g) {
-        g.vec({ x1:()=>this.p.x,
-                y1:()=>this.p.y,
-                x2:()=>this.p.x+this.p[this.value]().x,
-                y2:()=>this.p.y+this.p[this.value]().y,
-                ls:mec.velColor,
-                lw:1.5});
+    // interaction
+    get isSolid() { return false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
+    get endPoints() {
+        const scale = mec.aly[this.value].scl;
+        const v = this.p[this.value]();
+        const vabs = Math.hypot(v.y,v.x);
+        const vview = !mec.isEps(vabs) 
+                    ? mec.asympClamp(scale*vabs,25,150)
+                    : 0;
+        return { p1:this.p, 
+                 p2:{ x:this.p.x + v.x/vabs*vview, y:this.p.y + v.y/vabs*vview }
+        };
+    },
+    hitContour({x,y,eps}) {
+        const pts = this.endPoints;
+        return g2.isPntOnLin({x,y},pts.p1,pts.p2,eps);
+    },
+    g2() {
+        const pts = this.endPoints;
+//        console.log(pts.p1.x+' / '+pts.p2.x+' % '+pts.p1.y+' / '+pts.p2.y)
+        return g2().vec({x1:pts.p1.x, 
+                         y1:pts.p1.y, 
+                         x2:pts.p2.x,
+                         y2:pts.p2.y,
+                         ls:mec.color[this.value],
+                         lw:1.5,
+                         sh:this.sh
+        });
     }
 }
 /**
@@ -2195,12 +2240,10 @@ mec.model = {
         applyLoads() {
             // Apply node weight in case of gravity.
             for (const node of this.nodes) {
-                if (!node.base) {
-                    node.Qx = node.Qy = 0;
-                    if (this.hasGravity) {
-                        node.Qx = node.m*mec.from_N(this.gravity.x);
-                        node.Qy = node.m*mec.from_N(this.gravity.y);
-                    }
+                node.Qx = node.Qy = 0;
+                if (!node.base && this.hasGravity) {
+                    node.Qx = node.m*mec.from_N(this.gravity.x);
+                    node.Qy = node.m*mec.from_N(this.gravity.y);
                 }
             }
             // Apply external loads.
@@ -2313,11 +2356,11 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {
+        draw(g) {                                 // todo: draw all components via 'x.draw(g)' call ! 
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)
-                view.draw(g);
+                g.ins(view);
             for (const load of this.loads)
                 g.ins(load);
             for (const constraint of this.constraints)

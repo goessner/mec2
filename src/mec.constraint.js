@@ -325,6 +325,20 @@ mec.constraint = {
             }
         },
         post(dt) {
+            const impulse_r = this.lambda_r * dt,
+                  impulse_w = this.lambda_w * dt,
+                  w = this.w, cw = Math.cos(w), sw = Math.sin(w);
+            // apply radial impulse
+            this.p1.Qx -= -cw * this.lambda_r;
+            this.p1.Qy -= -sw * this.lambda_r;
+            this.p2.Qx -=  cw * this.lambda_r;
+            this.p2.Qy -=  sw * this.lambda_r;
+            // apply angular impulse
+            this.p1.Qx -=  sw * this.lambda_w;
+            this.p1.Qy -= -cw * this.lambda_w;
+            this.p2.Qx -= -sw * this.lambda_w;
+            this.p2.Qy -=  cw * this.lambda_w;
+
             this.lambda_r += this.dlambda_r;
             this.lambda_w += this.dlambda_w;
             if (this.ori.type === 'ref') { // surprise .. need to investigate further ..

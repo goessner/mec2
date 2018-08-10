@@ -202,6 +202,11 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 10/08/18
+
+* apply internal constraint forces to its nodes.
+* minor vector view bugs removed.
+
 # Changes 09/08/18
 
 * view container added to model.

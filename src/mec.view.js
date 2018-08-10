@@ -35,17 +35,39 @@ mec.view.vector = {
     init(model) {
         if (typeof this.p === 'string')
             this.p = model.nodeById(this.p);
-        if (this.value && this.p[this.value]) ; // node analysis value exists ? error handling required .. !
+//        if (this.value && this.p[this.value]) ; // node analysis value exists ? error handling required .. !
     },
     dependsOn(elem) {
         return this.p === elem;
     },
-    draw(g) {
-        g.vec({ x1:()=>this.p.x,
-                y1:()=>this.p.y,
-                x2:()=>this.p.x+this.p[this.value]().x,
-                y2:()=>this.p.y+this.p[this.value]().y,
-                ls:mec.velColor,
-                lw:1.5});
+    // interaction
+    get isSolid() { return false },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
+    get endPoints() {
+        const scale = mec.aly[this.value].scl;
+        const v = this.p[this.value]();
+        const vabs = Math.hypot(v.y,v.x);
+        const vview = !mec.isEps(vabs) 
+                    ? mec.asympClamp(scale*vabs,25,150)
+                    : 0;
+        return { p1:this.p, 
+                 p2:{ x:this.p.x + v.x/vabs*vview, y:this.p.y + v.y/vabs*vview }
+        };
+    },
+    hitContour({x,y,eps}) {
+        const pts = this.endPoints;
+        return g2.isPntOnLin({x,y},pts.p1,pts.p2,eps);
+    },
+    g2() {
+        const pts = this.endPoints;
+//        console.log(pts.p1.x+' / '+pts.p2.x+' % '+pts.p1.y+' / '+pts.p2.y)
+        return g2().vec({x1:pts.p1.x, 
+                         y1:pts.p1.y, 
+                         x2:pts.p2.x,
+                         y2:pts.p2.y,
+                         ls:mec.color[this.value],
+                         lw:1.5,
+                         sh:this.sh
+        });
     }
 }

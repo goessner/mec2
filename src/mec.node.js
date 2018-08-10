@@ -99,14 +99,14 @@ mec.node = {
                 delete this.usrDrag;  // avoid multiple evaluation .. !
             }
 */
-            // zero out velocity differences .. important !!
-            this.dxt = this.dyt = 0;
-
             // if applied forces are acting, set velocity diffs initially by forces.
+//console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
             if (this.Qx || this.Qy) {
                 this.dxt = this.Qx*this.im * dt;
                 this.dyt = this.Qy*this.im * dt;
             }
+            else
+                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
         },
         post(dt) {
             // symplectic euler ... partially
@@ -171,12 +171,12 @@ mec.node = {
                   xid = this.x + 3*this.r*loc[0], 
                   yid = this.y + 3*this.r*loc[1],
                   g = this.base 
-                    ? g2().beg({x:()=>this.x,y:()=>this.y,sh:()=>this.sh})
+                    ? g2().beg({x:this.x,y:this.y,sh:this.sh})
                           .cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
                           .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
                           .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"})
                           .end()
-                    : g2().cir({x:()=>this.x,y:()=>this.y,r:this.r,
+                    : g2().cir({x:this.x,y:this.y,r:this.r,
                                 ls:'#333',fs:'#eee',sh:()=>this.sh});
             if (mec.showNodeLabels)
                 g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});

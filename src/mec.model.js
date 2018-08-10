@@ -544,12 +544,10 @@ mec.model = {
         applyLoads() {
             // Apply node weight in case of gravity.
             for (const node of this.nodes) {
-                if (!node.base) {
-                    node.Qx = node.Qy = 0;
-                    if (this.hasGravity) {
-                        node.Qx = node.m*mec.from_N(this.gravity.x);
-                        node.Qy = node.m*mec.from_N(this.gravity.y);
-                    }
+                node.Qx = node.Qy = 0;
+                if (!node.base && this.hasGravity) {
+                    node.Qx = node.m*mec.from_N(this.gravity.x);
+                    node.Qy = node.m*mec.from_N(this.gravity.y);
                 }
             }
             // Apply external loads.
@@ -662,11 +660,11 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {
+        draw(g) {                                 // todo: draw all components via 'x.draw(g)' call ! 
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)
-                view.draw(g);
+                g.ins(view);
             for (const load of this.loads)
                 g.ins(load);
             for (const constraint of this.constraints)

@@ -63,10 +63,6 @@ itrMax: 256,
  * corrMax: fixed number of position correction steps.
  */
 corrMax: 64,
-/**
- * calculation target ['velocity'|'forces'], used for stopping iteration loop.
- */
-priority: 'velocity',
 /* graphics related */
 /**
  * place and show labels with elements
@@ -124,16 +120,29 @@ get selectedElmColor() { return this.darkmode ? 'yellow': 'blue' },
  * @return {string}
  */
 get txtColor() { return this.darkmode ? 'white' : 'black' },
-/**
- * color for velocity arrow (ls).
- * @return {string}
+/*
+ * colors for analyses
  */
-get velColor() { return this.darkmode ? 'lightblue' : 'mediumblue' },
-/**
- * color for acceleration arrow (ls).
- * @return {string}
- */
-get accColor() { return this.darkmode ? 'wheat' : 'saddlebrown' },
+color: {
+    /**
+     * color for velocity arrow (ls).
+     * @const
+     * @type {string}
+     */
+    get vel() { return mec.darkmode ? 'lightsteelblue' : 'steelblue' },
+    /**
+     * color for acceleration arrow (ls).
+     * @const
+     * @type {string}
+     */
+    get acc() { return mec.darkmode ? 'lightsalmon' : 'firebrick' },
+    /**
+     * color for acceleration arrow (ls).
+     * @const
+     * @type {string}
+     */
+    get force() { return mec.darkmode ? 'wheat' : 'saddlebrown' },
+},
 
 /**
  * default gravity.
@@ -141,6 +150,14 @@ get accColor() { return this.darkmode ? 'wheat' : 'saddlebrown' },
  * @type {object}
  */
 gravity: {x:0,y:-10,active:false},
+/*
+ * analysing values
+ */
+aly: {
+    vel: { get scl() {return 40*mec.m_u}, minlen:25, maxlen:150 },
+    acc: { get scl() {return  10*mec.m_u}, minlen:25, maxlen:150 },
+    force: { get scl() {return  5*mec.m_u}, minlen:25, maxlen:150 },
+},
 /**
  * unit specifiers and relations
  */
@@ -210,14 +227,6 @@ to_kgm2(x) { return x*mec.m_u*mec.m_u; },
  * @return {number} Value in [kgu^2]
  */
 from_kgm2(x) { return x/mec.m_u/mec.m_u; },
-/*
- * scale factors
- */
-velScale: 1/4, 
-/*
- * scale factors
- */
-accScale: 1/10, 
 /**
  * Helper functions
  */
@@ -255,7 +264,7 @@ clamp(val,lo,hi) { return Math.min(Math.max(val, lo), hi); },
  * @returns {number} Value within the bounds.
  */
 asympClamp(val,lo,hi) {
-    const dq = 0.5*(hi - lo);
+    const dq = hi - lo;
     return dq ? lo + 0.5*dq + Math.tanh(((Math.min(Math.max(val, lo), hi) - lo)/dq - 0.5)*5)*0.5*dq : lo;
 },
 /**
