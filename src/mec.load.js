@@ -59,9 +59,9 @@ mec.load.force = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"id":'+this.id+'","p":'+this.p.id
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
-                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
                 + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
                 + ' }';
     },
@@ -166,7 +166,7 @@ mec.load.spring = {
         return this.p1 === elem || this.p2 === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"id":'+this.id+'","p1":'+this.p1.id+',"p2":'+this.p2.id
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"'
                 + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
                 + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
                 + ' }';

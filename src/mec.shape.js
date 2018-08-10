@@ -42,7 +42,7 @@ mec.shape.fix = {
         return this.p === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"p":'+this.p.id
+        return '{ "type":"'+this.type+'","p":'+this.p.id
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
     },
@@ -76,7 +76,7 @@ mec.shape.flt = {
         return this.p === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"p":'+this.p.id
+        return '{ "type":"'+this.type+'","p":'+this.p.id
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
     },
@@ -119,7 +119,7 @@ mec.shape.slider = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"p":'+this.p.id
+        return '{ "type":"'+this.type+'","p":'+this.p.id
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":'+this.wref.id : '')
                 + ' }';
@@ -161,7 +161,7 @@ mec.shape.bar = {
         return this.p1 === elem || this.p2 === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"p1":'+this.p1.id+',"p2":'+this.p2.id+' }';
+        return '{ "type":"'+this.type+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'" }';
     },
     toJSON() {
         const obj = {
@@ -202,7 +202,7 @@ mec.shape.beam = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"p":'+this.p.id+',"wref":'+this.wref.id+',"len":'+this.len+' }';
+        return '{ "type":"'+this.type+'","p":"'+this.p.id+'","wref":"'+this.wref.id+'","len":"'+this.len+'" }';
     },
     toJSON() {
         const obj = {
@@ -243,8 +243,8 @@ mec.shape.wheel = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"p":'+this.p.id+',"w0":'+this.w0+',"r":'+this.r
-                + (this.wref ? ',"wref":'+this.wref.id : '')
+        return '{ "type":"'+this.type+'","p":"'+this.p.id+'","w0":'+this.w0+',"r":'+this.r
+                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ' }';
     },
     toJSON() {
@@ -304,7 +304,7 @@ mec.shape.img = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"uri":'+this.uri+',"p":'+this.p.id
+        return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":'+this.p.id+'"'
                 + (this.wref ? ',"wref":'+this.wref.id : '')
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')

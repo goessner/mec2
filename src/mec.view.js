@@ -41,7 +41,7 @@ mec.view.vector = {
         return this.p === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+',"id":'+this.id+',"p":'+this.p.id
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
                 + (this.value ? ',"value":'+this.value : '')
                 + ' }';
     },
