@@ -154,9 +154,17 @@ gravity: {x:0,y:-10,active:false},
  * analysing values
  */
 aly: {
-    vel: { get scl() {return 40*mec.m_u}, minlen:25, maxlen:150 },
-    acc: { get scl() {return  10*mec.m_u}, minlen:25, maxlen:150 },
-    force: { get scl() {return  5*mec.m_u}, minlen:25, maxlen:150 },
+    mass: { get scl() { return 1}, type:'num', name:'m', unit:'kg' },
+    vel: { get scl() {return mec.m_u}, type:'vec', name:'v', unit:'m/s', get drwscl() {return 40*mec.m_u} },
+    acc: { get scl() {return mec.m_u}, type:'vec', name:'a', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },
+    w: { get scl() { return 180/Math.PI}, type:'num', name:'φ', unit:'°' },
+    wt: { get scl() { return 1}, type:'num', name:'ω', unit:'rad/s' },
+    wtt: { get scl() { return 1}, type:'num', name:'α', unit:'rad/s^2' },
+    force: { get scl() {return mec.m_u}, type:'vec', name:'F', unit:'N', get drwscl() {return 5*mec.m_u} },
+    velAbs: { get scl() {return mec.m_u}, type:'num', name:'v', unit:'m/s' },
+    accAbs: { get scl() {return mec.m_u}, type:'num', name:'a', unit:'m/s' },
+    forceAbs: { get scl() {return mec.m_u}, type:'num', name:'F', unit:'N' },
+    moment: { get scl() {return mec.m_u**2}, type:'num', name:'M', unit:'Nm' },
 },
 /**
  * unit specifiers and relations
@@ -392,14 +400,14 @@ mec.node = {
             }
 */
             // if applied forces are acting, set velocity diffs initially by forces.
-//console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
-if (this.Qx || this.Qy) {
-    this.dxt = this.Qx*this.im * dt;
-    this.dyt = this.Qy*this.im * dt;
-}
-else
-    this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
-},
+            //console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
+            if (this.Qx || this.Qy) {
+                this.dxt = this.Qx*this.im * dt;
+                this.dyt = this.Qy*this.im * dt;
+            }
+            else
+                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
+        },
         post(dt) {
             // symplectic euler ... partially
             this.xt += this.dxt;
@@ -427,13 +435,15 @@ else
 
             return obj;
         },
-        // analysis methods
-        force() { return {x:this.Qx,y:this.Qy}; },
-        vel() { return {x:this.xt,y:this.yt}; },
-        acc() { return {x:this.xtt,y:this.ytt}; },
-        forceAbs() { return Math.hypot(this.Qx,this.Qy); },
-        velAbs() { return Math.hypot(this.xt,this.yt); },
-        accAbs() { return Math.hypot(this.xtt,this.ytt); },
+
+        // analysis getters
+        get force() { return {x:this.Qx,y:this.Qy}; },
+        get vel() { return {x:this.xt,y:this.yt}; },
+        get acc() { return {x:this.xtt,y:this.ytt}; },
+        get forceAbs() { return Math.hypot(this.Qx,this.Qy); },
+        get velAbs() { return Math.hypot(this.xt,this.yt); },
+        get accAbs() { return Math.hypot(this.xtt,this.ytt); },
+
         // interaction
         get isSolid() { return true },
         get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
@@ -575,16 +585,17 @@ mec.constraint = {
             return (this.ori.type === 'free' ? 1 : 0) + 
                    (this.len.type === 'free' ? 1 : 0);
         },
+
+        // analysis getters
         /**
          * Force value in [N]
          */
-        get force() { 
-            return mec.to_N(-this.lambda_r);
-        },
+        get forceAbs() { return -this.lambda_r; },
         /**
          * Moment value in [Nm]
          */
-        get moment() { return mec.to_Nm(-this.lambda_w * this.r); },
+        get moment() { return -this.lambda_w * this.r; },
+
         /**
          * Check constraint for dependencies on another element.
          * @method
@@ -1386,7 +1397,7 @@ mec.load.spring = {
  * @method
  * @param {object} - plain javascript shape object.
  * @property {string} id - view id.
- * @property {string} type - view type ['vector','trace'].
+ * @property {string} type - view type ['vector','trace','info'].
  */
 mec.view = {
     extend(view) {
@@ -1423,8 +1434,8 @@ mec.view.vector = {
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : false; },
     get endPoints() {
-        const scale = mec.aly[this.value].scl;
-        const v = this.p[this.value]();
+        const scale = mec.aly[this.value].drwscl;
+        const v = this.p[this.value];
         const vabs = Math.hypot(v.y,v.x);
         const vview = !mec.isEps(vabs) 
                     ? mec.asympClamp(scale*vabs,25,150)
@@ -1439,7 +1450,6 @@ mec.view.vector = {
     },
     g2() {
         const pts = this.endPoints;
-//        console.log(pts.p1.x+' / '+pts.p2.x+' % '+pts.p1.y+' / '+pts.p2.y)
         return g2().vec({x1:pts.p1.x, 
                          y1:pts.p1.y, 
                          x2:pts.p2.x,
@@ -1492,6 +1502,41 @@ mec.view.trace = {
                          fs: this.fill || 'transparent',
                          sh:this.sh
         });
+    }
+}
+
+/**
+ * @param {object} - info view.
+ * @property {string} elem - referenced elem id.
+ * @property {string} value - elem value to view.
+ * @property {string} [name] - elem value name to show.
+ */
+mec.view.info = {
+    constructor() {}, // always parameterless .. !
+    init(model) {
+        if (typeof this.elem === 'string')
+            this.elem = model.elementById(this.elem);
+    },
+    dependsOn(elem) {
+        return this.elem === elem;
+    },
+    reset() {},
+    get hasInfo() {
+        return this.elem.state === g2.OVER;  // exclude: OVER & DRAG
+    },
+    infoString() {
+        if (this.value in this.elem) {
+            const val = this.elem[this.value];
+            const aly = mec.aly[this.value];
+            const type = aly.type;
+            const usrval = q => (q*aly.scl).toPrecision(3);
+
+            return (this.name||aly.name||this.value) + ': '
+                 + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.x)+'}'
+                                   : usrval(val))
+                 + ' ' + aly.unit;
+        }
+        return '?';
     }
 }
 /**
@@ -1865,6 +1910,23 @@ mec.model = {
         constructor() { // always parameterless .. !
             this.state = {dirty:true,valid:true,direc:1,itrpos:0,itrvel:0};
             this.timer = {t:0,dt:1/60};
+            // create empty containers for all elements
+            if (!this.nodes) this.nodes = [];
+            if (!this.constraints) this.constraints = [];
+            if (!this.loads) this.loads = [];
+            if (!this.views) this.views = [];
+            if (!this.shapes) this.shapes = [];
+            // extending elements by their prototypes
+            for (const node of this.nodes)
+                mec.node.extend(node);
+            for (const constraint of this.constraints)
+                mec.constraint.extend(constraint);
+            for (const load of this.loads)
+                mec.load.extend(load)
+            for (const view of this.views)
+                mec.view.extend(view)
+            for (const shape of this.shapes)
+                mec.shape.extend(shape)
         },
         /**
          * Init model
@@ -1872,27 +1934,23 @@ mec.model = {
          * @returns {object} model
          */
         init() {
-            if (!this.nodes) this.nodes = [];
-            for (const node of this.nodes)  // do for all nodes ...
-                mec.node.extend(node).init(this);
-            if (!this.constraints) this.constraints = [];
-            for (const constraint of this.constraints)  // do for all constraints ...
-                if (!constraint.initialized)
-                    mec.constraint.extend(constraint).init(this);
-            if (!this.loads) this.loads = [];
-            for (const load of this.loads)  // do for all loads ...
-                mec.load.extend(load).init(this);
-            if (!this.views) this.views = [];
-            for (const view of this.views)  // do for all views ...
-                mec.view.extend(view).init(this);
-            if (!this.shapes) this.shapes = [];
-            for (const shape of this.shapes)  // do for all shapes ...
-                mec.shape.extend(shape).init(this);
-
             if (this.gravity === true)
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
+
+            for (const node of this.nodes)
+                node.init(this);
+            for (const constraint of this.constraints)
+                if (!constraint.initialized)  // possibly already uinitialized by referencing .. !
+                    constraint.init(this);
+            for (const load of this.loads)
+                load.init(this);
+            for (const view of this.views)
+                view.init(this);
+            for (const shape of this.shapes)
+                shape.init(this);
+
 
             return this;
         },
@@ -1984,6 +2042,12 @@ mec.model = {
         set dirty(q) { this.state.dirty = q; },
         get valid() { return this.state.valid; },
         set valid(q) { this.state.valid = q; },
+        get info() {
+            for (const view of this.views)
+                if (view.hasInfo)
+                    return view.infoString();
+            return false; 
+        },
         /**
          * Number of positional iterations.
          * @type {number}
@@ -2083,6 +2147,17 @@ mec.model = {
             return deps;
         },
         /**
+         * Get element by id.
+         * @method
+         * @param {string} id - element id.
+         */
+        elementById(id) {
+            return this.nodeById(id)
+                || this.constraintById(id)
+                || this.loadById(id)
+                || this.viewById(id);
+        },
+            /**
          * Purge all elements in an element dictionary.
          * @method
          * @param {object} elems - element dictionary.
@@ -2453,9 +2528,7 @@ mec.model = {
          */
         velStep() {
             let valid = true;  // pre-assume valid constraints velocities ...
-//            console.log('dt='+this.dt)
             for (const constraint of this.constraints) {
-//                console.log(constraint.vel(this.timer.dt)+ '&&'+ valid)
                 valid = constraint.velStep(this.timer.dt) && valid;
             }
             return valid;

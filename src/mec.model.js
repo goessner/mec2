@@ -31,6 +31,23 @@ mec.model = {
         constructor() { // always parameterless .. !
             this.state = {dirty:true,valid:true,direc:1,itrpos:0,itrvel:0};
             this.timer = {t:0,dt:1/60};
+            // create empty containers for all elements
+            if (!this.nodes) this.nodes = [];
+            if (!this.constraints) this.constraints = [];
+            if (!this.loads) this.loads = [];
+            if (!this.views) this.views = [];
+            if (!this.shapes) this.shapes = [];
+            // extending elements by their prototypes
+            for (const node of this.nodes)
+                mec.node.extend(node);
+            for (const constraint of this.constraints)
+                mec.constraint.extend(constraint);
+            for (const load of this.loads)
+                mec.load.extend(load)
+            for (const view of this.views)
+                mec.view.extend(view)
+            for (const shape of this.shapes)
+                mec.shape.extend(shape)
         },
         /**
          * Init model
@@ -38,27 +55,23 @@ mec.model = {
          * @returns {object} model
          */
         init() {
-            if (!this.nodes) this.nodes = [];
-            for (const node of this.nodes)  // do for all nodes ...
-                mec.node.extend(node).init(this);
-            if (!this.constraints) this.constraints = [];
-            for (const constraint of this.constraints)  // do for all constraints ...
-                if (!constraint.initialized)
-                    mec.constraint.extend(constraint).init(this);
-            if (!this.loads) this.loads = [];
-            for (const load of this.loads)  // do for all loads ...
-                mec.load.extend(load).init(this);
-            if (!this.views) this.views = [];
-            for (const view of this.views)  // do for all views ...
-                mec.view.extend(view).init(this);
-            if (!this.shapes) this.shapes = [];
-            for (const shape of this.shapes)  // do for all shapes ...
-                mec.shape.extend(shape).init(this);
-
             if (this.gravity === true)
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
+
+            for (const node of this.nodes)
+                node.init(this);
+            for (const constraint of this.constraints)
+                if (!constraint.initialized)  // possibly already uinitialized by referencing .. !
+                    constraint.init(this);
+            for (const load of this.loads)
+                load.init(this);
+            for (const view of this.views)
+                view.init(this);
+            for (const shape of this.shapes)
+                shape.init(this);
+
 
             return this;
         },
@@ -150,6 +163,12 @@ mec.model = {
         set dirty(q) { this.state.dirty = q; },
         get valid() { return this.state.valid; },
         set valid(q) { this.state.valid = q; },
+        get info() {
+            for (const view of this.views)
+                if (view.hasInfo)
+                    return view.infoString();
+            return false; 
+        },
         /**
          * Number of positional iterations.
          * @type {number}
@@ -249,6 +268,17 @@ mec.model = {
             return deps;
         },
         /**
+         * Get element by id.
+         * @method
+         * @param {string} id - element id.
+         */
+        elementById(id) {
+            return this.nodeById(id)
+                || this.constraintById(id)
+                || this.loadById(id)
+                || this.viewById(id);
+        },
+            /**
          * Purge all elements in an element dictionary.
          * @method
          * @param {object} elems - element dictionary.
@@ -619,9 +649,7 @@ mec.model = {
          */
         velStep() {
             let valid = true;  // pre-assume valid constraints velocities ...
-//            console.log('dt='+this.dt)
             for (const constraint of this.constraints) {
-//                console.log(constraint.vel(this.timer.dt)+ '&&'+ valid)
                 valid = constraint.velStep(this.timer.dt) && valid;
             }
             return valid;

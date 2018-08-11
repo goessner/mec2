@@ -202,6 +202,12 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 11/08/18
+
+* static `mec.aly.*` for processing `view.info` added.
+* `view.info` added.
+* `model.elementById` added.
+
 # Changes 10/08/18
 
 * `trace` view added.

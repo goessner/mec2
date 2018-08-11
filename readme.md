@@ -38,6 +38,10 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 # Change Log
 
+### 0.7.9 - 2018-08-11
+
+* info view implemented.
+
 ### 0.7.8 - 2018-08-10
 
 * trace view implemented.

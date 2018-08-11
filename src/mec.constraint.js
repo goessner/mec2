@@ -94,16 +94,17 @@ mec.constraint = {
             return (this.ori.type === 'free' ? 1 : 0) + 
                    (this.len.type === 'free' ? 1 : 0);
         },
+
+        // analysis getters
         /**
          * Force value in [N]
          */
-        get force() { 
-            return mec.to_N(-this.lambda_r);
-        },
+        get forceAbs() { return -this.lambda_r; },
         /**
          * Moment value in [Nm]
          */
-        get moment() { return mec.to_Nm(-this.lambda_w * this.r); },
+        get moment() { return -this.lambda_w * this.r; },
+
         /**
          * Check constraint for dependencies on another element.
          * @method

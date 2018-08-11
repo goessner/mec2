@@ -100,14 +100,14 @@ mec.node = {
             }
 */
             // if applied forces are acting, set velocity diffs initially by forces.
-//console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
-if (this.Qx || this.Qy) {
-    this.dxt = this.Qx*this.im * dt;
-    this.dyt = this.Qy*this.im * dt;
-}
-else
-    this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
-},
+            //console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
+            if (this.Qx || this.Qy) {
+                this.dxt = this.Qx*this.im * dt;
+                this.dyt = this.Qy*this.im * dt;
+            }
+            else
+                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
+        },
         post(dt) {
             // symplectic euler ... partially
             this.xt += this.dxt;
@@ -135,13 +135,15 @@ else
 
             return obj;
         },
-        // analysis methods
-        force() { return {x:this.Qx,y:this.Qy}; },
-        vel() { return {x:this.xt,y:this.yt}; },
-        acc() { return {x:this.xtt,y:this.ytt}; },
-        forceAbs() { return Math.hypot(this.Qx,this.Qy); },
-        velAbs() { return Math.hypot(this.xt,this.yt); },
-        accAbs() { return Math.hypot(this.xtt,this.ytt); },
+
+        // analysis getters
+        get force() { return {x:this.Qx,y:this.Qy}; },
+        get vel() { return {x:this.xt,y:this.yt}; },
+        get acc() { return {x:this.xtt,y:this.ytt}; },
+        get forceAbs() { return Math.hypot(this.Qx,this.Qy); },
+        get velAbs() { return Math.hypot(this.xt,this.yt); },
+        get accAbs() { return Math.hypot(this.xtt,this.ytt); },
+
         // interaction
         get isSolid() { return true },
         get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
