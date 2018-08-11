@@ -204,6 +204,7 @@ depending on its `shape.type` shapes become one of these objects:
 
 # Changes 11/08/18
 
+* decouple element prototype extension and initialization.
 * static `mec.aly.*` for processing `view.info` added.
 * `view.info` added.
 * `model.elementById` added.
