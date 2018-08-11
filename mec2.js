@@ -1209,7 +1209,7 @@ mec.load.force = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":'+this.p.id+'"'
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
                 + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
@@ -1583,7 +1583,7 @@ mec.shape.fix = {
         return this.p === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":'+this.p.id
+        return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
     },
@@ -1617,7 +1617,7 @@ mec.shape.flt = {
         return this.p === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":'+this.p.id
+        return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
     },
@@ -1660,9 +1660,9 @@ mec.shape.slider = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":'+this.p.id
+        return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
-                + (this.wref ? ',"wref":'+this.wref.id : '')
+                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ' }';
     },
     toJSON() {
@@ -1784,7 +1784,8 @@ mec.shape.wheel = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":"'+this.p.id+'","w0":'+this.w0+',"r":'+this.r
+        return '{ "type":"'+this.type+'","p":"'+this.p.id+'","r":'+this.r
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ' }';
     },
@@ -1845,8 +1846,8 @@ mec.shape.img = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":'+this.p.id+'"'
-                + (this.wref ? ',"wref":'+this.wref.id : '')
+        return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":"'+this.p.id+'"'
+                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
                 + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
