@@ -180,7 +180,7 @@ mec.node = {
                           .end()
                     : g2().cir({x:this.x,y:this.y,r:this.r,
                                 ls:'#333',fs:'#eee',sh:()=>this.sh});
-            if (mec.showNodeLabels)
+            if (this.model.labels.nodes)
                 g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
             return g;
         }

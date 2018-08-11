@@ -65,7 +65,17 @@ itrMax: 256,
 corrMax: 64,
 /* graphics related */
 /**
- * place and show labels with elements
+ * flags for showing labels.
+ * @const
+ * @type {object}
+ */
+labels: {
+    nodes: false,
+    constraints: true,
+    loads: true
+},
+/**
+ * place and show labels with elements (depricated !!) 
  */
 showNodeLabels: false,
 showConstraintLabels: true,

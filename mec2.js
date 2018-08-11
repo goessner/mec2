@@ -65,7 +65,17 @@ itrMax: 256,
 corrMax: 64,
 /* graphics related */
 /**
- * place and show labels with elements
+ * flags for showing labels.
+ * @const
+ * @type {object}
+ */
+labels: {
+    nodes: false,
+    constraints: true,
+    loads: true
+},
+/**
+ * place and show labels with elements (depricated !!) 
  */
 showNodeLabels: false,
 showConstraintLabels: true,
@@ -480,7 +490,7 @@ mec.node = {
                           .end()
                     : g2().cir({x:this.x,y:this.y,r:this.r,
                                 ls:'#333',fs:'#eee',sh:()=>this.sh});
-            if (mec.showNodeLabels)
+            if (this.model.labels.nodes)
                 g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
             return g;
         }
@@ -1010,18 +1020,18 @@ mec.constraint = {
                             .drw({d:mec.constraint.arrow[type],lsh:true})
                           .end();
 
-            if (mec.showConstraintLabels) {
+            if (this.model.labels.constraints) {
                 let idstr = id || '?', cw = Math.cos(w), sw = Math.sin(w),
                       xid = p1.x + 20*cw - 10*sw, 
                       yid = p1.y + 20*sw + 10*cw;
-                if (this.ori.type === 'ref') {
-                    idstr += '('+ this.ori.ref.id+')';
+                if (this.ori.type === 'ref' || this.len.type === 'ref') {
+                    idstr += '('+ (this.ori.type === 'ref' ? this.ori.ref.id : this.len.ref.id) +')';
                     xid -= 3*sw;
                     yid += 3*cw;
-                }  
+                }
                 g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle', ls:mec.txtColor})
             }
-            
+
             return g;
         }
     },
@@ -1274,7 +1284,7 @@ mec.load.force = {
                             lc:'round',sh:()=>this.sh,fs:'@ls'})
                       .drw({d:mec.load.force.arrow,lsh:true})
                       .end();
-        if (mec.showLoadLabels)
+        if (this.model.labels.loads)
             g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
         return g;
     },
@@ -1497,7 +1507,7 @@ mec.view.trace = {
     g2() {
         return g2().ply({pts:this.pts,
                          format:'{x,y}',
-                         ls:'navy',
+                         ls: this.stroke || 'navy',
                          lw:1.5,
                          fs: this.fill || 'transparent',
                          sh:this.sh
@@ -1896,7 +1906,8 @@ mec.shape.img = {
  * @returns {object} model object.
  * @param {object} - plain javascript model object.
  * @property {string} id - model id.
- * @property {boolean|object} gravity - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
+ * @property {boolean|object} [gravity] - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
+ * @property {object} [labels] - user specification of labels to show `default={nodes:false,constraints:true,loads:true}`.
  * @property {array} nodes - Array of node objects.
  * @property {array} constraints - Array of constraint objects.
  * @property {array} shapes - Array of shape objects.
@@ -1939,6 +1950,8 @@ mec.model = {
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
+
+            this.labels = Object.assign({},mec.labels,this.labels||null);
 
             for (const node of this.nodes)
                 node.init(this);

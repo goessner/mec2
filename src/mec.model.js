@@ -16,7 +16,8 @@
  * @returns {object} model object.
  * @param {object} - plain javascript model object.
  * @property {string} id - model id.
- * @property {boolean|object} gravity - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
+ * @property {boolean|object} [gravity] - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
+ * @property {object} [labels] - user specification of labels to show `default={nodes:false,constraints:true,loads:true}`.
  * @property {array} nodes - Array of node objects.
  * @property {array} constraints - Array of constraint objects.
  * @property {array} shapes - Array of shape objects.
@@ -59,6 +60,8 @@ mec.model = {
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
+
+            this.labels = Object.assign({},mec.labels,this.labels||null);
 
             for (const node of this.nodes)
                 node.init(this);

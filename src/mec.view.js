@@ -113,7 +113,7 @@ mec.view.trace = {
     g2() {
         return g2().ply({pts:this.pts,
                          format:'{x,y}',
-                         ls:'navy',
+                         ls: this.stroke || 'navy',
                          lw:1.5,
                          fs: this.fill || 'transparent',
                          sh:this.sh
