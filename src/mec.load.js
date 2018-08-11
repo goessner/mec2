@@ -59,7 +59,7 @@ mec.load.force = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":'+this.p.id+'"'
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
                 + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
