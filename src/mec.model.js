@@ -268,7 +268,6 @@ mec.model = {
             for (const shape of this.shapes)
                 if (shape.dependsOn(elem))
                     deps.shapes.push(shape);
-console.log(deps)
             return deps;
         },
             /**
