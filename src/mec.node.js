@@ -84,6 +84,9 @@ mec.node = {
             // symplectic euler ... partially
             this.x += this.model.direc*this.xt*dt;
             this.y += this.model.direc*this.yt*dt;
+            // position verlet  ... just for investigating in future  
+//            this.x += this.model.direc*(this.xt - 0.5*this.dxt)*dt;
+//            this.y += this.model.direc*(this.yt - 0.5*this.dyt)*dt;
 /*
             if (this.usrDrag) {  // node throwing by user occured .. !
                 const xt = this.usrDrag.dx / this.usrDrag.dt*1000,

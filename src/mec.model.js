@@ -249,7 +249,7 @@ mec.model = {
         /**
          * Get dependents of a specified element.
          * As a result a dictionary object containing dependent elements is created:
-         * `{constraints:[], loads:[], shapes:[]}`
+         * `{constraints:[], loads:[], shapes:[], views:[]}`
          * @method
          * @param {object} elem - element.
          * @returns {object} dictionary object containing dependent elements.
@@ -268,18 +268,8 @@ mec.model = {
             for (const shape of this.shapes)
                 if (shape.dependsOn(elem))
                     deps.shapes.push(shape);
+console.log(deps)
             return deps;
-        },
-        /**
-         * Get element by id.
-         * @method
-         * @param {string} id - element id.
-         */
-        elementById(id) {
-            return this.nodeById(id)
-                || this.constraintById(id)
-                || this.loadById(id)
-                || this.viewById(id);
         },
             /**
          * Purge all elements in an element dictionary.
@@ -293,8 +283,19 @@ mec.model = {
                 this.loads.splice(this.loads.indexOf(load),1);
             for (const view of elems.views)
                 this.views.splice(this.views.indexOf(view),1);
-            for (const shape of this.shapes)
+            for (const shape of elems.shapes)
                 this.shapes.splice(this.shapes.indexOf(shape),1);
+        },
+        /**
+         * Get element by id.
+         * @method
+         * @param {string} id - element id.
+         */
+        elementById(id) {
+            return this.nodeById(id)
+                || this.constraintById(id)
+                || this.loadById(id)
+                || this.viewById(id);
         },
         /**
          * Add node to model.
