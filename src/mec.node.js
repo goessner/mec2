@@ -50,6 +50,7 @@ mec.node = {
         get ytcur() { return this.yt + this.dyt },
         // inverse mass
 //        get im() { return 1/this.m },
+        get type() { return 'node' },
         get dof() { return this.m === Number.POSITIVE_INFINITY ? 0 : 2 },
         /**
          * Test, if node is significantly moving 
