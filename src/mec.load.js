@@ -66,22 +66,6 @@ mec.load.force = {
                 + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
                 + ' }';
     },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            id: this.id,
-            p: this.p.id
-        };
-
-        if (this.w0 && this.w0 > 0.0001) // ~0.006°
-            obj.w0 = this.w0;
-        if (this.wref)
-            obj.wref = this.wref.id;
-        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)
-            obj.value = mec.to_N(this.value);
-
-        return obj;
-    },
 
  // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
@@ -171,21 +155,6 @@ mec.load.spring = {
                 + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
                 + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
                 + ' }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            id: this.id,
-            p1: this.p1.id,
-            p2: this.p2.id
-        };
-
-        if (this.k && !(mec.to_N_m(this.k) === 0.01))
-            obj.k = mec.to_N_m(this.k);
-        if (this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001)
-            obj.len0 = this.len0;
-
-        return obj;
     },
 
     // cartesian components

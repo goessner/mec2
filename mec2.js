@@ -436,19 +436,6 @@ mec.node = {
                  + (this.idloc ? ',"idloc":"'+this.idloc+'"' : '')
                  + ' }';
         },
-        toJSON() {
-            const obj = {
-                id: this.id,
-                x: this.x,
-                y: this.y
-            };
-            if (this.base)
-                obj.base = true;
-            if (this.idloc)
-                obj.idloc = this.idloc;
-
-            return obj;
-        },
 
         // analysis getters
         get force() { return {x:this.Qx,y:this.Qy}; },
@@ -831,9 +818,7 @@ mec.constraint = {
             }
         },
         post(dt) {
-            const impulse_r = this.lambda_r * dt,
-                  impulse_w = this.lambda_w * dt,
-                  w = this.w, cw = Math.cos(w), sw = Math.sin(w);
+            const w = this.w, cw = Math.cos(w), sw = Math.sin(w);
             // apply radial impulse
             this.p1.Qx -= -cw * this.lambda_r;
             this.p1.Qy -= -sw * this.lambda_r;
@@ -971,39 +956,6 @@ mec.constraint = {
 
             return jsonString;
         },
-        toJSON() {
-            const obj = {
-                id: this.id,
-                p1: this.p1.id,
-                p2: this.p2.id
-            };
-
-            if (this.len)
-                obj.len = { type: this.len.type };
-            if (this.len.type === 'ref')
-                obj.len.ref = this.len.ref.id;
-            if (this.ori.type === 'drive') {
-                obj.len.func = this.len.func;
-                obj.len.Dt = this.len.Dt;
-                obj.len.Dw = this.len.Dw;
-                obj.len.input = this.len.input;
-                obj.len.output = this.len.output;
-            };
-
-            if (this.ori)
-                obj.ori = { type: this.ori.type };
-            if (this.ori.type === 'ref')
-                obj.ori.ref = this.ori.ref.id;
-            if (this.ori.type === 'drive') {
-                obj.ori.func = this.ori.func;
-                obj.ori.Dt = this.ori.Dt;
-                obj.ori.Dw = this.ori.Dw;
-                obj.ori.input = this.ori.input;
-                obj.ori.output = this.ori.output;
-            };
-
-            return obj;
-        },
         // interaction
         get isSolid() { return false },
         get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
@@ -1029,7 +981,12 @@ mec.constraint = {
                       xid = p1.x + 20*cw - 10*sw, 
                       yid = p1.y + 20*sw + 10*cw;
                 if (this.ori.type === 'ref' || this.len.type === 'ref') {
-                    idstr += '('+ (this.ori.type === 'ref' ? this.ori.ref.id : this.len.ref.id) +')';
+                    const comma = this.ori.type === 'ref' && this.len.type === 'ref' ? ',' : '';
+                    idstr += '('
+                          +  (this.ori.type === 'ref' ? this.ori.ref.id : '')
+                          +  comma
+                          +  (this.len.type === 'ref' ? this.len.ref.id : '')
+                          +')';
                     xid -= 3*sw;
                     yid += 3*cw;
                 }
@@ -1230,22 +1187,6 @@ mec.load.force = {
                 + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
                 + ' }';
     },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            id: this.id,
-            p: this.p.id
-        };
-
-        if (this.w0 && this.w0 > 0.0001) // ~0.006°
-            obj.w0 = this.w0;
-        if (this.wref)
-            obj.wref = this.wref.id;
-        if (this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001)
-            obj.value = mec.to_N(this.value);
-
-        return obj;
-    },
 
  // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
@@ -1335,21 +1276,6 @@ mec.load.spring = {
                 + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
                 + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
                 + ' }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            id: this.id,
-            p1: this.p1.id,
-            p2: this.p2.id
-        };
-
-        if (this.k && !(mec.to_N_m(this.k) === 0.01))
-            obj.k = mec.to_N_m(this.k);
-        if (this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001)
-            obj.len0 = this.len0;
-
-        return obj;
     },
 
     // cartesian components
@@ -1602,22 +1528,7 @@ mec.shape.fix = {
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
     },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            p: this.p.id,
-        };
-
-        if (this.w0 && this.w0 > 0.0001) // ~0.006°
-            obj.w0 = this.w0;
-
-        return obj;
-    },
-    draw(g) {
-        g.use({grp:'nodfix',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
-    }
-}
-
+},
 /**
  * @param {object} - floating node shape.
  * @property {string} p - referenced node id for position.
@@ -1635,17 +1546,6 @@ mec.shape.flt = {
         return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            p: this.p.id,
-        };
-
-        if (this.w0 && this.w0 > 0.0001) // ~0.006°
-            obj.w0 = this.w0;
-
-        return obj;
     },
     draw(g) {
         g.use({grp:'nodflt',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
@@ -1680,19 +1580,6 @@ mec.shape.slider = {
                 + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ' }';
     },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            p: this.p.id,
-        };
-
-        if (this.w0 && this.w0 > 0.0001) // ~0.006°
-            obj.w0 = this.w0;
-        if (this.wref)
-            obj.wref = this.wref.id;
-
-        return obj;
-    },
     draw(g) {
         const w = this.wref ? ()=>this.wref.w : this.w0 || 0;
         g.beg({x:()=>this.p.x,y:()=>this.p.y,w})
@@ -1718,15 +1605,6 @@ mec.shape.bar = {
     },
     asJSON() {
         return '{ "type":"'+this.type+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'" }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            p1: this.p1.id,
-            p2: this.p2.id,
-        };
-
-        return obj;
     },
     draw(g) {
         const x1 = () => this.p1.x,
@@ -1759,16 +1637,6 @@ mec.shape.beam = {
     },
     asJSON() {
         return '{ "type":"'+this.type+'","p":"'+this.p.id+'","wref":"'+this.wref.id+'","len":"'+this.len+'" }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            p: this.p.id,
-            wref: this.wref.id,
-            len: this.len
-        };
-
-        return obj;
     },
     draw(g) {
         const x1 = () => this.p.x,
@@ -1803,19 +1671,6 @@ mec.shape.wheel = {
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ' }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            p: this.p.id,
-            w0: this.w0,
-            r: this.r
-        };
-
-        if (this.wref)
-            obj.wref = this.wref.id;
-
-        return obj;
     },
     draw(g) {
         const w = this.wref ? ()=>this.wref.w : this.w0 || 0, r = this.r, 
@@ -1868,26 +1723,6 @@ mec.shape.img = {
                 + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
                 + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')
                 + ' }';
-    },
-    toJSON() {
-        const obj = {
-            type: this.type,
-            uri: this.uri,
-            p: this.p.id
-        };
-
-        if (this.wref)
-            obj.wref = this.wref.id;
-        if (this.w0 && this.w0 > 0.0001) // ~0.006°
-            obj.w0 = this.w0;
-        if (this.xoff && Math.abs(this.xoff) > 0.0001)
-            obj.xoff = this.xoff;
-        if (this.yoff && Math.abs(this.yoff) > 0.0001)
-            obj.yoff = this.yoff;
-        if (this.scl && Math.abs(this.scl - 1) > 0.0001)
-            obj.scl = this.scl;
-
-        return obj;
     },
     draw(g) {
         const w0 = this.w0 || 0, w = this.wref ? ()=>this.wref.w + w0 : w0; 
@@ -2435,51 +2270,6 @@ mec.model = {
                       + '}';
 
             return str;
-        },
-        /**
-         * Return a canonical JSON-representation of the model
-         * @method
-         * @returns {object} model as JSON.
-         */
-        toJSON() {
-            const obj = {};
-
-            if (this.id)
-                obj.id = this.id;
-            obj.dirty = true; // needed?
-            if (this.dt)
-                obj.dt = this.dt;
-            obj.gravity = this.hasGravity ? true : false;
-
-            if (this.nodes && this.nodes.length > 0) {
-                const nodearr = [];
-                for (const node of this.nodes)
-                    nodearr.push(node.toJSON());
-                obj.nodes = nodearr;
-            };
-
-            if (this.constraints && this.constraints.length > 0) {
-                const constraintarr = [];
-                for (const constraint of this.constraints)
-                    constraintarr.push(constraint.toJSON());
-                obj.constraints = constraintarr;
-            };
-
-            if (this.loads && this.loads.length > 0) {
-                const loadarr = [];
-                for (const load of this.loads)
-                    loadarr.push(load.toJSON());
-                obj.loads = loadarr;
-            };
-
-            if (this.shapes && this.shapes.length > 0) {
-                const shapearr = [];
-                for (const shape of this.shapes)
-                    shapearr.push(shape.toJSON());
-                obj.shapes = shapearr;
-            };
-
-            return obj;
         },
         /**
          * Apply loads to their nodes.

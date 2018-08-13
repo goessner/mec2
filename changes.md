@@ -202,6 +202,10 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 13/08/18
+* Draw references bug resolved.
+* *.toJSON removed.
+
 # Changes 11/08/18
 * add `stroke` property to `mec.trace` elements.
 * changed source to current `mec.labels` convention.

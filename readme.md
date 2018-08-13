@@ -38,6 +38,10 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 # Change Log
 
+### 0.8.0 - 2018-08-13
+
+* `*.toJSON` removed.
+
 ### 0.7.9 - 2018-08-11
 
 * info view implemented.

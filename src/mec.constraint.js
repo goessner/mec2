@@ -326,9 +326,7 @@ mec.constraint = {
             }
         },
         post(dt) {
-            const impulse_r = this.lambda_r * dt,
-                  impulse_w = this.lambda_w * dt,
-                  w = this.w, cw = Math.cos(w), sw = Math.sin(w);
+            const w = this.w, cw = Math.cos(w), sw = Math.sin(w);
             // apply radial impulse
             this.p1.Qx -= -cw * this.lambda_r;
             this.p1.Qy -= -sw * this.lambda_r;
@@ -466,39 +464,6 @@ mec.constraint = {
 
             return jsonString;
         },
-        toJSON() {
-            const obj = {
-                id: this.id,
-                p1: this.p1.id,
-                p2: this.p2.id
-            };
-
-            if (this.len)
-                obj.len = { type: this.len.type };
-            if (this.len.type === 'ref')
-                obj.len.ref = this.len.ref.id;
-            if (this.ori.type === 'drive') {
-                obj.len.func = this.len.func;
-                obj.len.Dt = this.len.Dt;
-                obj.len.Dw = this.len.Dw;
-                obj.len.input = this.len.input;
-                obj.len.output = this.len.output;
-            };
-
-            if (this.ori)
-                obj.ori = { type: this.ori.type };
-            if (this.ori.type === 'ref')
-                obj.ori.ref = this.ori.ref.id;
-            if (this.ori.type === 'drive') {
-                obj.ori.func = this.ori.func;
-                obj.ori.Dt = this.ori.Dt;
-                obj.ori.Dw = this.ori.Dw;
-                obj.ori.input = this.ori.input;
-                obj.ori.output = this.ori.output;
-            };
-
-            return obj;
-        },
         // interaction
         get isSolid() { return false },
         get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
@@ -524,7 +489,12 @@ mec.constraint = {
                       xid = p1.x + 20*cw - 10*sw, 
                       yid = p1.y + 20*sw + 10*cw;
                 if (this.ori.type === 'ref' || this.len.type === 'ref') {
-                    idstr += '('+ (this.ori.type === 'ref' ? this.ori.ref.id : this.len.ref.id) +')';
+                    const comma = this.ori.type === 'ref' && this.len.type === 'ref' ? ',' : '';
+                    idstr += '('
+                          +  (this.ori.type === 'ref' ? this.ori.ref.id : '')
+                          +  comma
+                          +  (this.len.type === 'ref' ? this.len.ref.id : '')
+                          +')';
                     xid -= 3*sw;
                     yid += 3*cw;
                 }

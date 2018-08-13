@@ -126,19 +126,6 @@ mec.node = {
                  + (this.idloc ? ',"idloc":"'+this.idloc+'"' : '')
                  + ' }';
         },
-        toJSON() {
-            const obj = {
-                id: this.id,
-                x: this.x,
-                y: this.y
-            };
-            if (this.base)
-                obj.base = true;
-            if (this.idloc)
-                obj.idloc = this.idloc;
-
-            return obj;
-        },
 
         // analysis getters
         get force() { return {x:this.Qx,y:this.Qy}; },
