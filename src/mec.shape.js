@@ -46,6 +46,9 @@ mec.shape.fix = {
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ' }';
     },
+    draw(g) {
+        g.use({grp:'nodfix',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+    }
 },
 /**
  * @param {object} - floating node shape.
