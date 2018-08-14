@@ -202,6 +202,12 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 14/08/18
+* Add `idloc` property to `mec.constraint`. Value is 
+    * `left`  positiv (default)
+    * `right` negativ
+    * numeric value `[-1 .. 1]`
+
 # Changes 13/08/18
 * Draw references bug resolved.
 * *.toJSON removed.

@@ -16,6 +16,7 @@
  * @returns {object} constraint object.
  * @param {object} - plain javascript constraint object.
  * @property {string} id - constraint id.
+ * @property {string|number} [idloc='left'] - label location ['left','right',-1..1]
  * @property {string} p1 - first point id.
  * @property {string} p2 - second point id.
  * @property {object} [ori] - orientation object.
@@ -486,8 +487,13 @@ mec.constraint = {
 
             if (this.model.labels.constraints) {
                 let idstr = id || '?', cw = Math.cos(w), sw = Math.sin(w),
-                      xid = p1.x + 20*cw - 10*sw, 
-                      yid = p1.y + 20*sw + 10*cw;
+                    u = idloc === 'left' ? 0.5
+                      : idloc === 'right' ? -0.5
+                      : idloc + 0 === idloc ? idloc  // is numeric
+                      : 0.5,
+                    lam = Math.abs(u)*40, mu = u > 0 ? 10 : -15,
+                    xid = p1.x + lam*cw - mu*sw, 
+                    yid = p1.y + lam*sw + mu*cw;
                 if (this.ori.type === 'ref' || this.len.type === 'ref') {
                     const comma = this.ori.type === 'ref' && this.len.type === 'ref' ? ',' : '';
                     idstr += '('
