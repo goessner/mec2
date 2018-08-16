@@ -202,6 +202,11 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 16/08/18
+* Add `mec.shape.poly` for supporting polygonial shapes.
+* Add `mec.aly.r`, `mec.aly.rt` and `mec.aly.rtt` to `mec.core.js`.
+
+
 # Changes 14/08/18
 * Add `idloc` property to `mec.constraint`. Value is 
     * `left`  positiv (default)

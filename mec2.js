@@ -170,6 +170,9 @@ aly: {
     w: { get scl() { return 180/Math.PI}, type:'num', name:'φ', unit:'°' },
     wt: { get scl() { return 1}, type:'num', name:'ω', unit:'rad/s' },
     wtt: { get scl() { return 1}, type:'num', name:'α', unit:'rad/s^2' },
+    r: { get scl() { return mec.m_u}, type:'num', name:'r', unit:'m' },
+    rt: { get scl() { return mec.m_u}, type:'num', name:'rt', unit:'m/s' },
+    rtt: { get scl() { return mec.m_u}, type:'num', name:'rtt', unit:'m/s^2' },
     force: { get scl() {return mec.m_u}, type:'vec', name:'F', unit:'N', get drwscl() {return 5*mec.m_u} },
     velAbs: { get scl() {return mec.m_u}, type:'num', name:'v', unit:'m/s' },
     accAbs: { get scl() {return mec.m_u}, type:'num', name:'a', unit:'m/s' },
@@ -508,7 +511,7 @@ mec.node = {
  * @returns {object} constraint object.
  * @param {object} - plain javascript constraint object.
  * @property {string} id - constraint id.
- * @property {string|number} [idloc='left'] - label location ['left','right',0-1]
+ * @property {string|number} [idloc='left'] - label location ['left','right',-1..1]
  * @property {string} p1 - first point id.
  * @property {string} p2 - second point id.
  * @property {object} [ori] - orientation object.
@@ -1500,19 +1503,15 @@ mec.view.info = {
 /**
  * @method
  * @param {object} - plain javascript shape object.
- * @property {string} type - shape type ['fix'|'flt'|'slider'|'bar'|'beam'|'wheel'|'img'].
+ * @property {string} type - shape type ['fix'|'flt'|'slider'|'bar'|'beam'|'wheel'|'poly'|'img'].
  */
 mec.shape = {
     extend(shape) {
         if (shape.type && mec.shape[shape.type]) {
-            Object.setPrototypeOf(shape, Object.assign({},this.prototype,mec.shape[shape.type]));
+            Object.setPrototypeOf(shape, mec.shape[shape.type]);
             shape.constructor();
         }
         return shape; 
-    },
-    prototype: {
-        constructor() {}, // always parameterless .. !
-        dependsOn(elem) { return false; }
     }
 }
 
@@ -1704,6 +1703,45 @@ mec.shape.wheel = {
     }
 }
 
+
+/**
+ * @param {object} - filled polygon shape.
+ * @property {array} pts - array of points.
+ * @property {string} p - referenced node id for center point position.
+ * @property {string} wref - referenced constraint id for orientation.
+ * @property {string} [fill='#aaaaaa88'] - fill color.
+ * @property {string} [stroke='transparent'] - stroke color.
+ */
+mec.shape.poly = {
+    init(model) {
+        if (typeof this.p === 'string')
+            this.p = model.nodeById(this.p);
+        if (typeof this.wref === 'string')
+            this.wref = model.constraintById(this.wref);
+        this.fill = this.fill || '#aaaaaa88';
+        this.stroke = this.stroke || 'transparent';
+    },
+    get x0() { return  this.p.x0; },
+    get y0() { return  this.p.y0; },
+    get w0() { return  this.wref.w0; },
+    get w() { return  this.wref.w - this.wref.w0; },
+    get x() { 
+        const w = this.wref.w - this.wref.w0;
+        return this.p.x - Math.cos(w)*this.p.x0 + Math.sin(w)*this.p.y0;
+    },
+    get y() { 
+        const w = this.wref.w - this.wref.w0;
+        return this.p.y - Math.sin(w)*this.p.x0 - Math.cos(w)*this.p.y0;
+    },
+    dependsOn(elem) {
+        return this.p === elem || this.wref === elem;
+    },
+    asJSON() { return '{}'; },  // todo ..
+    draw(g) {
+        g.ply({pts:this.pts,closed:true,x:()=>this.x,y:()=>this.y,w:()=>this.w,fs:this.fill,ls:this.stroke})
+    }
+}
+
 /**
  * @param {object} - image shape.
  * @property {string} uri - image uri
@@ -1745,6 +1783,7 @@ mec.shape.img = {
  * @requires mec.constraint.js
  * @requires mec.drive.js
  * @requires mec.load.js
+ * @requires mec.view.js
  * @requires mec.shape.js
  */
 "use strict";

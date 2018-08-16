@@ -6,6 +6,7 @@
  * @requires mec.constraint.js
  * @requires mec.drive.js
  * @requires mec.load.js
+ * @requires mec.view.js
  * @requires mec.shape.js
  */
 "use strict";
