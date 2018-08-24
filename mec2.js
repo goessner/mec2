@@ -927,15 +927,15 @@ mec.constraint = {
             if (this.len && !(this.len.type === 'free')) {
                 jsonString += (this.len.type === 'const' ? ',"len":{ "type":"const"' : '')
                             + (this.len.type === 'ref' ? ',"len":{ "type":"ref","ref":"'+this.len.ref.id+'"' : '')
-                            + (this.len.type === 'drive' ? '"len":{ "type":"drive"' : '')
-                            + (this.len.r0 && this.len.r0 > 0.0001 ? ',"r0":"'+this.len.r0+'"' : '')
+                            + (this.len.type === 'drive' ? ',"len":{ "type":"drive"' : '')
+                            + (this.len.r0 && this.len.r0 > 0.0001 ? ',"r0":'+this.len.r0 : '')
                             + (this.len.refval ? ',"refval":"'+this.len.refval+'"' : '')
-                            + (this.len.ratio && Math.abs(this.len.ratio-1)>0.0001 ? ',"ratio":"'+this.len.ratio+'"' : '')
+                            + (this.len.ratio && Math.abs(this.len.ratio-1)>0.0001 ? ',"ratio":'+this.len.ratio : '')
                             + (this.len.func ? ',"func":"'+this.len.func+'"' : '')
                             + (this.len.arg ? ',"arg":"'+this.len.arg+'"' : '')
-                            + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":"'+this.len.t0+'"' : '')
-                            + (this.len.Dt ? ',"Dt":"'+this.len.Dt+'"' : '')
-                            + (this.len.Dr ? ',"Dr":"'+this.len.Dr+'"' : '')
+                            + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":'+this.len.t0 : '')
+                            + (this.len.Dt ? ',"Dt":'+this.len.Dt : '')
+                            + (this.len.Dr ? ',"Dr":'+this.len.Dr : '')
                             + (this.len.input ? ',"input":true' : '')
                             + ' }'
             };
@@ -943,15 +943,15 @@ mec.constraint = {
             if (this.ori && !(this.ori.type === 'free')) {
                 jsonString += (this.ori.type === 'const' ? ',"ori":{ "type":"const"' : '')
                             + (this.ori.type === 'ref' ? ',"ori":{ "type":"ref","ref":"'+this.ori.ref.id+'"' : '')
-                            + (this.ori.type === 'drive' ? '"ori":{ "type":"drive"' : '')
-                            + (this.ori.w0 && this.ori.w0 > 0.0001 ? ',"r0":"'+this.ori.w0+'"' : '')
+                            + (this.ori.type === 'drive' ? ',"ori":{ "type":"drive"' : '')
+                            + (this.ori.w0 && this.ori.w0 > 0.0001 ? ',"r0":'+this.ori.w0 : '')
                             + (this.ori.refval ? ',"refval":"'+this.ori.refval+'"' : '')
-                            + (this.ori.ratio && Math.abs(this.ori.ratio-1)>0.0001 ? ',"ratio":"'+this.ori.ratio+'"' : '')
+                            + (this.ori.ratio && Math.abs(this.ori.ratio-1)>0.0001 ? ',"ratio":'+this.ori.ratio : '')
                             + (this.ori.func ? ',"func":"'+this.ori.func+'"' : '')
                             + (this.ori.arg ? ',"arg":"'+this.ori.arg+'"' : '')
-                            + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":"'+this.ori.t0+'"' : '')
-                            + (this.ori.Dt ? ',"Dt":"'+this.ori.Dt+'"' : '')
-                            + (this.ori.Dw ? ',"Dw":"'+this.ori.Dw+'"' : '')
+                            + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":'+this.ori.t0 : '')
+                            + (this.ori.Dt ? ',"Dt":'+this.ori.Dt : '')
+                            + (this.ori.Dw ? ',"Dw":'+this.ori.Dw : '')
                             + (this.ori.input ? ',"input":true' : '')
                             + ' }'
             };
@@ -1377,7 +1377,7 @@ mec.view.vector = {
     reset() {},
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
-                + (this.value ? ',"value":'+this.value : '')
+                + (this.value ? ',"value":"'+this.value+'"' : '')
                 + ' }';
     },
     // interaction
@@ -1414,8 +1414,8 @@ mec.view.vector = {
 /**
  * @param {object} - trace view.
  * @property {string} p - referenced node id.
- * @property {number} Dt - trace duration [s].
- * @property {string} fill - web color.
+ * @property {number} [Dt] - trace duration [s].
+ * @property {string} [fill] - web color.
  */
 mec.view.trace = {
     constructor() {}, // always parameterless .. !
@@ -1437,6 +1437,13 @@ mec.view.trace = {
         this.pts.push({x:this.p.x,y:this.p.y});
         if (this.model.timer.t - this.t0 > this.Dt) // remove first trace point !
             this.pts.shift();
+    },
+    asJSON() {
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
+                + (this.Dt ? ',"Dt":'+this.Dt : '')
+                + (this.stroke ? ',"stroke":"'+this.stroke+'"' : '')
+                + (this.fill ? ',"fill":"'+this.fill+'"' : '')
+                + ' }';
     },
     // interaction
     get isSolid() { return false },
@@ -1471,6 +1478,12 @@ mec.view.info = {
         return this.elem === elem;
     },
     reset() {},
+    asJSON() {
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","elem":"'+this.elem.id+'"'
+                + (this.value ? ',"value":"'+this.value+'"' : '')
+                + (this.name ? ',"name":"'+this.name+'"' : '')
+                + ' }';
+    },
     get hasInfo() {
         return this.elem.state === g2.OVER;  // exclude: OVER & DRAG
     },
@@ -2457,10 +2470,10 @@ mec.model = {
                 shape.draw(g);
             for (const view of this.views)
                 g.ins(view);
-            for (const load of this.loads)
-                g.ins(load);
             for (const constraint of this.constraints)
                 g.ins(constraint);
+            for (const load of this.loads)
+                g.ins(load);
             for (const node of this.nodes)
                 g.ins(node);
             return this;
