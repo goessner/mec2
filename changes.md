@@ -202,10 +202,14 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 28/08/18
+* Add `mec.core.linkage` for constraint and node graphics-flags.
+* Models now store label-flags in an `model.graphics` object that additionally has a member `linkage` of type `object` containing flags from `mec.core.linkage`.
+* Fixed some bugs and added some missing properties in `asJSON` methods.
+
 # Changes 16/08/18
 * Add `mec.shape.poly` for supporting polygonial shapes.
 * Add `mec.aly.r`, `mec.aly.rt` and `mec.aly.rtt` to `mec.core.js`.
-
 
 # Changes 14/08/18
 * Add `idloc` property to `mec.constraint`. Value is 
@@ -243,7 +247,6 @@ depending on its `shape.type` shapes become one of these objects:
 
 * Bug removed in `mec.model.isActive`. The negated result was returned. (Changes in app required !)
 * Bug removed in `mec.model.hasActiveDrives`.
-
 
 # Changes 07/08/18
 
