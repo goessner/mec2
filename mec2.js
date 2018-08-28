@@ -72,7 +72,16 @@ corrMax: 64,
 labels: {
     nodes: false,
     constraints: true,
-    loads: true
+    loads: true,
+},
+/**
+ * flags for showing linkage.
+ * @const
+ * @type {object}
+ */
+linkage: {
+    nodes: true,
+    constraints: true,
 },
 /**
  * place and show labels with elements (depricated !!) 
@@ -473,19 +482,23 @@ mec.node = {
         // graphics ...
         get r() { return mec.node.radius; },
         g2() {
-            const loc = mec.node.locdir[this.idloc || 'n'],
-                  xid = this.x + 3*this.r*loc[0], 
-                  yid = this.y + 3*this.r*loc[1],
-                  g = this.base 
-                    ? g2().beg({x:this.x,y:this.y,sh:this.sh})
-                          .cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
-                          .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
-                          .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"})
-                          .end()
-                    : g2().cir({x:this.x,y:this.y,r:this.r,
-                                ls:'#333',fs:'#eee',sh:()=>this.sh});
-            if (this.model.labels.nodes)
-                g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
+            let g;
+            if (this.model.graphics.linkage.nodes) {
+                const loc = mec.node.locdir[this.idloc || 'n'],
+                      xid = this.x + 3*this.r*loc[0], 
+                      yid = this.y + 3*this.r*loc[1];
+                
+                      g = this.base 
+                        ? g2().beg({x:this.x,y:this.y,sh:this.sh})
+                              .cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
+                              .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
+                              .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"})
+                              .end()
+                        : g2().cir({x:this.x,y:this.y,r:this.r,
+                                    ls:'#333',fs:'#eee',sh:()=>this.sh});
+                if (this.model.graphics.labels.nodes)
+                    g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
+            };
             return g;
         }
     },
@@ -527,17 +540,23 @@ mec.node = {
  * @property {number} [ori.t0] - drive parameter start value.
  * @property {number} [ori.Dt] - drive parameter value range.
  * @property {number} [ori.Dw] - drive angular range [rad].
+ * @property {boolean} [ori.bounce=false] - drive oscillate between drivestart and driveend.
+ * @property {number} [ori.repeat] - drive parameter scaling Dt.
+ * @property {boolean} [ori.input=false] - drive flags for actuation via an existing range-input with the same id.
  * @property {object} [len] - length object.
  * @property {string} [len.type] - type of length constraint ['free'|'const'|'ref'|'drive'].
  * @property {number} [len.r0] - initial length.
  * @property {string} [len.ref] - referenced constraint id.
  * @property {string} [len.refval] - referencing other orientation or length value ['ori'|'len'].
- * @property {number} [ori.ratio] - ratio to referencing value.
+ * @property {number} [len.ratio] - ratio to referencing value.
  * @property {string} [len.func] - drive function name ['linear'|'quadratic', ...].
  * @property {string} [len.arg] - drive function argument.
  * @property {number} [len.t0] - drive parameter start value.
  * @property {number} [len.Dt] - drive parameter value range.
  * @property {number} [len.Dr] - drive linear range [rad].
+ * @property {boolean} [len.bounce=false] - drive oscillate between drivestart and driveend.
+ * @property {number} [len.repeat] - drive parameter scaling Dt.
+ * @property {boolean} [len.input=false] - drive flags for actuation via an existing range-input with the same id.
  */
 mec.constraint = {
     extend(c) { Object.setPrototypeOf(c, this.prototype); c.constructor(); return c; },
@@ -936,6 +955,8 @@ mec.constraint = {
                             + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":'+this.len.t0 : '')
                             + (this.len.Dt ? ',"Dt":'+this.len.Dt : '')
                             + (this.len.Dr ? ',"Dr":'+this.len.Dr : '')
+                            + (this.len.bounce ? ',"bounce":true' : '')
+                            + (this.len.repeat ? ',"repeat":'+this.len.repeat : '')
                             + (this.len.input ? ',"input":true' : '')
                             + ' }'
             };
@@ -952,6 +973,8 @@ mec.constraint = {
                             + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":'+this.ori.t0 : '')
                             + (this.ori.Dt ? ',"Dt":'+this.ori.Dt : '')
                             + (this.ori.Dw ? ',"Dw":'+this.ori.Dw : '')
+                            + (this.ori.bounce ? ',"bounce":true' : '')
+                            + (this.ori.repeat ? ',"repeat":'+this.len.repeat : '')
                             + (this.ori.input ? ',"input":true' : '')
                             + ' }'
             };
@@ -972,36 +995,39 @@ mec.constraint = {
         },
         // drawing
         g2() {
-            const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this,
-                  g = g2().beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                                ls:mec.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
-                            .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
-                                    lw:lw+1,lsh:true})
-                            .drw({d:mec.constraint.arrow[type],lsh:true})
-                          .end();
+            let g = g2();
+            if (this.model.graphics.linkage.constraints) {
+                const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this;
 
-            if (this.model.labels.constraints) {
-                let idstr = id || '?', cw = Math.cos(w), sw = Math.sin(w),
-                    u = idloc === 'left' ? 0.5
-                      : idloc === 'right' ? -0.5
-                      : idloc + 0 === idloc ? idloc  // is numeric
-                      : 0.5,
-                    lam = Math.abs(u)*40, mu = u > 0 ? 10 : -15,
-                    xid = p1.x + lam*cw - mu*sw, 
-                    yid = p1.y + lam*sw + mu*cw;
-                if (this.ori.type === 'ref' || this.len.type === 'ref') {
-                    const comma = this.ori.type === 'ref' && this.len.type === 'ref' ? ',' : '';
-                    idstr += '('
-                          +  (this.ori.type === 'ref' ? this.ori.ref.id : '')
-                          +  comma
-                          +  (this.len.type === 'ref' ? this.len.ref.id : '')
-                          +')';
-                    xid -= 3*sw;
-                    yid += 3*cw;
-                }
-                g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle', ls:mec.txtColor})
-            }
+                g.beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
+                        ls:mec.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
+                    .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
+                            lw:lw+1,lsh:true})
+                    .drw({d:mec.constraint.arrow[type],lsh:true})
+                  .end();
 
+                if (this.model.graphics.labels.constraints) {
+                    let idstr = id || '?', cw = Math.cos(w), sw = Math.sin(w),
+                        u = idloc === 'left' ? 0.5
+                          : idloc === 'right' ? -0.5
+                          : idloc + 0 === idloc ? idloc  // is numeric
+                          : 0.5,
+                        lam = Math.abs(u)*40, mu = u > 0 ? 10 : -15,
+                        xid = p1.x + lam*cw - mu*sw, 
+                        yid = p1.y + lam*sw + mu*cw;
+                    if (this.ori.type === 'ref' || this.len.type === 'ref') {
+                        const comma = this.ori.type === 'ref' && this.len.type === 'ref' ? ',' : '';
+                        idstr += '('
+                              +  (this.ori.type === 'ref' ? this.ori.ref.id : '')
+                              +  comma
+                              +  (this.len.type === 'ref' ? this.len.ref.id : '')
+                              +')';
+                        xid -= 3*sw;
+                        yid += 3*cw;
+                    };
+                    g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle', ls:mec.txtColor})
+                };
+            };
             return g;
         }
     },
@@ -1852,7 +1878,13 @@ mec.model = {
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
 
-            this.labels = Object.assign({},mec.labels,this.labels||null);
+            this.graphics = {
+                labels: Object.assign({},mec.labels,!!this.graphics?this.graphics.labels:null),
+                linkage: Object.assign({},mec.linkage,!!this.graphics?this.graphics.linkage:null)
+            };
+
+            // this.labels = Object.assign({},mec.labels,this.labels||null);
+            // this.graphics = Object.assign({},mec.labels,this.labels||null);
 
             for (const node of this.nodes)
                 node.init(this);
@@ -2317,13 +2349,13 @@ mec.model = {
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
                       + (nodeCnt ? ',\n  "nodes": [\n' : '')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
-                      + (nodeCnt ? contraintCnt ? '  ],\n' : '  ]\n' : '')
+                      + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
                       + (contraintCnt ? '  "constraints": [\n' : '')
                       + (contraintCnt ? this.constraints.map((n,i) => '    '+n.asJSON()+comma(i,contraintCnt)+'\n').join('') : '')
-                      + (contraintCnt ? loadCnt ? '  ],\n' : '  ]\n' : '')
+                      + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
                       + (loadCnt ? '  "loads": [\n' : '')
                       + (loadCnt ? this.loads.map((n,i) => '    '+n.asJSON()+comma(i,loadCnt)+'\n').join('') : '')
-                      + (loadCnt ? shapeCnt ? '  ],\n' : '  ]\n' : '')
+                      + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
                       + (shapeCnt ? '  "shapes": [\n' : '')
                       + (shapeCnt ? this.shapes.map((n,i) => '    '+n.asJSON()+comma(i,shapeCnt)+'\n').join('') : '')
                       + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
