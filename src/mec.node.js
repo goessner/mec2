@@ -160,7 +160,7 @@ mec.node = {
         // graphics ...
         get r() { return mec.node.radius; },
         g2() {
-            let g;
+            let g = g2();
             if (this.model.graphics.linkage.nodes) {
                 const loc = mec.node.locdir[this.idloc || 'n'],
                       xid = this.x + 3*this.r*loc[0], 
