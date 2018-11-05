@@ -1788,7 +1788,7 @@ mec.shape.poly = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","pts":"'+JSON.stringify(this.pts)+'","p":"'+this.p.id+'"'
+        return '{ "type":"'+this.type+'","pts":'+JSON.stringify(this.pts)+',"p":"'+this.p.id+'"'
                 + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ((this.w0 && this.w0 > 0.0001 && !(this.wref.w0 === this.w0 )) ? ',"w0":'+this.w0 : '')
                 + (this.stroke && !(this.stroke === 'transparent') ? ',"stroke":"'+this.stroke+'"' : '')
