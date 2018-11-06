@@ -12,19 +12,19 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 ## JSON
 
-```js
+```json
 {
-    id: '4bar',
-    nodes: [
-        {id:'A0',x:100,y:100,base:true},
-        {id:'A',x:100,y:150},
-        {id:'B',x:350,y:220},
-        {id:'B0',x:300,y:100,base:true},
+    "id":"4bar",
+    "nodes": [
+        { "id":"A0","x":100,"y":100,"base":true },
+        { "id":"A", "x":100,"y":150 },
+        { "id":"B", "x":350,"y":220 },
+        { "id":"B0","x":300,"y":100,"base":true }
     ],
-    constraints: [
-        { id:'a',p1:'A0',p2:'A',len:{type:'const'} },
-        { id:'b',p1:'A', p2:'B',len:{type:'const'} },
-        { id:'c',p1:'B0', p2:'B',len:{type:'const'} },
+    "constraints": [
+        { "id":"a","p1":"A0","p2":"A","len":{ "type":"const" } },
+        { "id":"b","p1":"A", "p2":"B","len":{ "type":"const" } },
+        { "id":"c","p1":"B0","p2":"B","len":{ "type":"const" } }
     ]
 }
 ```
