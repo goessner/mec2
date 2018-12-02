@@ -2367,7 +2367,7 @@ mec.model = {
             const str = '{'
                       + '\n  "id":"'+this.id+'"'
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
-                      + (nodeCnt ? ',\n  "nodes": [\n' : '')
+                      + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
                       + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
                       + (contraintCnt ? '  "constraints": [\n' : '')
