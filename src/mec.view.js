@@ -241,3 +241,42 @@ mec.view.info = {
         return '?';
     }
 }
+
+/**
+ * @param {object} - chart view.
+*/
+mec.view.chart = {
+    constructor() {},
+    init(model) {
+        if (typeof this.p === 'string') {
+            this.p = model.nodeById(this.p);
+        }
+        const defaults = {x:0,y:0,xaxis:true,yaxis:true, dt: 1/100, t: 2}
+        this.graph = Object.assign({}, defaults, this);
+        const data = [];
+        const val = (a) => {
+            switch (a) {
+                case "x": return () => this.p.x;
+                case "y": return () => this.p.y;
+                case "time": return () => (this.dt * this.itr) % this.graph.t;
+                default: break;
+            };
+        };
+        this.xval = val(this['xval']);
+        this.yval = val(this['yval']);
+        this.itr;
+        for (this.itr = 0; this.itr * this.dt <= this.graph.t; ++this.itr) {
+            model.tick(this.dt);
+            data.push(this.xval(), this.yval());
+        }
+        this.graph.funcs = [{data: data}];
+        this.model = model;   // only used for timer access ... see below !
+        g2().chart(this.graph).exe(ctx); // to get the chart prototype and run autoaxis... todo!
+    },
+    g2() {
+        ++this.itr % (this.graph.t / this.dt);
+        return g2()
+            .chart(this.graph)
+            .nod(this.graph.pntOf({x: this.xval(), y: this.yval()}));
+    }
+}
