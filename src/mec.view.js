@@ -251,7 +251,12 @@ mec.view.chart = {
         if (typeof this.p === 'string') {
             this.p = model.nodeById(this.p);
         }
-        const defaults = {x:0,y:0,xaxis:true,yaxis:true, dt: 1/100, t: 2}
+        const defaults = {
+            x:0,y:0,xaxis:true,yaxis:true,
+            dt: 1/100, t:2,
+            xaxis:{title:this['xval'],grid:true},
+            yaxis:{title:this['yval'],grid:true},
+        }
         this.graph = Object.assign({}, defaults, this);
         const data = [];
         const val = (a) => {
@@ -265,7 +270,7 @@ mec.view.chart = {
         this.xval = val(this['xval']);
         this.yval = val(this['yval']);
         this.itr;
-        for (this.itr = 0; this.itr * this.dt <= this.graph.t; ++this.itr) {
+        for (this.itr = 0; this.itr * this.dt < this.graph.t; ++this.itr) {
             model.tick(this.dt);
             data.push(this.xval(), this.yval());
         }
