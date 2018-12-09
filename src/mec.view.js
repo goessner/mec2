@@ -248,40 +248,50 @@ mec.view.info = {
 mec.view.chart = {
     constructor() {},
     init(model) {
-        if (typeof this.p === 'string') {
-            this.p = model.nodeById(this.p);
-        }
-        const defaults = {
-            x:0,y:0,xaxis:true,yaxis:true,
-            dt: 1/100, t:2,
-            xaxis:{title:this['xval'],grid:true},
-            yaxis:{title:this['yval'],grid:true},
-        }
-        this.graph = Object.assign({}, defaults, this);
-        const data = [];
-        const val = (a) => {
+        if (typeof this.p === 'string') this.p = model.nodeById(this.p);
+        const getValue = (a) => {
             switch (a) {
-                case "x": return () => this.p.x;
-                case "y": return () => this.p.y;
-                case "time": return () => (this.dt * this.itr) % this.graph.t;
+                case "x":
+                case "y": return () => this.p[a];
+                case "time": return () => (model.timer.dt * this.itr) % this.graph.t;
                 default: break;
             };
         };
-        this.xval = val(this['xval']);
-        this.yval = val(this['yval']);
-        this.itr;
-        for (this.itr = 0; this.itr * this.dt < this.graph.t; ++this.itr) {
-            model.tick(this.dt);
-            data.push(this.xval(), this.yval());
+        const g = this.graph = Object.assign({
+            x:0 ,y:0, t:2, nod:true,
+            xaxis:{title:`${this.xval}`,grid:true,origin:true},
+            yaxis:{title:`${this.yval}`,grid:true,origin:true},
+            funcs:[]
+        },this);
+        g.funcs.addInterval = function(d) { this.push(d); return d };
+        this.data = g.funcs.addInterval({data:[]}).data;
+        this.itr = 0;
+        this.xvalue = getValue(this.xval);
+        this.yvalue = getValue(this.yval);
+        if(this.graph.nod) {
+            Object.setPrototypeOf(g, g2.prototype.chart.prototype);
+            this.graph.xAxis = g.autoAxis(this.xvalue(),this.xvalue(),0,g.b);
+            this.graph.yAxis = g.autoAxis(this.yvalue(),this.yvalue(),0,g.h);
         }
-        this.graph.funcs = [{data: data}];
-        this.model = model;   // only used for timer access ... see below !
-        g2().chart(this.graph).exe(ctx); // to get the chart prototype and run autoaxis... todo!
+        console.log(this.graph);
     },
     g2() {
-        ++this.itr % (this.graph.t / this.dt);
+        const g = this.graph;
+        const x = this.xvalue();
+        const y = this.yvalue();
+        if      (g.xmin > x) g.xmin=x;
+        else if (g.xmax < x) g.xmax=x;
+        if      (g.ymin > y) g.ymin=y;
+        else if (g.ymax < y) g.ymax=y;
+        this.data.push(this.xvalue(),this.yvalue());
+        if (++this.itr >= g.t / model.timer.dt) {
+            this.itr = 0;
+            this.data = g.funcs.addInterval({data:[]}).data;
+        };
         return g2()
-            .chart(this.graph)
-            .nod(this.graph.pntOf({x: this.xval(), y: this.yval()}));
+            .chart(g)
+            .ins(g => {
+                this.graph.nod && g.nod(this.graph.pntOf({x: this.xvalue(), y: this.yvalue()}))
+            });
     }
 }
