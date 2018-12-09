@@ -273,7 +273,6 @@ mec.view.chart = {
             this.graph.xAxis = g.autoAxis(this.xvalue(),this.xvalue(),0,g.b);
             this.graph.yAxis = g.autoAxis(this.yvalue(),this.yvalue(),0,g.h);
         }
-        console.log(this.graph);
     },
     g2() {
         const g = this.graph;
