@@ -261,7 +261,7 @@ mec.view.chart = {
             x:0 ,y:0, t:2, nod:true,
             xaxis:{title:`${this.xval}`,grid:true,origin:true},
             yaxis:{title:`${this.yval}`,grid:true,origin:true},
-            funcs:[]
+            funcs:[],fading:0.3
         },this);
         g.funcs.addInterval = function(d) { this.push(d); return d };
         this.data = g.funcs.addInterval({data:[]}).data;
@@ -285,6 +285,12 @@ mec.view.chart = {
         this.data.push(this.xvalue(),this.yvalue());
         if (++this.itr >= g.t / model.timer.dt) {
             this.itr = 0;
+            if (typeof g.fading === "number") {
+                for(let idx = g.funcs.length-1; idx >= 0; --idx) {
+                    const fade = 255 * (1 - ((g.funcs.length-idx)*g.fading));
+                    g.funcs[idx].color = g.funcs[idx].color.substr(0,7) + (fade < 16 ? "00" : (Math.floor(fade).toString(16)));
+                }
+            }
             this.data = g.funcs.addInterval({data:[]}).data;
         };
         return g2()
