@@ -291,6 +291,10 @@ mec.view.chart = {
             if (typeof g.fading === "number") {
                 for(let idx = g.funcs.length-1; idx >= 0; --idx) {
                     const fade = 255 * (1 - ((g.funcs.length-idx)*g.fading));
+                    if (idx === 3 && fade < 16) {
+                        for(let itr = 0; itr < 4; ++itr) g.funcs.shift();
+                        break;
+                    }
                     g.funcs[idx].color = g.funcs[idx].color.substr(0,7) + (fade < 16 ? "00" : (Math.floor(fade).toString(16)));
                 }
             }
