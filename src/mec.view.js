@@ -261,7 +261,7 @@ mec.view.chart = {
             }
         };
         const g = this.graph = Object.assign({
-            x:0 ,y:0, t:2, nod:true,
+            x:0 ,y:0, t:1, nod:true,
             xaxis:{title:`${this.xval}`,grid:true,origin:true},
             yaxis:{title:`${this.yval}`,grid:true,origin:true},
             funcs:[],fading:0.3
@@ -302,8 +302,8 @@ mec.view.chart = {
         };
         return g2()
             .chart(g)
-            .ins(g => {
-                this.graph.nod && g.nod(this.graph.pntOf({x: this.xvalue(), y: this.yvalue()}))
+            .ins(e => {
+                g.nod && e.nod(g.pntOf({x,y}))
             });
     }
 }
