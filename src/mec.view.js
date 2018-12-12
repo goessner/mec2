@@ -250,12 +250,15 @@ mec.view.chart = {
     init(model) {
         if (typeof this.p === 'string') this.p = model.nodeById(this.p);
         const getValue = (a) => {
-            switch (a) {
-                case "x":
-                case "y": return () => this.p[a];
-                case "time": return () => (model.timer.dt * this.itr) % this.graph.t;
-                default: break;
-            };
+            if (a === "time") return () => (model.timer.dt * this.itr) % this.graph.t;
+            if (typeof a === "string") {
+                const arr = a.split('.');
+                let cur = model.elementById(arr.shift());
+                while (arr.length > 1)
+                    cur = cur[arr.shift()];
+                const ret = arr.shift();
+                return () => cur[ret];
+            }
         };
         const g = this.graph = Object.assign({
             x:0 ,y:0, t:2, nod:true,
@@ -282,7 +285,7 @@ mec.view.chart = {
         else if (g.xmax < x) g.xmax=x;
         if      (g.ymin > y) g.ymin=y;
         else if (g.ymax < y) g.ymax=y;
-        this.data.push(this.xvalue(),this.yvalue());
+        this.data.push(x,y);
         if (++this.itr >= g.t / model.timer.dt) {
             this.itr = 0;
             if (typeof g.fading === "number") {
