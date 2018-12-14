@@ -52,10 +52,9 @@ Here's a minimal example:
     <script src="https://gitcdn.xyz/repo/goessner/mec2/master/mec2.min.js"></script>
 
     <script>
-        const ctx = document.getElementById('c').getContext('2d'),  // the canvas-context
-              g = g2().clr().view({cartesian:true}).grid();         // a g2 graphics-object
-        
-        let   model = {                                             // your model
+        const ctx = document.getElementById('c').getContext('2d');  // the canvas-context
+        let   g = g2().clr().view({cartesian:true}).grid(),         // a g2 graphics-object
+              model = {                                             // your model
                 id: 'pendulum',
                 gravity:true,
                 nodes: [
