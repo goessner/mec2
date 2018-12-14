@@ -33,6 +33,59 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 - todo -
 
+## How do i use it?
+You can build an environment yourself.
+
+Here's a minimal example:
+
+
+```html
+<html>
+<head>
+    <title>minimal mec2 example</title>
+    <meta charset='utf-8'>
+</head>
+<body>
+    <canvas id="c" width="601" height="401"></canvas>
+
+    <script src="https://gitcdn.xyz/repo/goessner/g2/master/src/g2.js"></script>
+    <script src="https://gitcdn.xyz/repo/goessner/mec2/master/mec2.min.js"></script>
+
+    <script>
+        const ctx = document.getElementById('c').getContext('2d'),  // the canvas-context
+              g = g2().clr().view({cartesian:true}).grid();         // a g2 graphics-object
+        
+        let   model = {                                             // your model
+                id: 'pendulum',
+                gravity:true,
+                nodes: [
+                    {id:'A0',x:300,y:240,base:true},
+                    {id:'A1',x:380,y:300}
+                ],
+                constraints: [
+                    { id:'a',p1:'A0',p2:'A1',len:{type:'const'} }
+                ]
+              };
+          
+        // simulation
+        const simulate = () => {       
+                  model.tick(1/60);                 // solve model with fixed stepping
+                  g.exe(ctx);                       // render its pose on the canvas
+                  requestAnimationFrame(simulate);  // keep calling back
+              };
+
+        mec.model.extend(model);                    // extend the model
+        model.init();                               // initialize it
+        model.draw(g);                              // append model-graphics to graphics-obj  
+
+        simulate();                                 // kick-off the simulation
+    </script>
+</body>
+</html>
+```
+
+If you don't want to bother with that, check out the project [_mecEdit_](https://jauhl.github.io/mecEdit "mecEdit"). _mecEdit_ is a standalone, installable editor for planar mechanisms, that uses `mec2` as a physics engine and focuses on user experience. It's hosted [here](https://jauhl.github.io/mecEdit/mecEdit.html "mecEdit").
+
 # License
 *mec2* is licensed under the terms of the MIT License.
 
