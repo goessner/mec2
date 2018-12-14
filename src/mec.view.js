@@ -249,23 +249,25 @@ mec.view.chart = {
     constructor() {},
     init(model) {
         const y = Array.isArray(this.yval) ? this.yval : [this.yval];
-        const ytitle = y.map((a) => `${a.of}.${a.prop}`).join(' / ');
+        const ytitle = y.map((a) => `${a.of}.${a.prop} ${a.unit ? '(' + a.unit + ')' : ""}`).join(' / ');
         this.graph = Object.assign({
-            x:0 ,y:0, funcs: [],
-            xaxis:{title:`${this.xval.of}.${this.xval.prop}`,grid:true,origin:true},
+            x:0 ,y:0, funcs: [], unit: "",
+            xaxis:{title:`${this.xval.of}.${this.xval.prop} ${this.xval.unit ? '(' + this.xval.unit + ')' : ""}`,grid:true,origin:true},
             yaxis:{title:`${ytitle}`,grid:true,origin:true},
         },this);
         const validate = (arg) => {
             const ele = model.elementById(arg);
             return ele !== false ? ele : model[arg];
         }
+        const xunit = this.xval.unit ? mec[this.xval.unit] : (e) => e;
         const xof = validate(this.xval.of);
         this.data = [[],[]];
-        this.data.x = () => xof[this.xval.prop];
+        this.data.x = () => xunit(xof[this.xval.prop]);
         this.data.y = y.map((e,idx) => {
             this.graph.funcs[idx] = {data:[]};
+            const yunit = e.unit ? mec[e.unit] : (e) => e;
             const yof = validate(e.of);
-            return () => yof[e.prop];
+            return () => yunit(yof[e.prop]);
         });
     },
     update() {
