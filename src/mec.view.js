@@ -79,7 +79,7 @@ mec.view.vector = {
         const scale = mec.aly[this.value].drwscl;
         const v = this.p[this.value];
         const vabs = Math.hypot(v.y,v.x);
-        const vview = !mec.isEps(vabs,0.5)
+        const vview = !mec.isEps(vabs)
                     ? mec.asympClamp(scale*vabs,25,100)
                     : 0;
         return { p1:this.p,
@@ -248,62 +248,49 @@ mec.view.info = {
 mec.view.chart = {
     constructor() {},
     init(model) {
-        if (typeof this.p === 'string') this.p = model.nodeById(this.p);
-        const getValue = (a) => {
-            if (a === "time") return () => (model.timer.dt * this.itr) % this.graph.t;
-            if (typeof a === "string") {
-                const arr = a.split('.');
-                let cur = model.elementById(arr.shift());
-                while (arr.length > 1)
-                    cur = cur[arr.shift()];
-                const ret = arr.shift();
-                return () => cur[ret];
-            }
-        };
-        const g = this.graph = Object.assign({
-            x:0 ,y:0, t:1, nod:true,
-            xaxis:{title:`${this.xval}`,grid:true,origin:true},
-            yaxis:{title:`${this.yval}`,grid:true,origin:true},
-            funcs:[],fading:0.3
+        const y = Array.isArray(this.yval) ? this.yval : [this.yval];
+        const ytitle = y.map((a) => `${a.of}.${a.prop}`).join(' / ');
+        this.graph = Object.assign({
+            x:0 ,y:0, funcs: [],
+            xaxis:{title:`${this.xval.of}.${this.xval.prop}`,grid:true,origin:true},
+            yaxis:{title:`${ytitle}`,grid:true,origin:true},
         },this);
-        g.funcs.addInterval = function(d) { this.push(d); return d };
-        this.data = g.funcs.addInterval({data:[]}).data;
-        this.itr = 0;
-        this.xvalue = getValue(this.xval);
-        this.yvalue = getValue(this.yval);
-        if(this.graph.nod) {
-            Object.setPrototypeOf(g, g2.prototype.chart.prototype);
-            this.graph.xAxis = g.autoAxis(this.xvalue(),this.xvalue(),0,g.b);
-            this.graph.yAxis = g.autoAxis(this.yvalue(),this.yvalue(),0,g.h);
+        const validate = (arg) => {
+            const ele = model.elementById(arg);
+            return ele !== false ? ele : model[arg];
         }
+        const xof = validate(this.xval.of);
+        this.data = [[],[]];
+        this.data.x = () => xof[this.xval.prop];
+        this.data.y = y.map((e,idx) => {
+            this.graph.funcs[idx] = {data:[]};
+            const yof = validate(e.of);
+            return () => yof[e.prop];
+        });
+    },
+    update() {
+        const g = this.graph;
+        this.data.y.forEach((e,idx) => {
+            const x = this.data.x();
+            const y = e();
+            this.data[0].push(x);
+            this.data[1].push(y);
+            this.graph.funcs[idx].data.push(x,y);
+        });
+        g.xmin = Math.min(...this.data[0]);
+        g.xmax = Math.max(...this.data[0]);
+        g.ymin = Math.min(...this.data[1]);
+        g.ymax = Math.max(...this.data[1]);
+        if (this.data.x && this.xval.len < g.xmax-g.xmin) {
+            this.graph.funcs.forEach((e) => {
+                this.data[0].shift();
+                this.data[1].shift();
+                e.data.shift(); e.data.shift();
+            });
+        };
     },
     g2() {
-        const g = this.graph;
-        const x = this.xvalue();
-        const y = this.yvalue();
-        if      (g.xmin > x) g.xmin=x;
-        else if (g.xmax < x) g.xmax=x;
-        if      (g.ymin > y) g.ymin=y;
-        else if (g.ymax < y) g.ymax=y;
-        this.data.push(x,y);
-        if (++this.itr >= g.t / model.timer.dt) {
-            this.itr = 0;
-            if (typeof g.fading === "number") {
-                for(let idx = g.funcs.length-1; idx >= 0; --idx) {
-                    const fade = 255 * (1 - ((g.funcs.length-idx)*g.fading));
-                    if (idx === 3 && fade < 16) {
-                        for(let itr = 0; itr < 4; ++itr) g.funcs.shift();
-                        break;
-                    }
-                    g.funcs[idx].color = g.funcs[idx].color.substr(0,7) + (fade < 16 ? "00" : (Math.floor(fade).toString(16)));
-                }
-            }
-            this.data = g.funcs.addInterval({data:[]}).data;
-        };
-        return g2()
-            .chart(g)
-            .ins(e => {
-                g.nod && e.nod(g.pntOf({x,y}))
-            });
+        this.update();
+        return g2().chart(this.graph);
     }
 }
