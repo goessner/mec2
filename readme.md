@@ -84,7 +84,7 @@ Here's a minimal example:
 </html>
 ```
 
-If you don't want to bother with that, check out the project [_mecEdit_](https://jauhl.github.io/mecEdit "mecEdit"). _mecEdit_ is a standalone, installable editor for planar mechanisms, that uses `mec2` as a physics engine and focuses on user experience. It's hosted [here](https://jauhl.github.io/mecEdit/mecEdit.html "mecEdit").
+If you don't want to bother with that, check out the project [_mecEdit_](https://github.com/jauhl/mecEdit "mecEdit on GitHub"). _mecEdit_ is a standalone, installable editor for planar mechanisms, that uses `mec2` as a physics engine and focuses on user experience. It's hosted [here](https://jauhl.github.io/mecEdit/mecEdit.html "mecEdit").
 
 # License
 *mec2* is licensed under the terms of the MIT License.
