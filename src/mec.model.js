@@ -31,7 +31,7 @@ mec.model = {
     },
     prototype: {
         constructor() { // always parameterless .. !
-            this.state = {dirty:true,valid:true,direc:1,itrpos:0,itrvel:0};
+            this.state = {valid:true,itrpos:0,itrvel:0};
             this.timer = {t:0,dt:1/60};
             // create empty containers for all elements
             if (!this.nodes) this.nodes = [];
@@ -54,9 +54,10 @@ mec.model = {
         /**
          * Init model
          * @method
-         * @returns {object} model
+         * @returns {boolean | object} error object in case of logical error or `false`.
          */
         init() {
+            let err = false;
             if (this.gravity === true)
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
@@ -67,23 +68,19 @@ mec.model = {
                 linkage: Object.assign({},mec.linkage,!!this.graphics?this.graphics.linkage:null)
             };
 
-            // this.labels = Object.assign({},mec.labels,this.labels||null);
-            // this.graphics = Object.assign({},mec.labels,this.labels||null);
+            for (let i=0; i < this.nodes.length && !err; i++)
+                err = this.nodes[i].init(this);
+            for (let i=0; i < this.constraints.length && !err; i++)
+                if (!this.constraints[i].initialized)  // possibly already initialized by referencing .. !
+                    err = this.constraints[i].init(this);
+            for (let i=0; i < this.loads.length && !err; i++)
+                err = this.loads[i].init(this);
+            for (let i=0; i < this.views.length && !err; i++)
+                err = this.views[i].init(this);
+            for (let i=0; i < this.shapes.length && !err; i++)
+                err = this.shapes[i].init(this);
 
-            for (const node of this.nodes)
-                node.init(this);
-            for (const constraint of this.constraints)
-                if (!constraint.initialized)  // possibly already uinitialized by referencing .. !
-                    constraint.init(this);
-            for (const load of this.loads)
-                load.init(this);
-            for (const view of this.views)
-                view.init(this);
-            for (const shape of this.shapes)
-                shape.init(this);
-
-
-            return this;
+            return err;
         },
         /**
          * Reset model
@@ -102,7 +99,7 @@ mec.model = {
                 load.reset();
             for (const view of this.views)
                 view.reset();
-            Object.assign(this.state,{valid:true,direc:1,itrpos:0,itrvel:0});
+            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             return this;
         },
         /**
@@ -135,8 +132,10 @@ mec.model = {
          * @returns {object} model
          */
         tick(dt) {
-            if (dt)  // sliders are setting simulation time explicite .. !
+            if (dt) { // sliders (dt == 0) are setting simulation time explicite .. !
+                dt = 1/60;  // BUG ?? fix: dt as a constant for now (study variable time step theoretically !!)
                 this.timer.t += (this.timer.dt = dt);
+            }
             this.pre().itr().post();
             return this;
         },
@@ -194,22 +193,14 @@ mec.model = {
         set itrvel(q) { this.state.itrvel = q; },
 
         /**
-         * Direction flag.
-         * Used implicite by slider input elements.
-         * Avoids setting negative `dt` by going back in time.
-         * @type {boolean}
-         */
-        get direc() { return this.state.direc; },
-        set direc(q) { this.state.direc = q; },
-        /**
          * Test, if model is active.
          * Nodes are moving (nonzero velocities) or active drives.
          * @type {boolean}
          */
         get isActive() {
             return this.hasActiveDrives   // active drives
-                || this.dof > 0           // or can move by itself
-                && !this.isSleeping;      // and does that
+                // || this.dof > 0           // or can move by itself
+                || !this.isSleeping;      // and does exactly that
         },
         /**
          * Test, if nodes are significantly moving 
@@ -229,11 +220,7 @@ mec.model = {
         get hasActiveDrives() {
             let active = false;
             for (const constraint of this.constraints) 
-                active = active
-                      || constraint.ori.type === 'drive'
-                      && this.timer.t < constraint.ori.t0 + constraint.ori.Dt
-                      || constraint.len.type === 'drive'
-                      && this.timer.t < constraint.len.t0 + constraint.len.Dt;
+                active = active || constraint.hasActiveDrives(this.timer.t);
             return active;
         },
         /**
@@ -532,7 +519,7 @@ mec.model = {
             const str = '{'
                       + '\n  "id":"'+this.id+'"'
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
-                      + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
+                      + (nodeCnt ? ',\n  "nodes": [\n' : '')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
                       + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
                       + (contraintCnt ? '  "constraints": [\n' : '')

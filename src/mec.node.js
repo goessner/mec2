@@ -49,8 +49,7 @@ mec.node = {
         get xtcur() { return this.xt + this.dxt },
         get ytcur() { return this.yt + this.dyt },
         // inverse mass
-//        get im() { return 1/this.m },
-        get type() { return 'node' },
+        get type() { return 'node' }, // needed for ... what .. ?
         get dof() { return this.m === Number.POSITIVE_INFINITY ? 0 : 2 },
         /**
          * Test, if node is significantly moving 
@@ -79,14 +78,17 @@ mec.node = {
                this.x = this.x0;
                this.y = this.y0;
            }
+            // resetting kinematic values ...
             this.xt = this.yt = 0;
             this.xtt = this.ytt = 0;
             this.dxt = this.dyt = 0;
         },
         pre(dt) {
             // symplectic euler ... partially
-            this.x += this.model.direc*this.xt*dt;
-            this.y += this.model.direc*this.yt*dt;
+            this.x += (this.xt + 0.5*this.dxt)*dt;
+            this.y += (this.yt + 0.5*this.dyt)*dt;
+//            this.x += this.model.direc*(this.xt + 0.5*this.dxt)*dt;
+//            this.y += this.model.direc*(this.yt + 0.5*this.dyt)*dt;
             // position verlet  ... just for investigating in future  
 //            this.x += this.model.direc*(this.xt - 0.5*this.dxt)*dt;
 //            this.y += this.model.direc*(this.yt - 0.5*this.dyt)*dt;
@@ -157,6 +159,7 @@ mec.node = {
             }
         },
         drag({x,y}) {
+//console.log('pntr(%d,%d)',x,y)            
             this.x = x; this.y = y;
         },
         // graphics ...

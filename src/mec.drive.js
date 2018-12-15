@@ -10,6 +10,24 @@
  * They are named and implemented after VDI 2145 and web easing functions.
  */
 mec.drive = {
+    create({func,z0,Dz,t0,Dt,t,bounce,repeat}) {
+        const isin = (x,x1,x2) => x > x1 && x <= x2;
+        let drv = func && func in mec.drive ? mec.drive[func] :  mec.drive.linear;
+
+        if (bounce) {
+            drv = mec.drive.bounce(drv);
+            Dt *= 2;  // preserve duration per repetition
+        }
+        if (repeat) {
+            drv = mec.drive.bounce(drv,repeat);
+            Dt *= repeat;  // preserve duration per repetition
+        }
+        return {
+            f:   () => z0 + drv.f(Math.max(0,Math.min((t() - t0)/Dt,1)))*Dz,
+            ft:  () => isin(t(),t0,t0+Dt) ? drv.fd((t()-t0)/Dt)*Dz/Dt : 0,
+            ftt: () => isin(t(),t0,t0+Dt) ? drv.fdd((t()-t0)/Dt)*Dz/Dt/Dt : 0
+        };
+    },
     linear: {
         f: (q) =>q, fd: (q) => 1, fdd: (q) => 0
     },
@@ -46,28 +64,29 @@ mec.drive = {
             const a =  1/((1-dq)*dq);
             return {f: function(q) {
                         return (q < dq)   ? 1/2*a*q*q
-                                : (q < 1-dq) ? a*(q - 1/2*dq)*dq
-                                :              a*(1 - 3/2*dq)*dq + a*(q+dq-1)*dq - 1/2*a*(q+dq-1)*(q+dq-1);
+                             : (q < 1-dq) ? a*(q - 1/2*dq)*dq
+                             :              a*(1 - 3/2*dq)*dq + a*(q+dq-1)*dq - 1/2*a*(q+dq-1)*(q+dq-1);
                     },
                     fd: function(q) {
                         return (q < dq)   ? a*q
-                            : (q < 1-dq) ? a*dq
-                            :              a*dq - a*(q+dq-1);
+                             : (q < 1-dq) ? a*dq
+                             :              a*dq - a*(q+dq-1);
                     },
                     fdd: function(q) {
                         return (q < dq)   ? a
-                            : (q < 1-dq) ? 0
-                            :             -a;
+                             : (q < 1-dq) ? 0
+                             :             -a;
                     }
             };
         }
     },
+    // todo .. test valid velocity and acceleration signs with bouncing !!
     bounce: function(drv) {
         if (typeof drv === 'string') drv = mec.drive[drv];
         return {
             f: q => drv.f(q < 0.5 ? 2*q : 2-2*q),
-            fd: q => drv.fd(q < 0.5 ? 2*q : 2-2*q),
-            fdd: q => drv.fdd(q < 0.5 ? 2*q : 2-2*q)
+            fd: q => drv.fd(q < 0.5 ? 2*q : 2-2*q)*(q < 0.5 ? 1 : -1),
+            fdd: q => drv.fdd(q < 0.5 ? 2*q : 2-2*q)*(q < 0.5 ? 1 : -1)
         }
     },
     repeat: function(drv,n) {

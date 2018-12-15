@@ -34,6 +34,7 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 - todo -
 
 ## How do i use it?
+
 You can build an environment yourself.
 
 Here's a minimal example:
@@ -83,12 +84,17 @@ Here's a minimal example:
 </html>
 ```
 
-If you don't want to bother with that, check out the project [_mecEdit_](https://github.com/jauhl/mecEdit "mecEdit on GitHub"). _mecEdit_ is a standalone, installable editor for planar mechanisms, that uses `mec2` as a physics engine and focuses on user experience. It's hosted [here](https://jauhl.github.io/mecEdit/mecEdit.html "mecEdit").
+If you don't want to do that, check out the project [_mecEdit_](https://github.com/jauhl/mecEdit "mecEdit on GitHub"). _mecEdit_ is a standalone, installable editor for planar mechanisms, that uses `mec2` as a physics engine and focuses on user experience. It's hosted [here](https://jauhl.github.io/mecEdit/mecEdit.html "mecEdit").
 
 # License
+
 *mec2* is licensed under the terms of the MIT License.
 
 # Change Log
+
+### 0.8.5 - 2018-12-15
+
+* reworked constraints and added support for bidirectional references.
 
 ### 0.8.0 - 2018-08-13
 

@@ -16,17 +16,17 @@ const mec = {
  */
 EPS: 1.19209e-07,
 /**
- * Linear tolerance for position correction.
+ * Length tolerance for position correction.
  * @const
  * @type {number}
  */
-linTol: 0.001,
+lenTol: 0.1,
 /**
  * Angular tolerance for orientation correction.
  * @const
  * @type {number}
  */
-angTol: 2 / 180 * Math.PI,
+angTol: 1 / 180 * Math.PI,
 /**
  * Velocity tolerance.
  * @const
@@ -54,7 +54,7 @@ maxLinCorrect: 20,
 /**
  * fixed limit of assembly iteration steps.
  */
-asmItrMax: 512,
+asmItrMax: 128, // 512,
 /**
  * itrMax: fixed limit of simulation iteration steps.
  */
@@ -310,6 +310,20 @@ toRad(deg) { return deg*Math.PI/180; },
  */
 toDeg(rad) { return rad/Math.PI*180; },
 /**
+ * Continuously rotating objects require infinite angles, both positives and negatives.
+ * Setting an angle `winf` to a new angle `w` does this with respect to the 
+ * shortest angular distance from  `winf` to `w`.
+ * @param {number} winf infinite extensible angle in radians.
+ * @param {number} w  Destination angle in radians [-pi,pi].
+ * @returns {number} Extended angle in radians.
+ */
+infAngle(winf, w) {
+    let pi = Math.PI, pi2 = 2*pi, d = w - winf % pi2;
+    if      (d >  pi) d -= pi2;
+    else if (d < -pi) d += pi2;
+    return winf + d;
+},
+/**
  * Mixin a set of prototypes into a primary object.
  * @param {object} obj Primary object.
  * @param {objects} ...protos Set of prototype objects.
@@ -319,5 +333,14 @@ mixin(obj, ...protos) {
         obj = Object.defineProperties(obj, Object.getOwnPropertyDescriptors(proto))
     })
     return obj;
+},
+/**
+ * Assign getters to an objects prototype.
+ * @param {object} obj Primary object.
+ * @param {objects} ...protos Set of prototype objects.
+ */
+assignGetters(obj,getters) {
+    for (const key in getters) 
+        Object.defineProperty(obj, key, { get: getters[key], enumerable:true, configurable:true });
 }
 }
