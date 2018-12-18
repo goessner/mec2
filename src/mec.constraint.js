@@ -9,7 +9,6 @@
  */
 "use strict";
 
-//  { id:<string>,p1:<string>,p2:<string>,ori:<object>,len:<object> },
 /**
  * Wrapper class for extending plain constraint objects, usually coming from JSON objects.
  * @method
@@ -54,16 +53,80 @@ mec.constraint = {
     extend(c) { Object.setPrototypeOf(c, this.prototype); c.constructor(); return c; },
     prototype: {
         constructor() {}, // always parameterless .. !
-        init(model) {
-            this.model = model;
-            if (typeof this.p1 === 'string')
-                this.p1 = this.model.nodeById(this.p1);
-            if (typeof this.p2 === 'string')
-                this.p2 = this.model.nodeById(this.p2);
+        /**
+         * Check constraint properties for validity.
+         * @method
+         * @param {number} idx - index in constraint array.
+         * @returns {boolean | object} true - if no error was detected, error object otherwise.
+         */
+        validate(idx) {
+            let tmp, warn = false;
+
+            if (!this.id) 
+                return { mid:'E_ELEM_ID_MISSING',elemtype:'constraint',idx };
+            if (this.model.elementById(this.id) !== this) 
+                return { mid:'E_ELEM_ID_AMBIGIOUS', id:this.id };
+            if (!this.p1) 
+                return { mid:'E_CSTR_NODE_MISSING', id:this.id, loc:'start', p:'p1' };
+            if (!this.p2)
+                return { mid:'E_CSTR_NODE_MISSING', id:this.id, loc:'end', p:'p2' };
+            if (typeof this.p1 === 'string') {
+                if (!(tmp=this.model.nodeById(this.p1)))
+                    return { mid:'E_CSTR_NODE_NOT_EXISTS', id:this.id, loc:'start', p:'p1', nodeId:this.p1 };
+                else
+                    this.p1 = tmp;
+            }
+            if (typeof this.p2 === 'string') {
+                if (!(tmp=this.model.nodeById(this.p2)))
+                    return { mid:'E_CSTR_NODE_NOT_EXISTS', id:this.id, loc:'end', p:'p2', nodeId:this.p2 };
+                else
+                    this.p2 = tmp;
+            }
+            if (mec.isEps(this.p1.x - this.p2.x) && mec.isEps(this.p1.y - this.p2.y)) 
+                warn = { mid:'W_CSTR_NODES_COINCIDE', id:this.id, p1:this.p1.id, p2:this.p2.id };
+
             if (!this.hasOwnProperty('ori'))
                 this.ori = { type:'free' };
             if (!this.hasOwnProperty('len'))
                 this.len = { type:'free' };
+
+            if (typeof this.ori.ref === 'string') {
+                if (!(tmp=this.model.constraintById(this.ori.ref)))
+                    return { mid:'E_CSTR_REF_NOT_EXISTS', id:this.id, sub:'ori', ref:this.ori.ref };
+                else
+                    this.ori.ref = tmp;
+
+                if (this.ori.type === 'drive') {
+                    if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
+                        return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
+                    if (typeof this.ratio !== undefined && this.ratio !== 1)
+                        return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
+                }
+            }
+            if (typeof this.len.ref === 'string') {
+                if (!(tmp=this.model.constraintById(this.len.ref)))
+                    return { mid:'E_CSTR_REF_NOT_EXISTS', id:this.id, sub:'len', ref:this.len.ref };
+                else
+                    this.len.ref = tmp;
+
+                if (this.len.type === 'drive') {
+                    if (this.len.ref[this.len.reftype || 'len'].type === 'free')
+                        return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'len', ref:this.len.ref.id, reftype:this.len.reftype || 'len' };
+                    if (typeof this.ratio !== undefined && this.ratio !== 1)
+                        return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'len', ref:this.ori.ref.id, reftype:this.ori.reftype || 'len' };
+                }
+            }
+            return warn
+        },
+        /**
+         * Initialize constraint. Multiple initialization allowed.
+         * @method
+         * @param {object} model - model parent.
+         * @param {number} idx - index in constraint array.
+         */
+        init(model, idx) {
+            this.model = model;
+            if (!this.model.notifyValid(this.validate(idx))) return;
 
             const ori = this.ori, len = this.len;
 
@@ -108,7 +171,7 @@ mec.constraint = {
                  : ori.type !== 'free' && len.type !== 'free' ? 'ctrl'
                  : 'invalid';
         },
-        get initialized() { return typeof this.p1 === 'object' },
+        get initialized() { return this.model !== undefined },
         get dof() {
             return (this.ori.type === 'free' ? 1 : 0) + 
                    (this.len.type === 'free' ? 1 : 0);

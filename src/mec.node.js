@@ -29,11 +29,33 @@ mec.node = {
             this.dxt = this.dyt = 0;
             this.Qx = this.Qy = 0;     // sum of external loads ...
         },
-        init(model) {
+        /**
+         * Check node properties for validity.
+         * @method
+         * @param {number} idx - index in node array.
+         * @returns {boolean | object} false - if no error was detected, error object otherwise.
+         */
+        validate(idx) {
+            if (!this.id) 
+                return { mid:'E_ELEM_ID_MISSING',elemtype:'node',idx };
+            if (this.model.elementById(this.id) !== this) 
+                return { mid:'E_ELEM_ID_AMBIGIOUS', id:this.id };
+            if (typeof this.m === 'number' && mec.isEps(this.m) ) 
+                return { mid:'E_NODE_MASS_TOO_SMALL', id:this.id, m:this.m };
+            return false;
+        },
+        /**
+         * Initialize node. Multiple initialization allowed.
+         * @method
+         * @param {object} model - model parent.
+         * @param {number} idx - index in node array.
+         */
+        init(model, idx) {
             this.model = model;
+            if (!this.model.notifyValid(this.validate(idx))) return;
+
             // make inverse mass to first class citizen ... 
             this.im = typeof this.m === 'number' ? 1/this.m 
-                    : this.m === 'infinite'      ? 0         // deprecated  !!
                     : this.base === true         ? 0
                     : 1;
             // ... and mass / base to getter/setter

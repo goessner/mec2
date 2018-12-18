@@ -54,7 +54,7 @@ mec.model = {
         /**
          * Init model
          * @method
-         * @returns {boolean | object} error object in case of logical error or `false`.
+         * @returns object} model.
          */
         init() {
             let err = false;
@@ -68,19 +68,32 @@ mec.model = {
                 linkage: Object.assign({},mec.linkage,!!this.graphics?this.graphics.linkage:null)
             };
 
-            for (let i=0; i < this.nodes.length && !err; i++)
-                err = this.nodes[i].init(this);
-            for (let i=0; i < this.constraints.length && !err; i++)
-                if (!this.constraints[i].initialized)  // possibly already initialized by referencing .. !
-                    err = this.constraints[i].init(this);
-            for (let i=0; i < this.loads.length && !err; i++)
-                err = this.loads[i].init(this);
-            for (let i=0; i < this.views.length && !err; i++)
-                err = this.views[i].init(this);
-            for (let i=0; i < this.shapes.length && !err; i++)
-                err = this.shapes[i].init(this);
+            for (let i=0; i < this.nodes.length && this.valid; i++)
+                this.nodes[i].init(this,i);
+            for (let i=0; i < this.constraints.length && this.valid; i++)
+//                if (!this.constraints[i].initialized)  // allow multiple initialization .. !
+                this.constraints[i].init(this,i);
+            for (let i=0; i < this.loads.length && this.valid; i++)
+                this.loads[i].init(this,i);
+            for (let i=0; i < this.views.length && this.valid; i++)
+                this.views[i].init(this,i);
+            for (let i=0; i < this.shapes.length && this.valid; i++)
+                this.shapes[i].init(this,i);
 
-            return err;
+            return this;
+        },
+        /**
+         * Notification of validity by child. Error message aborts init procedure.
+         * @method
+         * @param {boolean | object} msg - message object or false in case of no error / warning.
+         * @returns {boolean | object} message object in case of logical error / warning or `false`.
+         */
+        notifyValid(msg) {
+            if (msg) {
+                this.state.msg = msg;
+                return (this.state.valid = msg.mid[0] !== 'E');
+            }
+            return true;
         },
         /**
          * Reset model
@@ -91,6 +104,7 @@ mec.model = {
          */
         reset() {
             this.timer.t = 0;
+            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             for (const node of this.nodes)
                 node.reset();
             for (const constraint of this.constraints)
@@ -99,7 +113,6 @@ mec.model = {
                 load.reset();
             for (const view of this.views)
                 view.reset();
-            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             return this;
         },
         /**
@@ -172,6 +185,11 @@ mec.model = {
         set dirty(q) { this.state.dirty = q; },
         get valid() { return this.state.valid; },
         set valid(q) { this.state.valid = q; },
+        /**
+         * Message object resulting from initialization process.
+         * @type {object}
+         */
+        get msg() { return this.state.msg; },
         get info() {
             let str = '';
             for (const view of this.views)
@@ -656,8 +674,7 @@ mec.model = {
             // post process constraints
             for (const constraint of this.constraints)
                 constraint.post(this.timer.dt);
-// console.log('itr='+this.itrCnt.pos+'/'+this.itrCnt.vel);
-            // pre process views
+            // post process views
             for (const view of this.views)
                 if (view.post)
                     view.post(this.timer.dt);
@@ -669,7 +686,7 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {                                 // todo: draw all components via 'x.draw(g)' call ! 
+        draw(g) {  // todo: draw all components via 'x.draw(g)' call ! 
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)

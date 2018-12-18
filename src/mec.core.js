@@ -10,6 +10,18 @@
  */
 const mec = {
 /**
+ * user language shortcut (for messages)
+ * @const
+ * @type {string}
+ */
+lang: 'en',
+/**
+ * namespace for user language neutral messages
+ * @const
+ * @type {object}
+ */
+msg: {},
+/**
  * minimal float difference to 1.0
  * @const
  * @type {number}
@@ -342,5 +354,14 @@ mixin(obj, ...protos) {
 assignGetters(obj,getters) {
     for (const key in getters) 
         Object.defineProperty(obj, key, { get: getters[key], enumerable:true, configurable:true });
+},
+/**
+ * Create message string from message object.
+ * @param {object} msg message/warning/error object.
+ * @returns {string} message string.
+ */
+messageString(msg) {
+    const entry = mec.msg[mec.lang][msg.mid];
+    return entry ? msg.mid[0]+': '+entry(msg) : '';
 }
 }

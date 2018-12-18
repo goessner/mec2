@@ -37,16 +37,45 @@ mec.load = {
  */
 mec.load.force = {
     constructor() {}, // always parameterless .. !
-    init(model) {
-        this.model = model;
-        this.init_force(model);
+    /**
+     * Check force properties for validity.
+     * @method
+     * @param {number} idx - index in load array.
+     * @returns {boolean} false - if no error / warning was detected. 
+     */
+    validate(idx) {
+        let warn = false;
+
+        if (!this.id) 
+            warn = { mid:'W_ELEM_ID_MISSING',elemtype:'force',idx };
+        if (this.p === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'force',id:this.id,reftype:'node',name:'p'};
+        if (!this.model.nodeById(this.p)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'force',id:this.id,reftype:'node',name:this.p};
+        else
+            this.p = this.model.nodeById(this.p);
+
+        if (this.wref && !this.model.constraintById(this.wref)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'force',id:this.id,reftype:'constraint',name:'wref'};
+        else
+            this.wref = this.model.constraintById(this.wref);
+
+        if (typeof this.value === number && mec.isEps(this.value)) 
+            return { mid:'E_FORCE_VALUE_INVALID',val:this.value,id:this.id };
+            
+        return warn;
     },
-    init_force(model) {
-        if (typeof this.p === 'string')
-            this.p = model.nodeById(this.p);
-        if (typeof this.wref === 'string')
-            this.wref = model.constraintById(this.wref);
-        this.value = mec.from_N(this.value || 1);
+    /**
+     * Initialize force. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in load array.
+     */
+    init(model,idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) return;
+
+        this._value = mec.from_N(this.value || 1);  // allow multiple init's
         this.w0 = typeof this.w0 === 'number' ? this.w0 : 0;
     },
     /**
@@ -56,28 +85,29 @@ mec.load.force = {
      * @returns {boolean} true, dependency exists.
      */
     dependsOn(elem) {
-        return this.p === elem || this.wref === elem;
+        return this.p === elem 
+            || this.wref === elem;
     },
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
                 + ((!!this.mode && (this.mode === 'push')) ? ',"mode":"push"' : '')
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
-                + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
+                + (this.value ? ',"value":'+this.value : '')
                 + ' }';
     },
 
  // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
-    get Qx() { return this.value*Math.cos(this.w)},
-    get Qy() { return this.value*Math.sin(this.w)},
+    get Qx() { return this._value*Math.cos(this.w)},
+    get Qy() { return this._value*Math.sin(this.w)},
     reset() {},
     apply() {
         this.p.Qx += this.Qx;
         this.p.Qy += this.Qy;
     },
     // analysis getters
-    get forceAbs() { return this.value; },
+    get forceAbs() { return this._value; },
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
@@ -122,22 +152,54 @@ mec.load.force = {
  * @param {object} - spring load.
  * @property {string} [p1] - referenced node id 1.
  * @property {string} [p2] - referenced node id 2.
- * @property {number} [k] - spring rate.
- * @property {number} [len0] - unloaded spring length. If not given, 
+ * @property {number} [k = 1] - spring rate.
+ * @property {number} [len0] - unloaded spring length. If not specified, 
  * the initial distance between p1 and p2 is taken.
  */
 mec.load.spring = {
     constructor() {}, // always parameterless .. !
-    init(model) {
-        this.model = model;
-        this.init_spring(model);
+    /**
+     * Check spring properties for validity.
+     * @method
+     * @param {number} idx - index in load array.
+     * @returns {boolean} false - if no error / warning was detected. 
+     */
+    validate(idx) {
+        let warn = false;
+
+        if (!this.id) 
+            warn = { mid:'W_ELEM_ID_MISSING',elemtype:'spring',idx };
+
+        if (this.p1 === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'spring',id:this.id,reftype:'node',name:'p1'};
+        if (!this.model.nodeById(this.p1)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'spring',id:this.id,reftype:'node',name:this.p1};
+        else
+            this.p1 = this.model.nodeById(this.p1);
+
+        if (this.p2 === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'spring',id:this.id,reftype:'node',name:'p2'};
+        if (!this.model.nodeById(this.p2)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'spring',id:this.id,reftype:'node',name:this.p2};
+        else
+            this.p2 = this.model.nodeById(this.p2);
+
+        if (typeof this.k === number && mec.isEps(this.k))
+            return { mid:'E_SPRING_RATE_INVALID',id:this.id,val:this.k};
+
+        return warn;
     },
-    init_spring(model) {
-        if (typeof this.p1 === 'string')
-            this.p1 = model.nodeById(this.p1);
-        if (typeof this.p2 === 'string')
-            this.p2 = model.nodeById(this.p2);
-        this.k = mec.from_N_m(this.k || 0.01);
+    /**
+     * Initialize spring. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in load array.
+     */
+    init(model,idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) return;
+
+        this._k = mec.from_N_m(this.k || 0.01);
         this.len0 = typeof this.len0 === 'number' 
                   ? this.len0 
                   : Math.hypot(this.p2.x-this.p1.x,this.p2.y-this.p1.y);
@@ -149,11 +211,12 @@ mec.load.spring = {
      * @returns {boolean} true, dependency exists.
      */
     dependsOn(elem) {
-        return this.p1 === elem || this.p2 === elem;
+        return this.p1 === elem 
+            || this.p2 === elem;
     },
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"'
-                + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
+                + (this.k ? ',"k":'+this.k : '')
                 + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
                 + ' }';
     },
@@ -161,7 +224,7 @@ mec.load.spring = {
     // cartesian components
     get len() { return Math.hypot(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
     get w() { return Math.atan2(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
-    get force() { return this.k*(this.len - this.len0); },                           // todo: rename due to analysis convention .. !
+    get force() { return this._k*(this.len - this.len0); },                           // todo: rename due to analysis convention .. !
     get Qx() { return this.force*Math.cos(this.w)},
     get Qy() { return this.force*Math.sin(this.w)},
     reset() {},

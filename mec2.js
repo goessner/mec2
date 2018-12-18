@@ -10,6 +10,18 @@
  */
 const mec = {
 /**
+ * user language shortcut (for messages)
+ * @const
+ * @type {string}
+ */
+lang: 'en',
+/**
+ * namespace for user language neutral messages
+ * @const
+ * @type {object}
+ */
+msg: {},
+/**
  * minimal float difference to 1.0
  * @const
  * @type {number}
@@ -342,6 +354,15 @@ mixin(obj, ...protos) {
 assignGetters(obj,getters) {
     for (const key in getters) 
         Object.defineProperty(obj, key, { get: getters[key], enumerable:true, configurable:true });
+},
+/**
+ * Create message string from message object.
+ * @param {object} msg message/warning/error object.
+ * @returns {string} message string.
+ */
+messageString(msg) {
+    const entry = mec.msg[mec.lang][msg.mid];
+    return entry ? msg.mid[0]+': '+entry(msg) : '';
 }
 }
 /**
@@ -375,11 +396,33 @@ mec.node = {
             this.dxt = this.dyt = 0;
             this.Qx = this.Qy = 0;     // sum of external loads ...
         },
-        init(model) {
+        /**
+         * Check node properties for validity.
+         * @method
+         * @param {number} idx - index in node array.
+         * @returns {boolean | object} false - if no error was detected, error object otherwise.
+         */
+        validate(idx) {
+            if (!this.id) 
+                return { mid:'E_ELEM_ID_MISSING',elemtype:'node',idx };
+            if (this.model.elementById(this.id) !== this) 
+                return { mid:'E_ELEM_ID_AMBIGIOUS', id:this.id };
+            if (typeof this.m === 'number' && mec.isEps(this.m) ) 
+                return { mid:'E_NODE_MASS_TOO_SMALL', id:this.id, m:this.m };
+            return false;
+        },
+        /**
+         * Initialize node. Multiple initialization allowed.
+         * @method
+         * @param {object} model - model parent.
+         * @param {number} idx - index in node array.
+         */
+        init(model, idx) {
             this.model = model;
+            if (!this.model.notifyValid(this.validate(idx))) return;
+
             // make inverse mass to first class citizen ... 
             this.im = typeof this.m === 'number' ? 1/this.m 
-                    : this.m === 'infinite'      ? 0         // deprecated  !!
                     : this.base === true         ? 0
                     : 1;
             // ... and mass / base to getter/setter
@@ -546,7 +589,6 @@ mec.node = {
  */
 "use strict";
 
-//  { id:<string>,p1:<string>,p2:<string>,ori:<object>,len:<object> },
 /**
  * Wrapper class for extending plain constraint objects, usually coming from JSON objects.
  * @method
@@ -591,16 +633,80 @@ mec.constraint = {
     extend(c) { Object.setPrototypeOf(c, this.prototype); c.constructor(); return c; },
     prototype: {
         constructor() {}, // always parameterless .. !
-        init(model) {
-            this.model = model;
-            if (typeof this.p1 === 'string')
-                this.p1 = this.model.nodeById(this.p1);
-            if (typeof this.p2 === 'string')
-                this.p2 = this.model.nodeById(this.p2);
+        /**
+         * Check constraint properties for validity.
+         * @method
+         * @param {number} idx - index in constraint array.
+         * @returns {boolean | object} true - if no error was detected, error object otherwise.
+         */
+        validate(idx) {
+            let tmp, warn = false;
+
+            if (!this.id) 
+                return { mid:'E_ELEM_ID_MISSING',elemtype:'constraint',idx };
+            if (this.model.elementById(this.id) !== this) 
+                return { mid:'E_ELEM_ID_AMBIGIOUS', id:this.id };
+            if (!this.p1) 
+                return { mid:'E_CSTR_NODE_MISSING', id:this.id, loc:'start', p:'p1' };
+            if (!this.p2)
+                return { mid:'E_CSTR_NODE_MISSING', id:this.id, loc:'end', p:'p2' };
+            if (typeof this.p1 === 'string') {
+                if (!(tmp=this.model.nodeById(this.p1)))
+                    return { mid:'E_CSTR_NODE_NOT_EXISTS', id:this.id, loc:'start', p:'p1', nodeId:this.p1 };
+                else
+                    this.p1 = tmp;
+            }
+            if (typeof this.p2 === 'string') {
+                if (!(tmp=this.model.nodeById(this.p2)))
+                    return { mid:'E_CSTR_NODE_NOT_EXISTS', id:this.id, loc:'end', p:'p2', nodeId:this.p2 };
+                else
+                    this.p2 = tmp;
+            }
+            if (mec.isEps(this.p1.x - this.p2.x) && mec.isEps(this.p1.y - this.p2.y)) 
+                warn = { mid:'W_CSTR_NODES_COINCIDE', id:this.id, p1:this.p1.id, p2:this.p2.id };
+
             if (!this.hasOwnProperty('ori'))
                 this.ori = { type:'free' };
             if (!this.hasOwnProperty('len'))
                 this.len = { type:'free' };
+
+            if (typeof this.ori.ref === 'string') {
+                if (!(tmp=this.model.constraintById(this.ori.ref)))
+                    return { mid:'E_CSTR_REF_NOT_EXISTS', id:this.id, sub:'ori', ref:this.ori.ref };
+                else
+                    this.ori.ref = tmp;
+
+                if (this.ori.type === 'drive') {
+                    if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
+                        return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
+                    if (typeof this.ratio !== undefined && this.ratio !== 1)
+                        return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
+                }
+            }
+            if (typeof this.len.ref === 'string') {
+                if (!(tmp=this.model.constraintById(this.len.ref)))
+                    return { mid:'E_CSTR_REF_NOT_EXISTS', id:this.id, sub:'len', ref:this.len.ref };
+                else
+                    this.len.ref = tmp;
+
+                if (this.len.type === 'drive') {
+                    if (this.len.ref[this.len.reftype || 'len'].type === 'free')
+                        return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'len', ref:this.len.ref.id, reftype:this.len.reftype || 'len' };
+                    if (typeof this.ratio !== undefined && this.ratio !== 1)
+                        return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'len', ref:this.ori.ref.id, reftype:this.ori.reftype || 'len' };
+                }
+            }
+            return warn
+        },
+        /**
+         * Initialize constraint. Multiple initialization allowed.
+         * @method
+         * @param {object} model - model parent.
+         * @param {number} idx - index in constraint array.
+         */
+        init(model, idx) {
+            this.model = model;
+            if (!this.model.notifyValid(this.validate(idx))) return;
 
             const ori = this.ori, len = this.len;
 
@@ -645,7 +751,7 @@ mec.constraint = {
                  : ori.type !== 'free' && len.type !== 'free' ? 'ctrl'
                  : 'invalid';
         },
-        get initialized() { return typeof this.p1 === 'object' },
+        get initialized() { return this.model !== undefined },
         get dof() {
             return (this.ori.type === 'free' ? 1 : 0) + 
                    (this.len.type === 'free' ? 1 : 0);
@@ -1445,16 +1551,45 @@ mec.load = {
  */
 mec.load.force = {
     constructor() {}, // always parameterless .. !
-    init(model) {
-        this.model = model;
-        this.init_force(model);
+    /**
+     * Check force properties for validity.
+     * @method
+     * @param {number} idx - index in load array.
+     * @returns {boolean} false - if no error / warning was detected. 
+     */
+    validate(idx) {
+        let warn = false;
+
+        if (!this.id) 
+            warn = { mid:'W_ELEM_ID_MISSING',elemtype:'force',idx };
+        if (this.p === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'force',id:this.id,reftype:'node',name:'p'};
+        if (!this.model.nodeById(this.p)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'force',id:this.id,reftype:'node',name:this.p};
+        else
+            this.p = this.model.nodeById(this.p);
+
+        if (this.wref && !this.model.constraintById(this.wref)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'force',id:this.id,reftype:'constraint',name:'wref'};
+        else
+            this.wref = this.model.constraintById(this.wref);
+
+        if (typeof this.value === number && mec.isEps(this.value)) 
+            return { mid:'E_FORCE_VALUE_INVALID',val:this.value,id:this.id };
+            
+        return warn;
     },
-    init_force(model) {
-        if (typeof this.p === 'string')
-            this.p = model.nodeById(this.p);
-        if (typeof this.wref === 'string')
-            this.wref = model.constraintById(this.wref);
-        this.value = mec.from_N(this.value || 1);
+    /**
+     * Initialize force. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in load array.
+     */
+    init(model,idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) return;
+
+        this._value = mec.from_N(this.value || 1);  // allow multiple init's
         this.w0 = typeof this.w0 === 'number' ? this.w0 : 0;
     },
     /**
@@ -1464,28 +1599,29 @@ mec.load.force = {
      * @returns {boolean} true, dependency exists.
      */
     dependsOn(elem) {
-        return this.p === elem || this.wref === elem;
+        return this.p === elem 
+            || this.wref === elem;
     },
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
                 + ((!!this.mode && (this.mode === 'push')) ? ',"mode":"push"' : '')
                 + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
-                + ((this.value && Math.abs(mec.to_N(this.value) - 1) > 0.0001) ? ',"value":'+mec.to_N(this.value) : '')
+                + (this.value ? ',"value":'+this.value : '')
                 + ' }';
     },
 
  // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
-    get Qx() { return this.value*Math.cos(this.w)},
-    get Qy() { return this.value*Math.sin(this.w)},
+    get Qx() { return this._value*Math.cos(this.w)},
+    get Qy() { return this._value*Math.sin(this.w)},
     reset() {},
     apply() {
         this.p.Qx += this.Qx;
         this.p.Qy += this.Qy;
     },
     // analysis getters
-    get forceAbs() { return this.value; },
+    get forceAbs() { return this._value; },
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
@@ -1530,22 +1666,54 @@ mec.load.force = {
  * @param {object} - spring load.
  * @property {string} [p1] - referenced node id 1.
  * @property {string} [p2] - referenced node id 2.
- * @property {number} [k] - spring rate.
- * @property {number} [len0] - unloaded spring length. If not given, 
+ * @property {number} [k = 1] - spring rate.
+ * @property {number} [len0] - unloaded spring length. If not specified, 
  * the initial distance between p1 and p2 is taken.
  */
 mec.load.spring = {
     constructor() {}, // always parameterless .. !
-    init(model) {
-        this.model = model;
-        this.init_spring(model);
+    /**
+     * Check spring properties for validity.
+     * @method
+     * @param {number} idx - index in load array.
+     * @returns {boolean} false - if no error / warning was detected. 
+     */
+    validate(idx) {
+        let warn = false;
+
+        if (!this.id) 
+            warn = { mid:'W_ELEM_ID_MISSING',elemtype:'spring',idx };
+
+        if (this.p1 === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'spring',id:this.id,reftype:'node',name:'p1'};
+        if (!this.model.nodeById(this.p1)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'spring',id:this.id,reftype:'node',name:this.p1};
+        else
+            this.p1 = this.model.nodeById(this.p1);
+
+        if (this.p2 === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'spring',id:this.id,reftype:'node',name:'p2'};
+        if (!this.model.nodeById(this.p2)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'spring',id:this.id,reftype:'node',name:this.p2};
+        else
+            this.p2 = this.model.nodeById(this.p2);
+
+        if (typeof this.k === number && mec.isEps(this.k))
+            return { mid:'E_SPRING_RATE_INVALID',id:this.id,val:this.k};
+
+        return warn;
     },
-    init_spring(model) {
-        if (typeof this.p1 === 'string')
-            this.p1 = model.nodeById(this.p1);
-        if (typeof this.p2 === 'string')
-            this.p2 = model.nodeById(this.p2);
-        this.k = mec.from_N_m(this.k || 0.01);
+    /**
+     * Initialize spring. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in load array.
+     */
+    init(model,idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) return;
+
+        this._k = mec.from_N_m(this.k || 0.01);
         this.len0 = typeof this.len0 === 'number' 
                   ? this.len0 
                   : Math.hypot(this.p2.x-this.p1.x,this.p2.y-this.p1.y);
@@ -1557,11 +1725,12 @@ mec.load.spring = {
      * @returns {boolean} true, dependency exists.
      */
     dependsOn(elem) {
-        return this.p1 === elem || this.p2 === elem;
+        return this.p1 === elem 
+            || this.p2 === elem;
     },
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"'
-                + ((this.k && !(mec.to_N_m(this.k) === 0.01)) ? ',"k":'+mec.to_N_m(this.k) : '')
+                + (this.k ? ',"k":'+this.k : '')
                 + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
                 + ' }';
     },
@@ -1569,7 +1738,7 @@ mec.load.spring = {
     // cartesian components
     get len() { return Math.hypot(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
     get w() { return Math.atan2(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
-    get force() { return this.k*(this.len - this.len0); },                           // todo: rename due to analysis convention .. !
+    get force() { return this._k*(this.len - this.len0); },                           // todo: rename due to analysis convention .. !
     get Qx() { return this.force*Math.cos(this.w)},
     get Qy() { return this.force*Math.sin(this.w)},
     reset() {},
@@ -2133,7 +2302,7 @@ mec.model = {
         /**
          * Init model
          * @method
-         * @returns {boolean | object} error object in case of logical error or `false`.
+         * @returns object} model.
          */
         init() {
             let err = false;
@@ -2147,19 +2316,32 @@ mec.model = {
                 linkage: Object.assign({},mec.linkage,!!this.graphics?this.graphics.linkage:null)
             };
 
-            for (let i=0; i < this.nodes.length && !err; i++)
-                err = this.nodes[i].init(this);
-            for (let i=0; i < this.constraints.length && !err; i++)
-                if (!this.constraints[i].initialized)  // possibly already initialized by referencing .. !
-                    err = this.constraints[i].init(this);
-            for (let i=0; i < this.loads.length && !err; i++)
-                err = this.loads[i].init(this);
-            for (let i=0; i < this.views.length && !err; i++)
-                err = this.views[i].init(this);
-            for (let i=0; i < this.shapes.length && !err; i++)
-                err = this.shapes[i].init(this);
+            for (let i=0; i < this.nodes.length && this.valid; i++)
+                this.nodes[i].init(this,i);
+            for (let i=0; i < this.constraints.length && this.valid; i++)
+//                if (!this.constraints[i].initialized)  // allow multiple initialization .. !
+                this.constraints[i].init(this,i);
+            for (let i=0; i < this.loads.length && this.valid; i++)
+                this.loads[i].init(this,i);
+            for (let i=0; i < this.views.length && this.valid; i++)
+                this.views[i].init(this,i);
+            for (let i=0; i < this.shapes.length && this.valid; i++)
+                this.shapes[i].init(this,i);
 
-            return err;
+            return this;
+        },
+        /**
+         * Notification of validity by child. Error message aborts init procedure.
+         * @method
+         * @param {boolean | object} msg - message object or false in case of no error / warning.
+         * @returns {boolean | object} message object in case of logical error / warning or `false`.
+         */
+        notifyValid(msg) {
+            if (msg) {
+                this.state.msg = msg;
+                return (this.state.valid = msg.mid[0] !== 'E');
+            }
+            return true;
         },
         /**
          * Reset model
@@ -2170,6 +2352,7 @@ mec.model = {
          */
         reset() {
             this.timer.t = 0;
+            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             for (const node of this.nodes)
                 node.reset();
             for (const constraint of this.constraints)
@@ -2178,7 +2361,6 @@ mec.model = {
                 load.reset();
             for (const view of this.views)
                 view.reset();
-            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             return this;
         },
         /**
@@ -2251,6 +2433,11 @@ mec.model = {
         set dirty(q) { this.state.dirty = q; },
         get valid() { return this.state.valid; },
         set valid(q) { this.state.valid = q; },
+        /**
+         * Message object resulting from initialization process.
+         * @type {object}
+         */
+        get msg() { return this.state.msg; },
         get info() {
             let str = '';
             for (const view of this.views)
@@ -2735,8 +2922,7 @@ mec.model = {
             // post process constraints
             for (const constraint of this.constraints)
                 constraint.post(this.timer.dt);
-// console.log('itr='+this.itrCnt.pos+'/'+this.itrCnt.vel);
-            // pre process views
+            // post process views
             for (const view of this.views)
                 if (view.post)
                     view.post(this.timer.dt);
@@ -2748,7 +2934,7 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {                                 // todo: draw all components via 'x.draw(g)' call ! 
+        draw(g) {  // todo: draw all components via 'x.draw(g)' call ! 
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)
@@ -2762,4 +2948,39 @@ mec.model = {
             return this;
         }
     }
+}/**
+ * mec.msg.en (c) 2018 Stefan Goessner
+ * @license MIT License
+ */
+"use strict";
+
+/**
+ * @namespace mec.msg.en namespace for English mec related messages.
+ */
+mec.msg.en = {
+    // User interface related messages
+    U_SEL_SECOND_NODE: () => `Select second node.`,
+
+    // Logical warnings
+    W_CSTR_NODES_COINCIDE: ({cstr,p1,p2}) => `Warning: Nodes '${p1}' and '${p2}' of constraint '${cstr}' coincide.`,
+
+    // Logical errors / warnings
+    E_ELEM_ID_MISSING: ({elemtype,idx}) => `${elemtype} with index ${idx} must have an id defined.`,
+    E_ELEM_ID_AMBIGIOUS: ({elemtype,id}) => `${elemtype} id '${id}' is ambigious.`,
+    W_ELEM_ID_MISSING: ({elemtype,idx}) => `${elemtype} with index ${idx} should have an id defined.`,
+    E_ELEM_REF_MISSING: ({elemtype,id,reftype,name}) => `${elemtype} '${id}' must have a ${reftype} reference '${name}' defined.`,
+    E_ELEM_INVALID_REF: ({elemtype,id,reftype,name,}) => `${reftype} reference '${name}' of ${elemtype} '${id}' is invalid.`,
+
+    E_NODE_MASS_TOO_SMALL: ({id,m}) => `Node's (id='${id}') mass of ${m} is too small.`,
+
+    E_CSTR_NODE_MISSING: ({id, loc, p}) => `${loc} node '${p}' of constraint (id='${id}') is missing.`,
+    E_CSTR_NODE_NOT_EXISTS: ({id,loc,p,nodeId}) => `${loc} node '${p}':'${nodeId}' of constraint '${id}' does not exist.`,
+    E_CSTR_REF_NOT_EXISTS: ({id,sub,ref}) => `Reference to '${ref}' in '${sub} of constraint '${id}' does not exist.`,
+    E_CSTR_DRIVEN_REF_TO_FREE_CSTR: ({id,sub,ref, reftype}) => `Driven ${sub} constraint of '${id}' must not reference free '${reftype}' of constraint '${ref}'.`,
+    W_CSTR_RATIO_IGNORED: ({id,sub,ref,reftype}) => `Ratio value of driven ${sub} constraint '${id}' with reference to '${reftype}' constraint '${ref}' ignored.`,
+
+    E_FORCE_VALUE_INVALID: ({id,val}) => `Force value '${val}' of load '${id}' is not allowed.`,
+    E_SPRING_RATE_INVALID: ({id,val}) => `Spring rate '${val}' of load '${id}' is not allowed.`
+
 }
+
