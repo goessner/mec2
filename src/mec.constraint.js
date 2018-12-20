@@ -696,16 +696,16 @@ mec.constraint = {
                 jsonString += (this.len.type === 'const' ? ',"len":{ "type":"const"' : '')
                             + (this.len.type === 'drive' ? ',"len":{ "type":"drive"' : '')
                             + (this.len.ref ? ',"ref":"'+this.len.ref.id+'"' : '')
-                            + (this.len.refval ? ',"refval":"'+this.len.refval+'"' : '')
+                            + (this.len.reftype ? ',"reftype":"'+this.len.reftype+'"' : '')
                             + (this.len.r0 && this.len.r0 > 0.0001 ? ',"r0":'+this.len.r0 : '')
                             + (this.len.ratio && Math.abs(this.len.ratio-1)>0.0001 ? ',"ratio":'+this.len.ratio : '')
                             + (this.len.func ? ',"func":"'+this.len.func+'"' : '')
                             + (this.len.arg ? ',"arg":"'+this.len.arg+'"' : '')
                             + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":'+this.len.t0 : '')
-                            + (this.len.Dt ? 
-                                this.len.repeat ? 
-                                    ',"Dt":'+this.len.Dt/this.len.repeat+',"repeat":'+this.len.repeat 
-                                    : ',"Dt":'+this.len.Dt 
+                            + (this.len.Dt ?
+                                this.len.repeat ?
+                                    ',"Dt":'+this.len.Dt/this.len.repeat+',"repeat":'+this.len.repeat
+                                    : ',"Dt":'+this.len.Dt
                                 : '')
                             + (this.len.Dr ? ',"Dr":'+this.len.Dr : '')
                             + (this.len.bounce ? ',"bounce":true' : '')
@@ -717,16 +717,16 @@ mec.constraint = {
                 jsonString += (this.ori.type === 'const' ? ',"ori":{ "type":"const"' : '')
                             + (this.ori.type === 'drive' ? ',"ori":{ "type":"drive"' : '')
                             + (this.ori.ref ? ',"ref":"'+this.ori.ref.id+'"' : '')
-                            + (this.ori.refval ? ',"refval":"'+this.ori.refval+'"' : '')
+                            + (this.ori.reftype ? ',"reftype":"'+this.ori.reftype+'"' : '')
                             + (this.ori.w0 && this.ori.w0 > 0.0001 ? ',"r0":'+this.ori.w0 : '')
                             + (this.ori.ratio && Math.abs(this.ori.ratio-1)>0.0001 ? ',"ratio":'+this.ori.ratio : '')
                             + (this.ori.func ? ',"func":"'+this.ori.func+'"' : '')
                             + (this.ori.arg ? ',"arg":"'+this.ori.arg+'"' : '')
                             + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":'+this.ori.t0 : '')
-                            + (this.ori.Dt ? 
-                                this.ori.repeat ? 
-                                    ',"Dt":'+this.ori.Dt/this.ori.repeat+',"repeat":'+this.ori.repeat 
-                                    : ',"Dt":'+this.ori.Dt 
+                            + (this.ori.Dt ?
+                                this.ori.repeat ?
+                                    ',"Dt":'+this.ori.Dt/this.ori.repeat+',"repeat":'+this.ori.repeat
+                                    : ',"Dt":'+this.ori.Dt
                                 : '')
                             + (this.ori.Dw ? ',"Dw":'+this.ori.Dw : '')
                             + (this.ori.bounce ? ',"bounce":true' : '')
