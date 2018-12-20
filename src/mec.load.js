@@ -16,14 +16,14 @@
  * @property {string} type - load type ['force'|'spring'].
  */
 mec.load = {
-    extend(load) { 
+    extend(load) {
         if (!load.type)
             load.type = 'force';
         if (mec.load[load.type]) {
             Object.setPrototypeOf(load, mec.load[load.type]);
-            load.constructor(); 
+            load.constructor();
         }
-        return load; 
+        return load;
     }
 }
 
@@ -41,28 +41,28 @@ mec.load.force = {
      * Check force properties for validity.
      * @method
      * @param {number} idx - index in load array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
         let warn = false;
 
-        if (!this.id) 
+        if (!this.id)
             warn = { mid:'W_ELEM_ID_MISSING',elemtype:'force',idx };
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'force',id:this.id,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'force',id:this.id,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.wref && !this.model.constraintById(this.wref)) 
+        if (this.wref && !this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'force',id:this.id,reftype:'constraint',name:'wref'};
         else
             this.wref = this.model.constraintById(this.wref);
 
-        if (typeof this.value === number && mec.isEps(this.value)) 
+        if (typeof this.value === number && mec.isEps(this.value))
             return { mid:'E_FORCE_VALUE_INVALID',val:this.value,id:this.id };
-            
+
         return warn;
     },
     /**
@@ -85,7 +85,7 @@ mec.load.force = {
      * @returns {boolean} true, dependency exists.
      */
     dependsOn(elem) {
-        return this.p === elem 
+        return this.p === elem
             || this.wref === elem;
     },
     asJSON() {
@@ -110,7 +110,7 @@ mec.load.force = {
     get forceAbs() { return this._value; },
     // interaction
     get isSolid() { return false },
-    get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] : false; },
     hitContour({x,y,eps}) {
         const len = 45,   // const length for all force arrows
               p = this.p,
@@ -130,18 +130,18 @@ mec.load.force = {
               len = mec.load.force.arrowLength,
               off = 2*mec.node.radius,
               idsign = this.mode === 'push' ? -1 : 1,
-              xid = p.x + idsign*25*cw - 12*sw, 
+              xid = p.x + idsign*25*cw - 12*sw,
               yid = p.y + idsign*25*sw + 12*cw,
               x = this.mode === 'push' ? () => p.x - (len+off)*cw
                                        : () => p.x + off*cw,
               y = this.mode === 'push' ? () => p.y - (len+off)*sw
                                        : () => p.y + off*sw,
-              g = g2().beg({x,y,w,scl:1,lw:2,ls:mec.forceColor,
+              g = g2().beg({x,y,w,scl:1,lw:2,ls:this.model.env.show.forceColor,
                             lc:'round',sh:()=>this.sh,fs:'@ls'})
                       .drw({d:mec.load.force.arrow,lsh:true})
                       .end();
-        if (this.model.graphics.labels.loads)
-            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor});
+        if (this.model.env.show.loadLabels)
+            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:this.model.env.show.txtColor});
         return g;
     },
     arrowLength: 45,   // draw all forces of length ...
@@ -153,7 +153,7 @@ mec.load.force = {
  * @property {string} [p1] - referenced node id 1.
  * @property {string} [p2] - referenced node id 2.
  * @property {number} [k = 1] - spring rate.
- * @property {number} [len0] - unloaded spring length. If not specified, 
+ * @property {number} [len0] - unloaded spring length. If not specified,
  * the initial distance between p1 and p2 is taken.
  */
 mec.load.spring = {
@@ -162,24 +162,24 @@ mec.load.spring = {
      * Check spring properties for validity.
      * @method
      * @param {number} idx - index in load array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
         let warn = false;
 
-        if (!this.id) 
+        if (!this.id)
             warn = { mid:'W_ELEM_ID_MISSING',elemtype:'spring',idx };
 
-        if (this.p1 === undefined) 
+        if (this.p1 === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'spring',id:this.id,reftype:'node',name:'p1'};
-        if (!this.model.nodeById(this.p1)) 
+        if (!this.model.nodeById(this.p1))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'spring',id:this.id,reftype:'node',name:this.p1};
         else
             this.p1 = this.model.nodeById(this.p1);
 
-        if (this.p2 === undefined) 
+        if (this.p2 === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'spring',id:this.id,reftype:'node',name:'p2'};
-        if (!this.model.nodeById(this.p2)) 
+        if (!this.model.nodeById(this.p2))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'spring',id:this.id,reftype:'node',name:this.p2};
         else
             this.p2 = this.model.nodeById(this.p2);
@@ -200,8 +200,8 @@ mec.load.spring = {
         if (!this.model.notifyValid(this.validate(idx))) return;
 
         this._k = mec.from_N_m(this.k || 0.01);
-        this.len0 = typeof this.len0 === 'number' 
-                  ? this.len0 
+        this.len0 = typeof this.len0 === 'number'
+                  ? this.len0
                   : Math.hypot(this.p2.x-this.p1.x,this.p2.y-this.p1.y);
     },
     /**
@@ -211,7 +211,7 @@ mec.load.spring = {
      * @returns {boolean} true, dependency exists.
      */
     dependsOn(elem) {
-        return this.p1 === elem 
+        return this.p1 === elem
             || this.p2 === elem;
     },
     asJSON() {
@@ -237,11 +237,11 @@ mec.load.spring = {
         this.p2.Qy -= Qy;
     },
     // analysis getters
-    get forceAbs() { return this.force; },  
+    get forceAbs() { return this.force; },
     // interaction
     get isSolid() { return false },
     // get sh() { return this.state & g2.OVER ? [0,0,4,"gray"] : false },
-    get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, 'yellow'] : false; },
+    get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] : false; },
     hitContour({x,y,eps}) {
         const p1 = this.p1, p2 = this.p2,
               cw = Math.cos(this.w), sw = Math.sin(this.w),
@@ -266,6 +266,6 @@ mec.load.spring = {
                    .l({x:xm+( ux/6-uy/2)*h,y:ym+( uy/6+ux/2)*h})
                    .l({x:xm+ux*h/2,y:ym+uy*h/2})
                    .l({x:x2-ux*off,y:y2-uy*off})
-                   .stroke(Object.assign({}, {ls:mec.springColor},this,{fs:'transparent',lc:'round',lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
+                   .stroke(Object.assign({}, {ls:this.model.env.show.springColor},this,{fs:'transparent',lc:'round',lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
     }
 }

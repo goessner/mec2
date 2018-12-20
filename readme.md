@@ -66,9 +66,9 @@ Here's a minimal example:
                     { id:'a',p1:'A0',p2:'A1',len:{type:'const'} }
                 ]
               };
-          
+
         // simulation
-        const simulate = () => {       
+        const simulate = () => {
                   model.tick(1/60);                 // solve model with fixed stepping
                   g.exe(ctx);                       // render its pose on the canvas
                   requestAnimationFrame(simulate);  // keep calling back
@@ -76,7 +76,7 @@ Here's a minimal example:
 
         mec.model.extend(model);                    // extend the model
         model.init();                               // initialize it
-        model.draw(g);                              // append model-graphics to graphics-obj  
+        model.draw(g);                              // append model-graphics to graphics-obj
 
         simulate();                                 // kick-off the simulation
     </script>
@@ -92,9 +92,10 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 
 # Change Log
 
-### 0.8.5 - 2018-12-15
+### 0.8.5 - 2018-12-20
 
 * reworked constraints and added support for bidirectional references.
+* moved everything graphics related (flags, colors) to `mec.core.show`.
 
 ### 0.8.0 - 2018-08-13
 

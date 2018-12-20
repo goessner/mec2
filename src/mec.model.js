@@ -24,13 +24,17 @@
  * @property {array} shapes - Array of shape objects.
  */
 mec.model = {
-    extend(model) { 
-        Object.setPrototypeOf(model, this.prototype); 
-        model.constructor(); 
-        return model; 
+    extend(model, env = mec) {
+        Object.setPrototypeOf(model, this.prototype);
+        model.constructor(env);
+        return model;
     },
     prototype: {
-        constructor() { // always parameterless .. !
+        constructor(env) {
+            this.env = env; // reference environment of model
+            if (env !== mec) // it's possible that user defined a custom show object
+                this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
+
             this.state = {valid:true,itrpos:0,itrvel:0};
             this.timer = {t:0,dt:1/60};
             // create empty containers for all elements
@@ -63,11 +67,6 @@ mec.model = {
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
 
-            this.graphics = {
-                labels: Object.assign({},mec.labels,!!this.graphics?this.graphics.labels:null),
-                linkage: Object.assign({},mec.linkage,!!this.graphics?this.graphics.linkage:null)
-            };
-
             for (let i=0; i < this.nodes.length && this.valid; i++)
                 this.nodes[i].init(this,i);
             for (let i=0; i < this.constraints.length && this.valid; i++)
@@ -97,7 +96,7 @@ mec.model = {
         },
         /**
          * Reset model
-         * All nodes are set to their initial position. 
+         * All nodes are set to their initial position.
          * Kinematic values are set to zero.
          * @method
          * @returns {object} model
@@ -195,7 +194,7 @@ mec.model = {
             for (const view of this.views)
                 if (view.hasInfo)
                     str += view.infoString()+'<br>';
-            return str.length === 0 ? false : str; 
+            return str.length === 0 ? false : str;
         },
         /**
          * Number of positional iterations.
@@ -221,7 +220,7 @@ mec.model = {
                 || !this.isSleeping;      // and does exactly that
         },
         /**
-         * Test, if nodes are significantly moving 
+         * Test, if nodes are significantly moving
          * @type {boolean}
          */
         get isSleeping() {
@@ -231,13 +230,13 @@ mec.model = {
             return sleeping;
         },
         /**
-         * Test, if some drives are 'idle' or 'running' 
+         * Test, if some drives are 'idle' or 'running'
          * @const
          * @type {boolean}
          */
         get hasActiveDrives() {
             let active = false;
-            for (const constraint of this.constraints) 
+            for (const constraint of this.constraints)
                 active = active || constraint.hasActiveDrives(this.timer.t);
             return active;
         },
@@ -249,7 +248,7 @@ mec.model = {
          */
         hasDependents(elem) {
             let dependency = false;
-            for (const constraint of this.constraints) 
+            for (const constraint of this.constraints)
                 dependency = constraint.dependsOn(elem) || dependency;
             for (const load of this.loads)
                 dependency = load.dependsOn(elem) || dependency;
@@ -332,7 +331,7 @@ mec.model = {
         },
         /**
          * Remove node, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `node` is in fact an entry of 
+         * The calling app has to ensure, that `node` is in fact an entry of
          * the `model.nodes` array.
          * @method
          * @param {object} node - node to remove.
@@ -347,7 +346,7 @@ mec.model = {
         },
         /**
          * Delete node and all depending elements from model.
-         * The calling app has to ensure, that `node` is in fact an entry of 
+         * The calling app has to ensure, that `node` is in fact an entry of
          * the `model.nodes` array.
          * @method
          * @param {object} node - node to remove.
@@ -378,7 +377,7 @@ mec.model = {
         },
         /**
          * Remove constraint, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `constraint` is in fact an entry of 
+         * The calling app has to ensure, that `constraint` is in fact an entry of
          * the `model.constraints` array.
          * @method
          * @param {object} constraint - constraint to remove.
@@ -393,7 +392,7 @@ mec.model = {
         },
         /**
          * Delete constraint and all depending elements from model.
-         * The calling app has to ensure, that `constraint` is in fact an entry of 
+         * The calling app has to ensure, that `constraint` is in fact an entry of
          * the `model.constraints` array.
          * @method
          * @param {object} constraint - constraint to remove.
@@ -424,7 +423,7 @@ mec.model = {
         },
         /**
          * Remove load, if there are no other objects depending on it.
-         * The calling app has to ensure, that `load` is in fact an entry of 
+         * The calling app has to ensure, that `load` is in fact an entry of
          * the `model.loads` array.
          * @method
          * @param {object} node - load to remove.
@@ -438,7 +437,7 @@ mec.model = {
         },
         /**
          * Delete load and all depending elements from model.
-         * The calling app has to ensure, that `load` is in fact an entry of 
+         * The calling app has to ensure, that `load` is in fact an entry of
          * the `model.loads` array.
          * @method
          * @param {object} load - load to delete.
@@ -457,7 +456,7 @@ mec.model = {
         },
         /**
          * Remove shape, if there are no other objects depending on it.
-         * The calling app has to ensure, that `shape` is in fact an entry of 
+         * The calling app has to ensure, that `shape` is in fact an entry of
          * the `model.shapes` array.
          * @method
          * @param {object} shape - shape to remove.
@@ -469,7 +468,7 @@ mec.model = {
         },
         /**
          * Delete shape and all dependent elements from model.
-         * The calling app has to ensure, that `shape` is in fact an entry of 
+         * The calling app has to ensure, that `shape` is in fact an entry of
          * the `model.shapes` array.
          * @method
          * @param {object} shape - shape to delete.
@@ -500,7 +499,7 @@ mec.model = {
         },
         /**
          * Remove view, if there are no other objects depending on it.
-         * The calling app has to ensure, that `view` is in fact an entry of 
+         * The calling app has to ensure, that `view` is in fact an entry of
          * the `model.views` array.
          * @method
          * @param {object} view - view to remove.
@@ -512,7 +511,7 @@ mec.model = {
         },
         /**
          * Delete view and all dependent elements from model.
-         * The calling app has to ensure, that `view` is in fact an entry of 
+         * The calling app has to ensure, that `view` is in fact an entry of
          * the `model.views` array.
          * @method
          * @param {object} view - view to delete.
@@ -651,7 +650,7 @@ mec.model = {
             return this;
         },
         /**
-         * Perform iteration steps until constraints are valid or max-iteration 
+         * Perform iteration steps until constraints are valid or max-iteration
          * steps for assembly are reached.
          * @internal
          * @method
@@ -686,7 +685,7 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {  // todo: draw all components via 'x.draw(g)' call ! 
+        draw(g) {  // todo: draw all components via 'x.draw(g)' call !
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)

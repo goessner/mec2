@@ -25,7 +25,7 @@
  * @property {string} [ori.reftype] - referencing other orientation or length value ['ori'|'len'].
  * @property {number} [ori.ratio] - ratio to referencing value.
  * @property {string} [ori.func] - drive function name from `mec.drive` object ['linear'|'quadratic', ...].
- *                                 If the name points to a function in `mec.drive` (not an object as usual) 
+ *                                 If the name points to a function in `mec.drive` (not an object as usual)
  *                                 it will be called with `ori.arg` as an argument.
  * @property {string} [ori.arg] - drive function argument.
  * @property {number} [ori.t0] - drive parameter start value.
@@ -62,11 +62,11 @@ mec.constraint = {
         validate(idx) {
             let tmp, warn = false;
 
-            if (!this.id) 
+            if (!this.id)
                 return { mid:'E_ELEM_ID_MISSING',elemtype:'constraint',idx };
-            if (this.model.elementById(this.id) !== this) 
+            if (this.model.elementById(this.id) !== this)
                 return { mid:'E_ELEM_ID_AMBIGIOUS', id:this.id };
-            if (!this.p1) 
+            if (!this.p1)
                 return { mid:'E_CSTR_NODE_MISSING', id:this.id, loc:'start', p:'p1' };
             if (!this.p2)
                 return { mid:'E_CSTR_NODE_MISSING', id:this.id, loc:'end', p:'p2' };
@@ -82,7 +82,7 @@ mec.constraint = {
                 else
                     this.p2 = tmp;
             }
-            if (mec.isEps(this.p1.x - this.p2.x) && mec.isEps(this.p1.y - this.p2.y)) 
+            if (mec.isEps(this.p1.x - this.p2.x) && mec.isEps(this.p1.y - this.p2.y))
                 warn = { mid:'W_CSTR_NODES_COINCIDE', id:this.id, p1:this.p1.id, p2:this.p2.id };
 
             if (!this.hasOwnProperty('ori'))
@@ -173,7 +173,7 @@ mec.constraint = {
         },
         get initialized() { return this.model !== undefined },
         get dof() {
-            return (this.ori.type === 'free' ? 1 : 0) + 
+            return (this.ori.type === 'free' ? 1 : 0) +
                    (this.len.type === 'free' ? 1 : 0);
         },
 
@@ -195,9 +195,9 @@ mec.constraint = {
          */
         hasActiveDrives(t) {
             let ori = this.ori, len = this.len;
-            return ori.type === 'drive' 
+            return ori.type === 'drive'
                 && (ori.input || t <= ori.t0 + ori.Dt*(ori.bounce ? 2 : 1)*(ori.repeat || 1) + 0.5*this.model.timer.dt)
-                || len.type === 'drive' 
+                || len.type === 'drive'
                 && (len.input || t <= len.t0 + len.Dt*(len.bounce ? 2 : 1)*(len.repeat || 1) + 0.5*this.model.timer.dt);
         },
         /**
@@ -208,7 +208,7 @@ mec.constraint = {
          */
         dependsOn(elem) {
             return this.p1 === elem
-                || this.p2 === elem 
+                || this.p2 === elem
                 || this.ori && this.ori.ref === elem
                 || this.len && this.len.ref === elem;
         },
@@ -222,7 +222,7 @@ mec.constraint = {
         // default orientational constraint equations
         get ori_C() { return this.ay*this.cw - this.ax*this.sw; },
         get ori_Ct() { return this.ayt*this.cw - this.axt*this.sw - this.wt*this.r; },
-        get ori_mc() { 
+        get ori_mc() {
             const imc = mec.toZero(this.p1.im + this.p2.im);
             return imc ? 1/imc : 0;
         },
@@ -269,7 +269,7 @@ mec.constraint = {
             return this.type === 'free' ? true
                  : this.type === 'rot'  ? this.len_pos()
                  : this.type === 'tran' ? this.ori_pos()
-                 : this.type === 'ctrl' ? (res = this.ori_pos(), (this.len_pos() && res))                    
+                 : this.type === 'ctrl' ? (res = this.ori_pos(), (this.len_pos() && res))
                  : false;
         },
         /**
@@ -306,7 +306,7 @@ mec.constraint = {
          * @param {dt} - time increment.
          */
         ori_vel(dt) {
-            const Ct = this.ori_Ct, impulse = -this.ori_mc * Ct; 
+            const Ct = this.ori_Ct, impulse = -this.ori_mc * Ct;
 
 //            console.log(`Ct(${this.id}) = ${Ct}, dt = ${dt}`);
 //            if (Math.abs(Ct) > 100)
@@ -362,7 +362,7 @@ mec.constraint = {
             this.p2.Qx += -this.sw * lambda;
             this.p2.Qy +=  this.cw * lambda;
         },
-    
+
         /**
          * Calculate length.
          */
@@ -383,7 +383,7 @@ mec.constraint = {
          * @param {number} dt - time increment.
          */
         len_vel(dt) {
-            const Ct = this.len_Ct, impulse = -this.len_mc * Ct; 
+            const Ct = this.len_Ct, impulse = -this.len_mc * Ct;
 
             this.len_impulse_vel(impulse);
             this.dlambda_r += impulse/dt;
@@ -459,7 +459,7 @@ mec.constraint = {
                       reftype = ori.reftype || 'ori',
                       ratio = ori.ratio || 1;
 
-                if (!ref.initialized) 
+                if (!ref.initialized)
                     ref.init(this.model);
 
                 if (reftype === 'ori')
@@ -469,7 +469,7 @@ mec.constraint = {
                         wtt:() => ratio*ref.wtt,
                         ori_C:  () => this.r*(this.angle(Math.atan2(this.ay,this.ax)) - this.w0) - ratio*this.r*(ref.angle(Math.atan2(ref.ay,ref.ax)) - ref.w0),
                         ori_Ct: () => this.ayt*this.cw - this.axt*this.sw - ratio*this.r/ref.r*(ref.ayt*ref.cw - ref.axt*ref.sw),
-                        ori_mc: () => { 
+                        ori_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + ratio**2*this.r**2/ref.r**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
                         }
@@ -481,7 +481,7 @@ mec.constraint = {
                         wtt:() => ratio*ref.rtt,
                         ori_C:  () => this.r*(this.angle(Math.atan2(this.ay,this.ax)) - this.w0) - ratio*(ref.ax*ref.cw + ref.ay*ref.sw - ref.r0),
                         ori_Ct: () => this.ayt*this.cw - this.axt*this.sw - ratio*(ref.axt*ref.cw + ref.ayt*ref.sw),
-                        ori_mc: () => { 
+                        ori_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + ratio**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
                         }
@@ -531,7 +531,7 @@ mec.constraint = {
                       reftype = ori.reftype || 'ori',
                       ratio = ori.ratio || 1;
 
-                if (!ref.initialized) 
+                if (!ref.initialized)
                     ref.init(this.model);
 
                 if (reftype === 'ori')
@@ -541,7 +541,7 @@ mec.constraint = {
                         wtt:() => ref.wtt + ori.drive.ftt(),
                         ori_C:  () => this.r*(this.angle(Math.atan2(this.ay,this.ax)) - this.w0) -this.r*(ref.angle(Math.atan2(ref.ay,ref.ax)) - ref.w0) - this.r*ori.drive.f(),
                         ori_Ct: () => this.ayt*this.cw - this.axt*this.sw - this.r/ref.r*(ref.ayt*ref.cw - ref.axt*ref.sw) - this.r*ori.drive.ft(),
-                        ori_mc: () => { 
+                        ori_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + this.r**2/ref.r**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
                         }
@@ -587,7 +587,7 @@ mec.constraint = {
                       reftype = len.reftype || 'len',
                       ratio = len.ratio || 1;
 
-                if (!ref.initialized) 
+                if (!ref.initialized)
                     ref.init(this.model);
 
                 if (reftype === 'len')
@@ -597,7 +597,7 @@ mec.constraint = {
                         rtt:() => ratio*ref.rtt,
                         len_C:  () => (this.ax*this.cw + this.ay*this.sw - this.r0) - ratio*(ref.ax*ref.cw + ref.ay*ref.sw - ref.r0),
                         len_Ct: () =>  this.axt*this.cw + this.ayt*this.sw - ratio*(ref.axt*ref.cw + ref.ayt*ref.sw),
-                        len_mc: () => { 
+                        len_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + ratio**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
                         }
@@ -609,7 +609,7 @@ mec.constraint = {
                         rtt:() => ratio*ref.wtt,
                         len_C:  () => this.ax*this.cw + this.ay*this.sw - this.r0 - ratio*ref.r*(ref.angle(Math.atan2(ref.ay,ref.ax)) - ref.w0),
                         len_Ct: () => this.axt*this.cw + this.ayt*this.sw - ratio*(ref.ayt*ref.cw - ref.axt*ref.sw),
-                        len_mc: () => { 
+                        len_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + ratio**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
                         }
@@ -659,7 +659,7 @@ mec.constraint = {
                       reftype = len.reftype || 'len',
                       ratio = len.ratio || 1;
 
-                if (!ref.initialized) 
+                if (!ref.initialized)
                     ref.init(this.model);
 
                 if (reftype === 'len')
@@ -669,7 +669,7 @@ mec.constraint = {
                         rtt:() => ref.rtt + len.drive.ftt(),
                         len_C:  () => (this.ax*this.cw + this.ay*this.sw - this.r0) - (ref.ax*ref.cw + ref.ay*ref.sw - ref.r0) - len.drive.f(),
                         len_Ct: () =>  this.axt*this.cw + this.ayt*this.sw - (ref.axt*ref.cw + ref.ayt*ref.sw) - len.drive.ft(),
-                        len_mc: () => { 
+                        len_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
                         }
@@ -740,7 +740,7 @@ mec.constraint = {
         },
         // interaction
         get isSolid() { return false },
-        get sh() { return this.state & g2.OVER ? [0, 0, 10, mec.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, mec.selectedElmColor] : false; },
+        get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] : false; },
         hitContour({x,y,eps}) {
             const p1 = this.p1, p2 = this.p2,
                   dx = this.p2.x - this.p1.x, dy = this.p2.y - this.p1.y,
@@ -750,29 +750,29 @@ mec.constraint = {
         },
         // drawing
         get color() { return this.model.valid
-            ? mec.validConstraintColor 
-            : mec.invalidConstraintColor; 
+                           ? this.model.env.show.validConstraintColor
+                           : this.model.env.show.invalidConstraintColor;
         },
         g2() {
             let g = g2();
-            if (this.model.graphics.linkage.constraints) {
+            if (this.model.env.show.constraints) {
                 const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this;
 
                 g.beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                        ls:mec.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
+                        ls:this.model.env.show.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
                     .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
                             lw:lw+1,lsh:true})
                     .drw({d:mec.constraint.arrow[type],lsh:true})
                   .end();
 
-                if (this.model.graphics.labels.constraints) {
+                if (this.model.env.show.constraintLabels) {
                     let idstr = id || '?', cw = Math.cos(w), sw = Math.sin(w),
                         u = idloc === 'left' ? 0.5
                           : idloc === 'right' ? -0.5
                           : idloc + 0 === idloc ? idloc  // is numeric
                           : 0.5,
                         lam = Math.abs(u)*40, mu = u > 0 ? 10 : -15,
-                        xid = p1.x + lam*cw - mu*sw, 
+                        xid = p1.x + lam*cw - mu*sw,
                         yid = p1.y + lam*sw + mu*cw;
                     if (this.ori.type === 'ref' || this.len.type === 'ref') {
                         const comma = this.ori.type === 'ref' && this.len.type === 'ref' ? ',' : '';
@@ -784,7 +784,7 @@ mec.constraint = {
                         xid -= 3*sw;
                         yid += 3*cw;
                     };
-                    g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle',ls:mec.txtColor})
+                    g.txt({str:idstr,x:xid,y:yid,thal:'center',tval:'middle',ls:this.model.env.show.txtColor})
                 };
             };
             return g;
