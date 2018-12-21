@@ -66,6 +66,7 @@ mec.model = {
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
 
+            this.state.valid = true;  // clear previous logical error result ...
             for (let i=0; i < this.nodes.length && this.valid; i++)
                 this.nodes[i].init(this,i);
             for (let i=0; i < this.constraints.length && this.valid; i++)
