@@ -36,15 +36,15 @@ mec.drive = {
         fd: (q) =>  q <= 0.5 ? 4*q : -4*q + 4,
         fdd: (q) =>  q <= 0.5 ? 4 : -4
     },
-    harmonic: { 
+    harmonic: {
         f:   (q) => (1 - Math.cos(Math.PI*q))/2,
         fd:  (q) => Math.PI/2*Math.sin(Math.PI*q),
-        fdd: (q) => Math.PI*Math.PI/2*Math.cos(Math.PI*q) 
+        fdd: (q) => Math.PI*Math.PI/2*Math.cos(Math.PI*q)
     },
-    sinoid: { 
+    sinoid: {
         f:   (q) => q - Math.sin(2*Math.PI*q)/2/Math.PI,
         fd:  (q) => 1 - Math.cos(2*Math.PI*q),
-        fdd: (q) =>     Math.sin(2*Math.PI*q)*2*Math.PI 
+        fdd: (q) =>     Math.sin(2*Math.PI*q)*2*Math.PI
     },
     poly5: {
         f: (q) => (10 - 15*q + 6*q*q)*q*q*q,
@@ -107,20 +107,20 @@ mec.drive = {
 
     inPot(n) { return this.pot[n]; },
 
-    outPot(n) { 
+    outPot(n) {
         const fn = this.pot[n];
-        return { f:   q => 1 - fn.f(1-q), 
-                 fd:  q =>    fn.fd(1-q), 
-                 fdd: q =>  -fn.fdd(1-q) } 
+        return { f:   q => 1 - fn.f(1-q),
+                 fd:  q =>    fn.fd(1-q),
+                 fdd: q =>  -fn.fdd(1-q) }
     },
-    
-    inOutPot(n) { 
+
+    inOutPot(n) {
         const fn = this.pot[n], exp2 = Math.pow(2,n-1);
-        return { f:   q => q < 0.5 ? exp2*fn.f(q)         : 1 - exp2*fn.f(1-q), 
-                 fd:  q => q < 0.5 ? exp2*fn.fd(q)        :  exp2*fn.fd(1-q), 
-                 fdd: q => q < 0.5 ? exp2*(n-1)*fn.fdd(q) : -exp2*(n-1)*fn.fdd(1-q) } 
+        return { f:   q => q < 0.5 ? exp2*fn.f(q)         : 1 - exp2*fn.f(1-q),
+                 fd:  q => q < 0.5 ? exp2*fn.fd(q)        :  exp2*fn.fd(1-q),
+                 fdd: q => q < 0.5 ? exp2*(n-1)*fn.fdd(q) : -exp2*(n-1)*fn.fdd(1-q) }
     },
-    
+
     get inQuad() { return this.inPot(2); },
     get outQuad() { return this.outPot(2); },
     get inOutQuad() { return this.inOutPot(2); },

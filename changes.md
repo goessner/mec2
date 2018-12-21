@@ -202,6 +202,10 @@ depending on its `shape.type` shapes become one of these objects:
 }
 ```
 
+# Changes 20/12/18
+* Moved everything graphics related (flags, colors) to `mec.core.show`.
+* Model now get e reference to their environment in `model.env` by passing it as a second parameter when extending (e.g. `mec.model.extend(this.model,this);`). When an evnironment is set, `mec.core.show` is copied as a property for that instance. If no environment is passed, `mec.core.show` is used.
+
 # Changes 28/08/18
 * Add `mec.core.linkage` for constraint and node graphics-flags.
 * Models now store label-flags in an `model.graphics` object that additionally has a member `linkage` of type `object` containing flags from `mec.core.linkage`.
@@ -212,7 +216,7 @@ depending on its `shape.type` shapes become one of these objects:
 * Add `mec.aly.r`, `mec.aly.rt` and `mec.aly.rtt` to `mec.core.js`.
 
 # Changes 14/08/18
-* Add `idloc` property to `mec.constraint`. Value is 
+* Add `idloc` property to `mec.constraint`. Value is
     * `left`  positiv (default)
     * `right` negativ
     * numeric value `[-1 .. 1]`
@@ -262,7 +266,7 @@ depending on its `shape.type` shapes become one of these objects:
 * Rename `model.hasDependencies()` to the semantic more correct `model.hasDependents()`.
 * Add `model.dependentsOf(elem)` to get a dictionary object of all dependents.
 * Add `model.purgeElements(elems)` to purge all elements in a dictionary object.
-* Add a new function `mec.toZero(a,eps)` to `mec.core.js`. If amount of `a` is smaller than `eps` 
+* Add a new function `mec.toZero(a,eps)` to `mec.core.js`. If amount of `a` is smaller than `eps`
 the result is `0` else `a`.
 * Avoid constraint masses to get *infinite*.
 
