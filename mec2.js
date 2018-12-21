@@ -2528,7 +2528,7 @@ mec.model = {
     prototype: {
         constructor(env) {
             this.env = env; // reference environment of model
-            if (env !== mec) // it's possible that user defined a custom show object
+            if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
             this.state = {valid:true,itrpos:0,itrvel:0};
@@ -2562,6 +2562,7 @@ mec.model = {
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
 
+            this.state.valid = true;  // clear previous logical error result ...
             for (let i=0; i < this.nodes.length && this.valid; i++)
                 this.nodes[i].init(this,i);
             for (let i=0; i < this.constraints.length && this.valid; i++)
