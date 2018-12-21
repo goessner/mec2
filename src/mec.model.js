@@ -61,7 +61,6 @@ mec.model = {
          * @returns object} model.
          */
         init() {
-            let err = false;
             if (this.gravity === true)
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
