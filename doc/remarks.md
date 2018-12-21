@@ -22,6 +22,70 @@
 * The spring rate `k` must be a positive number greater than zero interpreted as [`N/cm`]. Default value is `1 N/cm`.
 * Initial spring length of the unloaded spring can be set by `len0`. If not specified, the initial distance between `p1` and `p2` is taken.
 
+## Shapes
+
+* Shape elements can be connected with nodes and/or constraints
+* Shape elements may have a valid and in this case unique `id` property of type string.
+* Shape elements with `type` of `['fix', 'flt', 'slider', 'bar', 'beam', 'wheel', 'poly', 'img']` are supported.
+
+### Fix
+
+* Fixed nodes (supports) are connected to a node, which is usually a base node.
+* They need to have a valid reference `p` to their node.
+* Fixed nodes have a fixed orientation specified by `w0` (default value `0`).
+
+### Flt
+
+* Floating nodes (supports) are connected to a node.
+* They need to have a valid reference `p` to their node.
+* Floating nodes have a fixed orientation specified by `w0` (default value `0`).
+
+### Slider
+
+* Slider shapes are connected to a node.
+* They need to have a valid reference `p` to their node.
+* Slider shapes have a fixed orientation specified by `w0` (default value `0`).
+* Alternatively slider shapes can have an optional reference `wref` to a constraint for aligning their orientation to it. `w0` is interpreted as a constant relative angular difference then.
+
+### Bar
+
+* Bar shapes are defined between two nodes.
+* They need to have valid references `p1` and `p2` to their nodes.
+
+### Beam
+
+* Beam shapes are connected to a node.
+* They need to have a valid reference `p` to their node.
+* Beam shapes have a constant length `len`.
+* Beam shapes have a valid reference `wref` to a constraint for aligning their orientation to it.
+
+### Wheel
+
+* Wheel shapes are connected to a node.
+* They need to have a valid reference `p` to their node.
+* Wheel shapes have a valid reference `wref` to a constraint for aligning their orientation to it.
+* Wheel shapes have a constant offset angle `w0` to their referenced constraint.
+* Wheel shapes have a constant radius `r`.
+
+### Poly
+
+* Polygon shapes must have `pts` array containing at least two points in global coordinates.
+* Polygon shapes are connected to a reference node.
+* They need to have a valid reference `p` to their reference node.
+* Polygon shapes have a fixed orientation specified by `w0` (default value `0`).
+* Polygon shapes can have an optional reference `wref` to a constraint for aligning their orientation to it. `w0` is interpreted as a constant relative angular offset then.
+
+### Img
+
+* Image shapes must have a uniform resource locator string `uri` defined.
+* Image shapes are connected to a reference node.
+* They need to have a valid reference `p` to their reference node.
+* Image shapes are connected with their lower left corner to their node (cartesian coordinate system assumed).
+* A local offset to the lower left corner can be specified by `xoff` and `yoff`.
+* Image shapes have a fixed orientation specified by `w0` (default value `0`).
+* Image shapes can have an optional reference `wref` to a constraint for aligning their orientation to it. `w0` is interpreted as a constant relative angular offset then.
+* Image shapes have a scaling factor specified by `scl` (default value `1`).
+
 ## Time and Display Refresh Rate
 
 * Model time is globally controlled by `model.timer.t`.

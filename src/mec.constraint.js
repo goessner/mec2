@@ -99,8 +99,10 @@ mec.constraint = {
                 if (this.ori.type === 'drive') {
                     if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
                         return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
-                    if (typeof this.ratio !== undefined && this.ratio !== 1)
+                    if (this.ratio !== undefined && this.ratio !== 1) {
+                        console.log('ratio:'+this.ratio)
                         return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
+                    }
                 }
             }
             if (typeof this.len.ref === 'string') {
@@ -112,7 +114,7 @@ mec.constraint = {
                 if (this.len.type === 'drive') {
                     if (this.len.ref[this.len.reftype || 'len'].type === 'free')
                         return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'len', ref:this.len.ref.id, reftype:this.len.reftype || 'len' };
-                    if (typeof this.ratio !== undefined && this.ratio !== 1)
+                    if (this.ratio !== undefined && this.ratio !== 1)
                         return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'len', ref:this.ori.ref.id, reftype:this.ori.reftype || 'len' };
                 }
             }
@@ -308,10 +310,6 @@ mec.constraint = {
         ori_vel(dt) {
             const Ct = this.ori_Ct, impulse = -this.ori_mc * Ct; 
 
-//            console.log(`Ct(${this.id}) = ${Ct}, dt = ${dt}`);
-//            if (Math.abs(Ct) > 100)
-//                throw(`Ct(${this.id}) = ${Ct} > 100, w=${mec.toDeg(this.w)}`);
-
             this.ori_impulse_vel(impulse);
             this.dlambda_w += impulse/dt;
             if (this.ori.ref) {
@@ -453,7 +451,6 @@ mec.constraint = {
         init_ori_const(ori) {
             this.w0 = ori.hasOwnProperty('w0') ? ori.w0 : this.angle(Math.atan2(this.ay,this.ax));
 
-            // if (typeof ori.ref === 'object' || typeof ori.ref === 'string') {
             if (!!ori.ref) {
                 const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
                       reftype = ori.reftype || 'ori',
@@ -525,7 +522,6 @@ mec.constraint = {
                                             bounce: ori.bounce,
                                             repeat: ori.repeat });
 
-            // if (typeof ori.ref === 'object' || typeof ori.ref === 'string') {
             if (!!ori.ref) {
                 const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
                       reftype = ori.reftype || 'ori',
@@ -581,7 +577,6 @@ mec.constraint = {
         init_len_const(len) {
             this.r0 = len.hasOwnProperty('r0') ? len.r0 : Math.hypot(this.ay,this.ax);
 
-            // if (typeof len.ref === 'object' ||typeof len.ref === 'string') {
             if (!!len.ref) {
                 const ref = len.ref = this.model.constraintById(len.ref) || len.ref,
                       reftype = len.reftype || 'len',
@@ -653,7 +648,6 @@ mec.constraint = {
                                           bounce: len.bounce,
                                           repeat: len.repeat });
 
-            // if (typeof len.ref === 'object' ||typeof len.ref === 'string') {
             if (!!len.ref) {
                 const ref = len.ref = this.model.constraintById(len.ref) || len.ref,
                       reftype = len.reftype || 'len',

@@ -71,7 +71,6 @@ mec.model = {
             for (let i=0; i < this.nodes.length && this.valid; i++)
                 this.nodes[i].init(this,i);
             for (let i=0; i < this.constraints.length && this.valid; i++)
-//                if (!this.constraints[i].initialized)  // allow multiple initialization .. !
                 this.constraints[i].init(this,i);
             for (let i=0; i < this.loads.length && this.valid; i++)
                 this.loads[i].init(this,i);

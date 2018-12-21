@@ -60,7 +60,7 @@ mec.load.force = {
         else
             this.wref = this.model.constraintById(this.wref);
 
-        if (typeof this.value === number && mec.isEps(this.value)) 
+        if (typeof this.value === 'number' && mec.isEps(this.value)) 
             return { mid:'E_FORCE_VALUE_INVALID',val:this.value,id:this.id };
             
         return warn;
@@ -184,7 +184,7 @@ mec.load.spring = {
         else
             this.p2 = this.model.nodeById(this.p2);
 
-        if (typeof this.k === number && mec.isEps(this.k))
+        if (typeof this.k === 'number' && mec.isEps(this.k))
             return { mid:'E_SPRING_RATE_INVALID',id:this.id,val:this.k};
 
         return warn;
