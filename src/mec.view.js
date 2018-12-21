@@ -251,7 +251,7 @@ mec.view.chart = {
         const y = Array.isArray(this.yval) ? this.yval : [this.yval];
         const ytitle = y.map((a) => `${a.of}.${a.prop} ${a.unit ? '(' + a.unit + ')' : ""}`).join(' / ');
         this.graph = Object.assign({
-            x:0 ,y:0, funcs: [], unit: "",
+            x:0 ,y:0, funcs: [], unit: "",t0: 0, Dt: 0,
             xaxis:{title:`${this.xval.of}.${this.xval.prop} ${this.xval.unit ? '(' + this.xval.unit + ')' : ""}`,grid:true,origin:true},
             yaxis:{title:`${ytitle}`,grid:true,origin:true},
         },this);
@@ -261,38 +261,31 @@ mec.view.chart = {
         }
         const xunit = this.xval.unit ? mec[this.xval.unit] : (e) => e;
         const xof = validate(this.xval.of);
-        this.data = [[],[]];
-        this.data.x = () => xunit(xof[this.xval.prop]);
-        this.data.y = y.map((e,idx) => {
-            this.graph.funcs[idx] = {data:[]};
-            const yunit = e.unit ? mec[e.unit] : (e) => e;
-            const yof = validate(e.of);
-            return () => yunit(yof[e.prop]);
-        });
+        this.data = {
+            x: () => xunit(xof[this.xval.prop]),
+            y: y.map((e,idx) => {
+                this.graph.funcs[idx] = {data:[]};
+                const yunit = e.unit ? mec[e.unit] : (e) => e;
+                const yof = validate(e.of);
+                return () => yunit(yof[e.prop]);
+            })
+        };
     },
     update() {
         const g = this.graph;
-        this.data.y.forEach((e,idx) => {
-            const x = this.data.x();
-            const y = e();
-            this.data[0].push(x);
-            this.data[1].push(y);
-            this.graph.funcs[idx].data.push(x,y);
-        });
-        g.xmin = Math.min(...this.data[0]);
-        g.xmax = Math.max(...this.data[0]);
-        g.ymin = Math.min(...this.data[1]);
-        g.ymax = Math.max(...this.data[1]);
+        this.data.y.forEach((y,idx) => this.graph.funcs[idx].data.push(this.data.x(),y()));
         if (this.data.x && this.xval.len < g.xmax-g.xmin) {
-            this.graph.funcs.forEach((e) => {
-                this.data[0].shift();
-                this.data[1].shift();
+            for (const e of this.graph.funcs) {
                 e.data.shift(); e.data.shift();
-            });
+            }
         };
+        [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
     g2() {
-        this.update();
-        return g2().chart(this.graph);
+        if (model.timer.t > this.graph.t0 && (!this.graph.Dt || model.timer.t < this.graph.t0 + this.graph.Dt))
+        {
+            this.update();
+        }
+            return g2().chart(this.graph);
     }
 }
