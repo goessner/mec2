@@ -1,3 +1,14 @@
+## Perfomance Hints (For Implementers only)
+
+* At `init` state creation of temporary objects is mostly avoided. Existing objects are modified or extended.
+* The inner animation loop consisting of the sequence `model.pre().itr().post()` should run in the time frame of `1/60`th seconds - including user interaction - in order to achive real time behavior. Inside of that loop ...
+    * Avoid creating temporary objects, as they must be removed by the garbage collector regularly. Don't rely on JIT compiler optimzing here. So avoid ... 
+        * array methods returning arrays as `keys, map, values, ...`
+        * `Object` or `Array` methods requiring a temporary function argument.
+    * Do not use antiquated ES5 `forEach` loop in favor of much more performant ES6 `for...of` loop.
+    * Try to keep array modifications at a minimum.
+* Functional programming has its charm. But its paradigma to not modifying arguments but returning modified copies of them instead, does not fit very well with the performance requirements of the inner animation loop of a physics engine.
+
 ## Nodes
 
 * Nodes are required to have a valid and unique `id` property of type string.
