@@ -99,10 +99,8 @@ mec.constraint = {
                 if (this.ori.type === 'drive') {
                     if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
                         return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
-                    if (this.ratio !== undefined && this.ratio !== 1) {
-                        console.log('ratio:'+this.ratio)
+                    if (this.ratio !== undefined && this.ratio !== 1)
                         return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
-                    }
                 }
             }
             if (typeof this.len.ref === 'string') {

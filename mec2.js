@@ -688,10 +688,8 @@ mec.constraint = {
                 if (this.ori.type === 'drive') {
                     if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
                         return { mid:'E_CSTR_DRIVEN_REF_TO_FREE', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
-                    if (this.ratio !== undefined && this.ratio !== 1) {
-                        console.log('ratio:'+this.ratio)
+                    if (this.ratio !== undefined && this.ratio !== 1)
                         return { mid:'E_CSTR_RATIO_IGNORED', id:this.id, sub:'ori', ref:this.ori.ref.id, reftype:this.ori.reftype || 'ori' };
-                    }
                 }
             }
             if (typeof this.len.ref === 'string') {
@@ -3224,7 +3222,7 @@ mec.msg.en = {
     E_CSTR_NODE_MISSING: ({id, loc, p}) => `${loc} node '${p}' of constraint (id='${id}') is missing.`,
     E_CSTR_NODE_NOT_EXISTS: ({id,loc,p,nodeId}) => `${loc} node '${p}':'${nodeId}' of constraint '${id}' does not exist.`,
     E_CSTR_REF_NOT_EXISTS: ({id,sub,ref}) => `Reference to '${ref}' in '${sub} of constraint '${id}' does not exist.`,
-    E_CSTR_DRIVEN_REF_TO_FREE_CSTR: ({id,sub,ref, reftype}) => `Driven ${sub} constraint of '${id}' must not reference free '${reftype}' of constraint '${ref}'.`,
+    E_CSTR_DRIVEN_REF_TO_FREE: ({id,sub,ref, reftype}) => `Driven ${sub} constraint of '${id}' must not reference free ${reftype} of constraint '${ref}'.`,
     W_CSTR_RATIO_IGNORED: ({id,sub,ref,reftype}) => `Ratio value of driven ${sub} constraint '${id}' with reference to '${reftype}' constraint '${ref}' ignored.`,
 
     E_FORCE_VALUE_INVALID: ({id,val}) => `Force value '${val}' of load '${id}' is not allowed.`,
