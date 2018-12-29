@@ -1407,12 +1407,12 @@ mec.drive = {
         const isin = (x,x1,x2) => x >= x1 && x < x2;
         let drv = func && func in mec.drive ? mec.drive[func] :  mec.drive.linear;
 
-        if (bounce) {
+        if (bounce  && func !== 'static') {
             drv = mec.drive.bounce(drv);
             Dt *= 2;  // preserve duration per repetition
         }
-        if (repeat) {
-            drv = mec.drive.bounce(drv,repeat);
+        if (repeat && func !== 'static') {
+            drv = mec.drive.repeat(drv,repeat);
             Dt *= repeat;  // preserve duration per repetition
         }
         return {
@@ -2589,7 +2589,7 @@ mec.model = {
     prototype: {
         constructor(env) {
             this.env = env; // reference environment of model
-            if (env !== mec) // it's possible that user defined a custom show object
+            if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
             this.state = {valid:true,itrpos:0,itrvel:0,preview:false};
