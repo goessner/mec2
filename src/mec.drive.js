@@ -11,7 +11,7 @@
  */
 mec.drive = {
     create({func,z0,Dz,t0,Dt,t,bounce,repeat}) {
-        const isin = (x,x1,x2) => x > x1 && x <= x2;
+        const isin = (x,x1,x2) => x >= x1 && x < x2;
         let drv = func && func in mec.drive ? mec.drive[func] :  mec.drive.linear;
 
         if (bounce) {

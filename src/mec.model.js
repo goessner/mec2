@@ -35,7 +35,7 @@ mec.model = {
             if (env !== mec) // it's possible that user defined a custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
-            this.state = {valid:true,itrpos:0,itrvel:0};
+            this.state = {valid:true,itrpos:0,itrvel:0,preview:false};
             this.timer = {t:0,dt:1/60};
             // create empty containers for all elements
             if (!this.nodes) this.nodes = [];
@@ -111,6 +111,39 @@ mec.model = {
                 load.reset();
             for (const view of this.views)
                 view.reset();
+            return this;
+        },
+        /**
+         * Preview model
+         * Some views need pre calculation for getting immediate results (i.e. traces)
+         * After `preview` was called, model is in `reset` state.
+         * @method
+         * @returns {object} model
+         */
+        preview() {
+            let previewMode = false, tmax = 0;
+            for (const view of this.views) {
+                if (view.mode === 'preview') {
+                    tmax = view.t0 + view.Dt;
+                    view.reset(previewMode = true);
+                }
+            }
+            if (previewMode) {
+                this.reset();
+                this.state.preview = true;
+                this.timer.dt = 1/30;
+
+                for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
+                    this.pre().itr().post();
+                    for (const view of this.views)
+                        if (view.preview)
+                            view.preview();
+                }
+
+                this.timer.dt = 1/60;
+                this.state.preview = false;
+                this.reset();
+            }
             return this;
         },
         /**
@@ -215,8 +248,8 @@ mec.model = {
          */
         get isActive() {
             return this.hasActiveDrives   // active drives
-                // || this.dof > 0           // or can move by itself
-                || !this.isSleeping;      // and does exactly that
+                || this.dof > 0           // or can move by itself
+                && !this.isSleeping;      // and does exactly that
         },
         /**
          * Test, if nodes are significantly moving
@@ -258,7 +291,7 @@ mec.model = {
             return dependency;
         },
         /**
-         * Get dependents of a specified element.
+         * Get direct dependents of a specified element.
          * As a result a dictionary object containing dependent elements is created:
          * `{constraints:[], loads:[], shapes:[], views:[]}`
          * @method
@@ -283,7 +316,37 @@ mec.model = {
                     deps.shapes.push(shape);
             return deps;
         },
-            /**
+        /**
+         * Verify an element indirect (deep) depending on another element.
+         * @method
+         * @param {object} elem - element.
+         * @returns {boolean} dependency exists.
+         */
+        /*
+        deepDependsOn(elem,target) {
+            if (elem === target)
+                return true;
+            else {
+                for (const node of this.nodes)
+                    if (elem.dependsOn(node))
+                        return true;
+                for (const constraint of this.constraints)
+                    if (elem.dependsOn(elem) || this.deepDependsOn(elem,constraint))
+                        return true;
+                for (const load of this.loads)
+                    if (load.dependsOn(elem))
+                        deps.loads.push(load);
+            for (const view of this.views)
+                if (view.dependsOn(elem))
+                    deps.views.push(view);
+            for (const shape of this.shapes)
+                if (shape.dependsOn(elem))
+                    deps.shapes.push(shape);
+                for 
+            }
+        },
+*/
+        /**
          * Purge all elements in an element dictionary.
          * @method
          * @param {object} elems - element dictionary.
@@ -645,7 +708,6 @@ mec.model = {
             for (const view of this.views)
                 if (view.pre)
                     view.pre(this.timer.dt);
-
             return this;
         },
         /**
@@ -666,16 +728,18 @@ mec.model = {
          * @returns {object} model
          */
         post() {
-            // post process nodes
-            for (const node of this.nodes)
-                node.post(this.timer.dt);
             // post process constraints
             for (const constraint of this.constraints)
                 constraint.post(this.timer.dt);
+            // post process nodes
+            for (const node of this.nodes)
+                node.post(this.timer.dt);
             // post process views
             for (const view of this.views)
                 if (view.post)
                     view.post(this.timer.dt);
+
+//    console.log(this.state.itrpos)
             return this;
         },
         /**

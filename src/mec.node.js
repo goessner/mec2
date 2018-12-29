@@ -95,6 +95,22 @@ mec.node = {
             }
             return e;
         },
+        /**
+         * Check node for dependencies on another element.
+         * @method
+         * @param {object} elem - element to test dependency for.
+         * @returns {boolean} always false.
+         */
+        dependsOn(elem) { return false; },
+        /**
+         * Check node for deep (indirect) dependencies on another element.
+         * @method
+         * @param {object} elem - element to test dependency for.
+         * @returns {boolean} dependency exists.
+         */
+        deepDependsOn(elem) {
+            return elem === this;
+        },
         reset() {
            if (!this.base) {
                this.x = this.x0;
@@ -114,21 +130,6 @@ mec.node = {
             // position verlet  ... just for investigating in future
 //            this.x += this.model.direc*(this.xt - 0.5*this.dxt)*dt;
 //            this.y += this.model.direc*(this.yt - 0.5*this.dyt)*dt;
-/*
-            if (this.usrDrag) {  // node throwing by user occured .. !
-                const xt = this.usrDrag.dx / this.usrDrag.dt*1000,
-                      yt = this.usrDrag.dy / this.usrDrag.dt*1000,
-                      v  = Math.hypot(xt,yt);
-                if (v > 20) {    // set upper limit of throwing velocity
-                    this.xt = xt/v*Math.min(v,250);
-                    this.yt = yt/v*Math.min(v,250);
-                }
-                else   // set model to rest ..
-                    this.model.stop();
-
-                delete this.usrDrag;  // avoid multiple evaluation .. !
-            }
-*/
             // if applied forces are acting, set velocity diffs initially by forces.
             //console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
             if (this.Qx || this.Qy) {
@@ -140,6 +141,7 @@ mec.node = {
         },
         post(dt) {
             // symplectic euler ... partially
+//            console.log(`${this.id}:${this.dxt}/${this.dyt},${dt}`)
             this.xt += this.dxt;
             this.yt += this.dyt;
             // get accelerations from velocity differences...
@@ -168,21 +170,15 @@ mec.node = {
         hitInner({x,y,eps}) {
             return g2.isPntInCir({x,y},this,eps);
         },
-        selectBeg({x,y,t}) {
-//            if (!this.base)
-//                this.usrDrag = {dx:this.x,dy:this.y,dt:t};
-        },
+        selectBeg({x,y,t}) { },
         selectEnd({x,y,t}) {
             if (!this.base) {
                 this.xt = this.yt = this.xtt = this.ytt = 0;
-//                this.usrDrag.dx = this.x - this.usrDrag.dx;
-//                this.usrDrag.dy = this.y - this.usrDrag.dy;
-//                this.usrDrag.dt = (t - this.usrDrag.dt);
             }
         },
-        drag({x,y}) {
-//console.log('pntr(%d,%d)',x,y)
-            this.x = x; this.y = y;
+        drag({x,y,mode}) {
+            if (mode === 'edit' && !this.base) { this.x0 = x; this.y0 = y; }
+            else                               { this.x = x; this.y = y; }
         },
         // graphics ...
         get r() { return mec.node.radius; },

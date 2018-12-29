@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<title></title>
+<meta charset='utf-8'>
+</head>
+<body>
+<mec-2 width="501" height="301" grid cartesian x0="100" y0="100">
+{   "nodes":[
+        {"id":"A0","x":0,"y":0,"base":true},
+        {"id":"A","x":50,"y":0},
+        {"id":"B","x":250,"y":0}
+    ],
+    "constraints":[
+        {"id":"a","p1":"A0","p2":"A","len":{"type":"const"},"ori":{"type":"drive","func":"linear","Dt":2,"bounce":true}},
+        {"id":"b","p1":"A","p2":"B","len":{"type":"const"}},
+        {"id":"c","p1":"A0","p2":"B","ori":{"type":"const"}}
+    ],
+    "views":[
+        {"type":"vector","p":"B","value":"vel"}
+    ]
+}
+</mec-2>
+<script src="../bin/canvasInteractor.js"></script>
+<script src="../bin/g2.js"></script>
+<script src="../bin/g2.selector.js"></script>
+<script src="../mec2.js"></script>
+<script src="../bin/mec.htmlelement.js"></script>
+</body>

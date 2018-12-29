@@ -65,6 +65,7 @@ mec.view.vector = {
     dependsOn(elem) {
         return this.p === elem;
     },
+    preview() {},
     reset() {},
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
@@ -78,7 +79,7 @@ mec.view.vector = {
         const scale = mec.aly[this.value].drwscl;
         const v = this.p[this.value];
         const vabs = Math.hypot(v.y,v.x);
-        const vview = !mec.isEps(vabs)
+        const vview = !mec.isEps(vabs,0.5)
                     ? mec.asympClamp(scale*vabs,25,100)
                     : 0;
         return { p1:this.p,
@@ -105,30 +106,75 @@ mec.view.vector = {
 /**
  * @param {object} - trace view.
  * @property {string} p - referenced node id.
- * @property {number} [Dt] - trace duration [s].
+ * @property {number} [t0=0] - trace begin [s].
+ * @property {number} [Dt=1] - trace duration [s].
+ * @property {boolean} [mode='dynamic'] - ['static','dynamic','preview'].
  * @property {string} [stroke='navy'] - web color.
  * @property {string} [fill='transparent'] - web color.
  */
 mec.view.trace = {
-    constructor() {}, // always parameterless .. !
-    init(model) {
-        if (typeof this.p === 'string')
-            this.p = model.nodeById(this.p);
-        this.pts = [];
-        this.t0 = 0;
-        this.model = model;   // only used for timer access ... see below !
+    constructor() {
+        this.pts = [];  // allocate array
+    }, // always parameterless .. !
+    /**
+     * Check vector view properties for validity.
+     * @method
+     * @param {number} idx - index in views array.
+     * @returns {boolean} false - if no error / warning was detected. 
+     */
+    validate(idx) {
+        if (this.p === undefined) 
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'trace',id:this.id,idx,reftype:'node',name:'p'};
+        if (!this.model.nodeById(this.p)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'trace',id:this.id,idx,reftype:'node',name:this.p};
+        else
+            this.p = this.model.nodeById(this.p);
+        
+        return false;
+    },
+    /**
+     * Initialize view. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in views array.
+     */
+    init(model,idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) 
+            return;
+
+        this.t0 = this.t0 || 0;
+        this.Dt = this.Dt || 1;
+        this.mode = this.mode || 'dynamic';
+        this.pts.length = 0;  // clear points array ...
     },
     dependsOn(elem) {
         return this.p === elem;
     },
-    reset() {
-        this.pts.length = 0;
-        this.t0 = 0;
+    build() {
+        const t = this.model.timer.t;
+        if (this.mode === 'static' || this.mode === 'preview') {
+            if (this.t0 <= t && t <= this.t0 + this.Dt)
+                this.pts.push({x:this.p.x,y:this.p.y});
+        }
+        else if (this.mode === 'dynamic') {
+            if (this.t0 < t)
+                this.pts.push({x:this.p.x,y:this.p.y});
+            if (this.t0 + this.Dt < t)
+                this.pts.shift();
+        }
+    },
+    preview() {
+        if (this.mode === 'preview')
+            this.build();
+    },
+    reset(preview) {
+        if (preview || this.mode !== 'preview')
+            this.pts.length = 0;
     },
     post(dt) {  // add model.timer.t to parameter list .. or use timer as parameter everywhere !
-        this.pts.push({x:this.p.x,y:this.p.y});
-        if (this.model.timer.t - this.t0 > this.Dt) // remove first trace point !
-            this.pts.shift();
+        if (this.mode !== 'preview')
+            this.build();
     },
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
@@ -144,6 +190,7 @@ mec.view.trace = {
         return false;
     },
     g2() {
+//    console.log('!')
         return g2().ply({pts: this.pts,
                          format: '{x,y}',
                          ls: this.stroke || 'navy',

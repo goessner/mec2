@@ -32,7 +32,7 @@ EPS: 1.19209e-07,
  * @const
  * @type {number}
  */
-lenTol: 0.1,
+lenTol: 0.01,
 /**
  * Angular tolerance for orientation correction.
  * @const
@@ -66,7 +66,7 @@ maxLinCorrect: 20,
 /**
  * fixed limit of assembly iteration steps.
  */
-asmItrMax: 128, // 512,
+asmItrMax: 512, // 512,
 /**
  * itrMax: fixed limit of simulation iteration steps.
  */

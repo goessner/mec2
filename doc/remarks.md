@@ -1,3 +1,54 @@
+## View Modes
+
+View elements creating polylines starting from a time `t0` during a defined time span `Dt` now have a property `mode` of type `string` controlling their behaviour. The value of `mode` must be one of `['static','dynamic','preview']`. The view elements `"type":"trace"` and `"type":"chart"` provide that property.
+
+### Mode `static`
+
+During constantly advancing system time `model.timer.t` the polyline is created between `t0` and `t0+Dt`. 
+`static` mode is not available with `input` drives
+
+![Fig.1: static mode](img/staticView.gif)
+
+```js
+"views":[
+    {"type":"trace","p":"C","t0":1,"Dt":1,
+     "mode":"static","fill":"orange"}
+]
+```
+### Mode `dynamic`
+
+During constantly advancing system time `model.timer.t` the polyline is created starting at `t0`, then adding points to the polyline until end of simulation, but holding not more than points generated at the past time span `Dt`. Mode `dynamic` is not available with `input` drives.
+
+![Fig.2: dynamic mode](img/dynamicView.gif)
+
+```js
+"views":[
+    {"type":"trace","p":"C","t0":1,"Dt":1,
+     "mode":"dynamic","fill":"orange"}
+]
+```
+### Mode `preview`
+
+Before starting the simulation there is now a preview step looking for view elements requesting preview. When some are present, a background simulation using a time step `dt=1/30` seconds is done first until the largest `t0+Dt` time value. So when starting the simulation, the precalculated polyline is already there. Mode `preview` is available with `input` drives. It is especially useful when editing.
+
+<figure>
+  <img src="img/previewView.gif">
+  <figcaption>Fig.1: preview mode</figcaption>
+</figure>
+
+```js
+"views":[
+    {"type":"trace","p":"C","t0":1,"Dt":1,
+     "mode":"preview","fill":"orange"}
+]
+```
+
+
+## Bugs
+
+* `this.model.env.show.invalidConstraintColor` is undefined in 'constraint.js'.
+
+
 ## Perfomance Hints (For Implementers only)
 
 * At `init` state creation of temporary objects is mostly avoided. Existing objects are modified or extended.
