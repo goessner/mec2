@@ -46,7 +46,7 @@ Before starting the simulation there is now a preview step looking for view elem
 
 ## Bugs
 
-* `this.model.env.show.invalidConstraintColor` is undefined in 'constraint.js'.
+* /
 
 
 ## Perfomance Hints (For Implementers only)
