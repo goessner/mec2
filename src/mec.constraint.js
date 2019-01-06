@@ -184,9 +184,9 @@ mec.constraint = {
          */
         get forceAbs() { return -this.lambda_r; },
         /**
-         * Moment value in [Nm]
+         * Moment value in [N*u]
          */
-        get moment() { return -this.lambda_w/this.r; },
+        get moment() { return -this.lambda_w*this.r; },
 
         /**
          * Check constraint for unfinished drives.
