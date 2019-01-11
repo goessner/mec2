@@ -247,45 +247,52 @@ mec.view.info = {
 */
 mec.view.chart = {
     constructor() {},
-    init(model) {
+    elem(a) {
+        const ret = model.elementById(a.of) || model[a.of];
+        return ret[a.prop];
+    },
+    aly(val) {
+        return mec.aly[val.prop]
+            || { get scl() { return 1}, type:'num', name:val.prop, unit:val.unit || '' };
+    },
+    title(t) {
+        return t.map((a) => a.of + '.' + a.prop + ' (' + a.aly.unit + ') ').join(' / ');
+    },
+    init() {
         const y = Array.isArray(this.yval) ? this.yval : [this.yval];
-        const ytitle = y.map((a) => `${a.of}.${a.prop} ${a.unit ? '(' + a.unit + ')' : ""}`).join(' / ');
+        const x = Object.assign(this.xval, {aly: this.aly(this.xval)});
+        y.forEach((a) => a.aly = this.aly(a));
         this.graph = Object.assign({
-            x:0 ,y:0, funcs: [], unit: "",t0: 0, Dt: 0,
-            xaxis:{title:`${this.xval.of}.${this.xval.prop} ${this.xval.unit ? '(' + this.xval.unit + ')' : ""}`,grid:true,origin:true},
-            yaxis:{title:`${ytitle}`,grid:true,origin:true},
+            x:0 ,y:0, funcs: [], t0: 0, Dt: 0,
+            xaxis:{title:this.title([x]),grid:true,origin:true},
+            yaxis:{title:this.title(y),grid:true,origin:true},
         },this);
-        const validate = (arg) => {
-            const ele = model.elementById(arg);
-            return ele !== false ? ele : model[arg];
-        }
-        const xunit = this.xval.unit ? mec[this.xval.unit] : (e) => e;
-        const xof = validate(this.xval.of);
         this.data = {
-            x: () => xunit(xof[this.xval.prop]),
+            x: () => x.aly.scl * this.elem(this.xval),
             y: y.map((e,idx) => {
                 this.graph.funcs[idx] = {data:[]};
-                const yunit = e.unit ? mec[e.unit] : (e) => e;
-                const yof = validate(e.of);
-                return () => yunit(yof[e.prop]);
+                return () => e.aly.scl * this.elem(e);
             })
         };
     },
     update() {
         const g = this.graph;
-        this.data.y.forEach((y,idx) => this.graph.funcs[idx].data.push(this.data.x(),y()));
+        this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
         if (this.data.x && this.xval.len < g.xmax-g.xmin) {
-            for (const e of this.graph.funcs) {
+            for (const e of g.funcs) {
                 e.data.shift(); e.data.shift();
             }
         };
+        // Update g2 chart to make this obsolete
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
     g2() {
-        if (model.timer.t > this.graph.t0 && (!this.graph.Dt || model.timer.t < this.graph.t0 + this.graph.Dt))
+        const g = this.graph;
+        if  (model.timer.t > g.t0 &&
+            (!g.Dt || model.timer.t < g.t0 + g.Dt))
         {
             this.update();
         }
-            return g2().chart(this.graph);
+        return g2().chart(g);
     }
 }
