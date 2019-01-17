@@ -36,20 +36,20 @@ mec.view.vector = {
      * Check vector view properties for validity.
      * @method
      * @param {number} idx - index in views array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
         const keys = ['vel','acc','force'];
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'vector',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'vector',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.value === undefined) 
+        if (this.value === undefined)
             return { mid:'E_ALY_REF_MISSING',elemtype:'vector',id:this.id,idx,reftype:'node',name:'value',keys:'['+keys.join(',')+']'};
-        
+
         return false;
     },
     /**
@@ -120,16 +120,16 @@ mec.view.trace = {
      * Check vector view properties for validity.
      * @method
      * @param {number} idx - index in views array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'trace',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'trace',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
-        
+
         return false;
     },
     /**
@@ -140,7 +140,7 @@ mec.view.trace = {
      */
     init(model,idx) {
         this.model = model;
-        if (!this.model.notifyValid(this.validate(idx))) 
+        if (!this.model.notifyValid(this.validate(idx)))
             return;
 
         this.t0 = this.t0 || 0;
@@ -246,44 +246,61 @@ mec.view.info = {
  * @param {object} - chart view.
 */
 mec.view.chart = {
-    constructor() {},
-    elem(a) {
-        const ret = model.elementById(a.of) || model[a.of];
-        return ret[a.prop];
+    constructor() {}, // always parameterless .. !
+    asJSON() {},
+    /**
+     * Check vector view properties for validity.
+     * @method
+     * @param {number} idx - index in views array.
+     * @returns {boolean} false - if no error / warning was detected.
+     */
+    validate(idx) {
+        if (this.xaxis === undefined)
+            return { mid: 'E_ELEM_REF_MISSING',elemtype:'xaxis',id:this.id,idx,reftype:'show',name:'xaxis'};
+        else if(this.xaxis.show === undefined)
+            return { mid: 'E_ELEM_REF_MISSING',elemtype}
     },
-    aly(val) {
-        return mec.aly[val.prop]
-            || { get scl() { return 1}, type:'num', name:val.prop, unit:val.unit || '' };
-    },
-    title(t) {
-        return t.map((a) => a.of + '.' + a.prop + ' (' + a.aly.unit + ') ').join(' / ');
-    },
+    /**
+     * Initialize view. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in views array.
+     */
     init() {
-        const y = Array.isArray(this.yval) ? this.yval : [this.yval];
-        const x = Object.assign(this.xval, {aly: this.aly(this.xval)});
+        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
+        const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
         y.forEach((a) => a.aly = this.aly(a));
-        this.graph = Object.assign({
-            x:0 ,y:0, funcs: [], t0: 0, Dt: 0,
-            xaxis:{title:this.title([x]),grid:true,origin:true},
-            yaxis:{title:this.title(y),grid:true,origin:true},
-        },this);
+        this.graph       = Object.assign({x:0 ,y:0, funcs: [], t0: 0, Dt: 0,},this);
+        this.graph.xaxis = Object.assign({title:this.title([x]),grid:true,origin:true}, this.xaxis);
+        this.graph.yaxis = Object.assign({title:this.title( y ),grid:true,origin:true}, this.yaxis);
         this.data = {
-            x: () => x.aly.scl * this.elem(this.xval),
+            x: () => x.aly.scl * this.elem(this.xaxis),
             y: y.map((e,idx) => {
                 this.graph.funcs[idx] = {data:[]};
                 return () => e.aly.scl * this.elem(e);
             })
         };
     },
+    elem(a) {
+        const ret = model.elementById(a.of) || model[a.of];
+        return ret[a.show];
+    },
+    aly(val) {
+        return mec.aly[val.show]
+            || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
+    },
+    title(t) {
+        return t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
+    },
     update() {
         const g = this.graph;
         this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
-        if (this.data.x && this.xval.len < g.xmax-g.xmin) {
+        if (this.data.x && this.xaxis.len < g.xmax-g.xmin) {
             for (const e of g.funcs) {
                 e.data.shift(); e.data.shift();
             }
         };
-        // Update g2 chart to make this obsolete
+        // Update g2 chart to make this obsolete ...
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
     g2() {
