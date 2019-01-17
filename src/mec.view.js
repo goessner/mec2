@@ -247,7 +247,6 @@ mec.view.info = {
 */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
-    asJSON() {},
     /**
      * Check vector view properties for validity.
      * @method
@@ -255,10 +254,22 @@ mec.view.chart = {
      * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.xaxis === undefined)
-            return { mid: 'E_ELEM_REF_MISSING',elemtype:'xaxis',id:this.id,idx,reftype:'show',name:'xaxis'};
-        else if(this.xaxis.show === undefined)
-            return { mid: 'E_ELEM_REF_MISSING',elemtype}
+        //obv not finished ...
+        const std = {elemtype: 'graph', id:this.id,idx}
+        if (this.xaxis === undefined  || this.yaxis === undefined)
+            return { mid: 'E_ELEM_REF_MISSING',...std,reftype:'node or timer',name:'of'};
+        return false;
+    },
+    elem(a) {
+        const ret = model.elementById(a.of) || model[a.of] || undefined;
+        return ret ? ret[a.show] : undefined;
+    },
+    aly(val) {
+        return mec.aly[val.show]
+            || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
+    },
+    title(t) {
+        return t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
     },
     /**
      * Initialize view. Multiple initialization allowed.
@@ -266,11 +277,18 @@ mec.view.chart = {
      * @param {object} model - model parent.
      * @param {number} idx - index in views array.
      */
-    init() {
-        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
+    init(model, idx) {
+        this.model = model;
+        this.mode = this.mode || 'static';
+        if (!model.notifyValid(this.validate(model, idx))) {
+            return;
+        }
         const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
+        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
         y.forEach((a) => a.aly = this.aly(a));
-        this.graph       = Object.assign({x:0 ,y:0, funcs: [], t0: 0, Dt: 0,},this);
+        this.t0 = this.t0 || 0;
+        this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
+        this.graph       = Object.assign({x:0 ,y:0, funcs: []},this);
         this.graph.xaxis = Object.assign({title:this.title([x]),grid:true,origin:true}, this.xaxis);
         this.graph.yaxis = Object.assign({title:this.title( y ),grid:true,origin:true}, this.yaxis);
         this.data = {
@@ -281,35 +299,47 @@ mec.view.chart = {
             })
         };
     },
-    elem(a) {
-        const ret = model.elementById(a.of) || model[a.of];
-        return ret[a.show];
+    dependsOn(elem) {
+        /* ... */
     },
-    aly(val) {
-        return mec.aly[val.show]
-            || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
-    },
-    title(t) {
-        return t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
-    },
-    update() {
+    build() {
         const g = this.graph;
-        this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
-        if (this.data.x && this.xaxis.len < g.xmax-g.xmin) {
-            for (const e of g.funcs) {
-                e.data.shift(); e.data.shift();
+        const t = this.model.timer.t;
+        if (this.mode === 'static' || this.mode === 'preview') {
+            if (this.t0 <= t && t <= this.t0 + this.Dt) {
+                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
             }
-        };
-        // Update g2 chart to make this obsolete ...
+        }
+        else if (this.mode === 'dynamic') {
+            if (this.t0 < t) {
+                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+            }
+            if (this.Dt && this.t0 + this.Dt < t) {
+                for (const e of g.funcs) {
+                    e.data.shift(); e.data.shift();
+                }
+            }
+        }
+        // Redundant when g2.chart gets respective update ...
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
+    preview() {
+        if (this.mode === 'preview')
+            this.build();
+    },
+    reset(preview) {
+        if (preview || this.mode !== 'preview')
+                this.graph.funcs.forEach((d) => d.data = []);
+    },
+    post() {
+        if (this.mode !== 'preview')
+            this.build();
+    },
+    asJSON() {
+        /* ... */
+    },
     g2() {
-        const g = this.graph;
-        if  (model.timer.t > g.t0 &&
-            (!g.Dt || model.timer.t < g.t0 + g.Dt))
-        {
-            this.update();
-        }
-        return g2().chart(g);
-    }
+        return g2().chart(this.graph);
+    },
+
 }
