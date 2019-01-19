@@ -1,5 +1,5 @@
 /**
- * mec (c) 2018 Stefan Goessner
+ * mec (c) 2018-19 Stefan Goessner
  * @license MIT License
  */
 "use strict";
@@ -32,7 +32,7 @@ EPS: 1.19209e-07,
  * @const
  * @type {number}
  */
-lenTol: 0.01,
+lenTol: 0.001,
 /**
  * Angular tolerance for orientation correction.
  * @const
@@ -195,6 +195,7 @@ gravity: {x:0,y:-10,active:false},
  */
 aly: {
     mass: { get scl() { return 1}, type:'num', name:'m', unit:'kg' },
+    pos: { type:'pnt', name:'p', unit:'m' },
     vel: { get scl() {return mec.m_u}, type:'vec', name:'v', unit:'m/s', get drwscl() {return 40*mec.m_u} },
     acc: { get scl() {return mec.m_u}, type:'vec', name:'a', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },
     w: { get scl() { return 180/Math.PI}, type:'num', name:'φ', unit:'°' },
@@ -208,6 +209,12 @@ aly: {
     accAbs: { get scl() {return mec.m_u}, type:'num', name:'a', unit:'m/s' },
     forceAbs: { get scl() {return mec.m_u}, type:'num', name:'F', unit:'N' },
     moment: { get scl() {return mec.m_u**2}, type:'num', name:'M', unit:'Nm' },
+    energy: { get scl() {return mec.to_J}, type:'num', name:'E', unit:'J' },
+    pole: { type:'pnt', name:'P', unit:'m' },
+    polAcc: { get scl() {return mec.m_u}, type:'vec', name:'a_P', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },
+    polChgVel: { get scl() {return mec.m_u}, type:'vec', name:'u_P', unit:'m/s', get drwscl() {return 40*mec.m_u} },
+    accPole: { type:'pnt', name:'Q', unit:'m' },
+    inflPole: { type:'pnt', name:'I', unit:'m' },
 },
 /**
  * unit specifiers and relations
@@ -254,7 +261,7 @@ from_Nm(x) { return x/mec.m_u/mec.m_u; },
  */
 to_N_m(x) { return x; },
 /**
- * convert [N/m] = [kg/s^2] => [k/s^2]
+ * convert [N/m] = [kg/s^2] => [kg/s^2]
  * @return {number} Value in [kg/s^2]
  */
 from_N_m(x) { return x; },

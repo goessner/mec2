@@ -1,13 +1,85 @@
+## Drive Sequence
+
+Drive functions can be composed as a sequence (`'func':'seq'`) of normalized functions, being one of `['const', 'linear', 'quadratic', 'harmonic', 'sinoid', 'poly5']` each. Every segment of a drive sequence must specify its function type `func`, its duration `dt` (always positive) and its value range `dz` (might be negative).
+
+<figure>
+  <img src="img/rampDrive.gif">
+  <figcaption>Fig.1: Ramp drive - Duration 5 Seconds.</figcaption>
+</figure>
+
+```js
+"constraints":[
+    {"id":"a","p1":"A0","p2":"A",
+     "len":{"type":"const"},
+     "ori":{"type":"drive","func":"seq","Dt":5,"Dw":0.5326,
+                           "args": [ {"func":"quadratic","dt":3,"dz":1},
+                                     {"func":"const","dt":2},
+                                     {"func":"quadratic","dt":3,"dz":-1}
+                            ]
+           }
+    }
+]
+```
+
+## Views
+
+The `views` array holds properties the user wants to display during simulation. Each *view* element has three primary properties `{"show","of","as"}`. Examples:
+```json
+{"show":"velPole","of":"b","as":"point"},
+{"show":"acc","of":"C","as":"vector","at":"pos"},
+{"show":"angVel","of":"b","as":"info"},
+{"show":"pos","of":"C","as":"trace"},
+{"show":"angVel","of":"c","as":"chart"}
+{"show":"polAcc","of":"b","as":"vector","at":"pole"},
+```
+
+There are different element properties shown by five potential presentation modes.
+
+| show | of | as | type | comments |
+|:-----|:---|:---|:-----|:---------|
+| `pos` | node | `['point','trace']` | point | |
+| `vel` | node | `['vector']` | vector |
+| `acc` | node | `['vector']` | vector |
+| `cog` | model | `['point','trace']` | point | center of gravity |
+| `ang` | constraint | `['info','chart']` | scalar | |
+| `velPole` | constraint | `['point','trace']` | point | instance centre of velocity |
+| `accPole` | constraint | `['point','trace']` | point | instance centre of acceleration |
+| `inflPole` | constraint | `['point','trace']` | point | inflection pole |
+
+Views might have additional properties.
+
+|        | `info` | `point` | `vector` | `trace` | `chart` | comment |
+|:-------|:------:|:-------:|:--------:|:-------:|:-------:|:--------|
+| `mode` |   -    | `point`, `pole`, `center` | - |`static`, `dynamic`, `preview` |   -     | point to place vector at |
+| `ref`  |   -    |    -    |    -     |&#10004; |&#10004; | reference element id |
+| `t0`   |   -    |    -    |    -     |&#10004; |&#10004; | start time |
+| `Dt`   |   -    |    -    |    -     |&#10004; |&#10004; | time region |
+| `at`   |   -    |    -    | &#10004; |    -    |   -     | point to place vector at |
+
+
+
+## Relative Point Path
+
+<figure>
+  <img src="img/camDrive.gif">
+  <figcaption>Fig.1: Cam contour generation.</figcaption>
+</figure>
+
+, View elements creating polylines starting from a time `t0` during a defined time span `Dt` now have a property `mode` of type `string` controlling their behaviour. The value of `mode` must be one of `['static','dynamic','preview']`. The view elements `"type":"trace"` and `"type":"chart"` provide that property.
+
 ## View Modes
 
 View elements creating polylines starting from a time `t0` during a defined time span `Dt` now have a property `mode` of type `string` controlling their behaviour. The value of `mode` must be one of `['static','dynamic','preview']`. The view elements `"type":"trace"` and `"type":"chart"` provide that property.
 
 ### Mode `static`
 
-During constantly advancing system time `model.timer.t` the polyline is created between `t0` and `t0+Dt`. 
-`static` mode is not available with `input` drives
+During constantly advancing model time `model.timer.t` the polyline is created between `t0` and `t0+Dt`. 
+Mode `static` is not available with `input` drives.
 
-![Fig.1: static mode](img/staticView.gif)
+<figure>
+  <img src="img/staticView.gif">
+  <figcaption>Fig.1: static mode</figcaption>
+</figure>
 
 ```js
 "views":[
@@ -17,9 +89,12 @@ During constantly advancing system time `model.timer.t` the polyline is created 
 ```
 ### Mode `dynamic`
 
-During constantly advancing system time `model.timer.t` the polyline is created starting at `t0`, then adding points to the polyline until end of simulation, but holding not more than points generated at the past time span `Dt`. Mode `dynamic` is not available with `input` drives.
+During constantly advancing model time `model.timer.t` the polyline is created starting at `t0`, then adding points to the polyline until end of simulation, but holding not more than points generated at the past time span `Dt`. Mode `dynamic` is not available with `input` drives.
 
-![Fig.2: dynamic mode](img/dynamicView.gif)
+<figure>
+  <img src="img/dynamicView.gif">
+  <figcaption>Fig.2: dynamic mode</figcaption>
+</figure>
 
 ```js
 "views":[
@@ -33,7 +108,7 @@ Before starting the simulation there is now a preview step looking for view elem
 
 <figure>
   <img src="img/previewView.gif">
-  <figcaption>Fig.1: preview mode</figcaption>
+  <figcaption>Fig.3: preview mode</figcaption>
 </figure>
 
 ```js
@@ -46,7 +121,6 @@ Before starting the simulation there is now a preview step looking for view elem
 
 ## Bugs
 
-* `this.model.env.show.invalidConstraintColor` is undefined in 'constraint.js'.
 
 
 ## Perfomance Hints (For Implementers only)
