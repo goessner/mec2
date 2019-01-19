@@ -797,7 +797,7 @@ mec.constraint = {
          */
         get forceAbs() { return -this.lambda_r; },
         /**
-         * Moment value in [Nm]
+         * Moment value in [N*u]
          */
         get moment() { return -this.lambda_w/this.r; },
         /**
@@ -1346,11 +1346,7 @@ mec.constraint = {
                             + (this.len.func ? ',"func":"'+this.len.func+'"' : '')
                             + (this.len.arg ? ',"arg":"'+this.len.arg+'"' : '')
                             + (this.len.t0 && this.len.t0 > 0.0001 ? ',"t0":'+this.len.t0 : '')
-                            + (this.len.Dt ?
-                                this.len.repeat ?
-                                    ',"Dt":'+this.len.Dt/this.len.repeat+',"repeat":'+this.len.repeat
-                                    : ',"Dt":'+this.len.Dt
-                                : '')
+                            + (this.len.Dt ? ',"Dt":'+this.len.Dt : '')
                             + (this.len.Dr ? ',"Dr":'+this.len.Dr : '')
                             + (this.len.bounce ? ',"bounce":true' : '')
                             + (this.len.input ? ',"input":true' : '')
@@ -1367,11 +1363,7 @@ mec.constraint = {
                             + (this.ori.func ? ',"func":"'+this.ori.func+'"' : '')
                             + (this.ori.arg ? ',"arg":"'+this.ori.arg+'"' : '')
                             + (this.ori.t0 && this.ori.t0 > 0.0001 ? ',"t0":'+this.ori.t0 : '')
-                            + (this.ori.Dt ?
-                                this.ori.repeat ?
-                                    ',"Dt":'+this.ori.Dt/this.ori.repeat+',"repeat":'+this.ori.repeat
-                                    : ',"Dt":'+this.ori.Dt
-                                : '')
+                            + (this.ori.Dt ? ',"Dt":'+this.ori.Dt : '')
                             + (this.ori.Dw ? ',"Dw":'+this.ori.Dw : '')
                             + (this.ori.bounce ? ',"bounce":true' : '')
                             + (this.ori.input ? ',"input":true' : '')
@@ -1654,7 +1646,7 @@ mec.load.force = {
         else
             this.wref = this.model.constraintById(this.wref);
 
-        if (typeof this.value === 'number' && mec.isEps(this.value)) 
+        if (typeof this.value === 'number' && mec.isEps(this.value))
             return { mid:'E_FORCE_VALUE_INVALID',val:this.value,id:this.id };
 
         return warn;
@@ -1685,9 +1677,9 @@ mec.load.force = {
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p":"'+this.p.id+'"'
                 + ((!!this.mode && (this.mode === 'push')) ? ',"mode":"push"' : '')
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ((this.w0 && Math.abs(this.w0) > 0.001) ? ',"w0":'+this.w0 : '')
                 + (this.wref ? ',"wref":'+this.wref.id+'"' : '')
-                + (this.value ? ',"value":'+this.value : '')
+                + (this._value && Math.abs(this._value - mec.from_N(1)) > 0.01 ? ',"value":'+mec.to_N(this._value) : '')
                 + ' }';
     },
 
@@ -1811,7 +1803,7 @@ mec.load.spring = {
     },
     asJSON() {
         return '{ "type":"'+this.type+'","id":"'+this.id+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'"'
-                + (this.k ? ',"k":'+this.k : '')
+                + (this._k && Math.abs(this._k - mec.from_N_m(0.01)) > 0.01 ? ',"k":'+mec.to_N_m(this._k) : '')
                 + ((this.len0 && Math.abs(this.len0 - Math.hypot(this.p2.x0-this.p1.x0,this.p2.y0-this.p1.y0)) > 0.0001) ? ',"len0":'+this.len0 : '')
                 + ' }';
     },
