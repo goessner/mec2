@@ -189,9 +189,10 @@ mec.constraint = {
         /**
          * Instantaneous centre of velocity 
          */
-        get velPole() {
+        get pole() {
             return { x:this.p1.x-this.p1.yt/this.wt, y:this.p1.y+this.p1.xt/this.wt };
         },
+        get velPole() { return this.pole; },
         /**
          * Inflection pole 
          */

@@ -803,9 +803,10 @@ mec.constraint = {
         /**
          * Instantaneous centre of velocity 
          */
-        get velPole() {
+        get pole() {
             return { x:this.p1.x-this.p1.yt/this.wt, y:this.p1.y+this.p1.xt/this.wt };
         },
+        get velPole() { return this.pole; },
         /**
          * Inflection pole 
          */
@@ -1646,7 +1647,7 @@ mec.load.force = {
         else
             this.wref = this.model.constraintById(this.wref);
 
-        if (typeof this.value === 'number' && mec.isEps(this.value))
+        if (typeof this.value === 'number' && mec.isEps(this.value)) 
             return { mid:'E_FORCE_VALUE_INVALID',val:this.value,id:this.id };
 
         return warn;
@@ -2002,43 +2003,43 @@ mec.view.vector = {
     init(model,idx) {
         this.model = model;
         this.model.notifyValid(this.validate(idx));
+        this.p = Object.assign({},this.anchor);
+        this.v = Object.assign({},this.of[this.show]);
     },
     dependsOn(elem) {
         return this.of === elem || this.at === elem;
     },
-    reset() {},
+    update() {
+        Object.assign(this.p,this.anchor);
+        Object.assign(this.v,this.of[this.show]);
+        const vabs = Math.hypot(this.v.y,this.v.x);
+        const vview = !mec.isEps(vabs,0.5)
+                    ? mec.asympClamp(mec.aly[this.show].drwscl*vabs,25,100)
+                    : 0;
+        this.v.x *= vview/vabs;
+        this.v.y *= vview/vabs;
+    },
+    reset() { this.update(); },
+    post() {  this.update(); },
     asJSON() {
         return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"vector" }';
     },
     // interaction
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : false; },
-    get endPoints() {
-        const scale = mec.aly[this.show].drwscl;
-        const p = this.anchor;
-        const v = this.of[this.show];
-        const vabs = Math.hypot(v.y,v.x);
-        const vview = !mec.isEps(vabs,0.5)
-                    ? mec.asympClamp(scale*vabs,25,100)
-                    : 0;
-        return { p1:p,
-                 p2:{ x:p.x + v.x/vabs*vview, y:p.y + v.y/vabs*vview }
-        };
-    },
     hitContour({x,y,eps}) {
-        const pts = this.endPoints;
-        return g2.isPntOnLin({x,y},pts.p1,pts.p2,eps);
+        const p = this.p, v = this.v;
+        return g2.isPntOnLin({x,y},p,{x:p.x+v.x,y:p.y+v.y},eps);
     },
     g2() {
-        const pts = this.endPoints;
         return this.g2cache
-        || (this.g2cache = g2().vec({x1:pts.p1.x,
-                         y1:pts.p1.y,
-                         x2:pts.p2.x,
-                         y2:pts.p2.y,
-                         ls:this.model.env.show[this.show+'VecColor'],
-                         lw:1.5,
-                         sh:this.sh
+            || (this.g2cache = g2().vec({x1:()=>this.p.x,
+                                         y1:()=>this.p.y,
+                                         x2:()=>this.p.x+this.v.x,
+                                         y2:()=>this.p.y+this.v.y,
+                                         ls:this.model.env.show[this.show+'VecColor'],
+                                         lw:1.5,
+                                         sh:this.sh
         }));
     },
     draw(g) { g.ins(this); },
@@ -2050,7 +2051,7 @@ mec.view.vector = {
  * @property {string} of - element property belongs to.
  * @property {string} ref - reference constraint id.
  * @property {string} [mode='dynamic'] - ['static','dynamic','preview'].
- * @property {string} [p] - node id to trace ... (deprecated use 'show':'pos' now!)
+ * @property {string} [p] - node id to trace ... (deprecated .. use 'show':'pos' now!)
  * @property {number} [t0=0] - trace begin [s].
  * @property {number} [Dt=1] - trace duration [s].
  * @property {string} [stroke='navy'] - stroke web color.
@@ -2076,6 +2077,11 @@ mec.view.trace = {
 
         if (this.show && !(this.show in this.of))
             return { mid:'E_ALY_INVALID_PROP',elemtype:'view as trace',id:this.id,idx,reftype:this.of,name:this.show};
+
+        if (this.ref && !this.model.constraintById(this.ref)) 
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'view as trace',id:this.id,idx,reftype:'constraint',name:this.ref};
+        else
+            this.ref = this.model.constraintById(this.ref);
 
         // (deprecated !)
         if (this.p) {
@@ -2110,7 +2116,7 @@ mec.view.trace = {
             || this.ref === elem
             || this.p === elem;  // deprecated !!
     },
-    build() {
+    addPoint() {
         const t = this.model.timer.t,
               pnt = this.of[this.show],
               sw = this.ref ? Math.sin(this.ref.w) : 0,      // transform to ..
@@ -2132,7 +2138,7 @@ mec.view.trace = {
     },
     preview() {
         if (this.mode === 'preview')
-            this.build();
+            this.addPoint();
     },
     reset(preview) {
         if (preview || this.mode !== 'preview')
@@ -2140,7 +2146,7 @@ mec.view.trace = {
     },
     post(dt) {  // add model.timer.t to parameter list .. or use timer as parameter everywhere !
         if (this.mode !== 'preview')
-            this.build();
+            this.addPoint();
     },
     asJSON() {
         return '{ "show":"'+this.show+'"as":"'+this.as
@@ -2159,8 +2165,7 @@ mec.view.trace = {
         return false;
     },
     g2() {
-        return this.g2cache
-            || (this.g2cache = g2().ply({pts: this.pts,
+        return g2().ply({pts: this.pts,
                                         format: '{x,y}',
                                         x: this.ref ? ()=>this.ref.p1.x : 0,
                                         y: this.ref ? ()=>this.ref.p1.y : 0,
@@ -2168,10 +2173,52 @@ mec.view.trace = {
                                         ls: this.stroke || 'navy',
                                         lw: 1.5,
                                         fs: this.fill || 'transparent',
-                                        sh: this.sh
-        }));
+                                        sh: ()=>this.sh
+        });
     },
     draw(g) { g.ins(this); },
+}
+
+
+/**
+ * @param {object} - info view.
+ * @property {string} elem - referenced elem id.
+ * @property {string} value - elem value to view.
+ * @property {string} [name] - elem value name to show.
+ */
+mec.view.info = {
+    constructor() {}, // always parameterless .. !
+    init(model) {
+        if (typeof this.elem === 'string')
+            this.elem = model.elementById(this.elem);
+    },
+    dependsOn(elem) {
+        return this.elem === elem;
+    },
+    reset() {},
+    asJSON() {
+        return '{ "type":"'+this.type+'","id":"'+this.id+'","elem":"'+this.elem.id+'"'
+                + (this.value ? ',"value":"'+this.value+'"' : '')
+                + (this.name ? ',"name":"'+this.name+'"' : '')
+                + ' }';
+    },
+    get hasInfo() {
+        return this.elem.state === g2.OVER;  // exclude: OVER & DRAG
+    },
+    infoString() {
+        if (this.value in this.elem) {
+            const val = this.elem[this.value];
+            const aly = mec.aly[this.value];
+            const type = aly.type;
+            const usrval = q => (q*aly.scl).toPrecision(3);
+
+            return (this.name||aly.name||this.value) + ': '
+                 + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.x)+'}'
+                                   : usrval(val))
+                 + ' ' + aly.unit;
+        }
+        return '?';
+    }
 }
 /**
  * mec.shape (c) 2018 Stefan Goessner
