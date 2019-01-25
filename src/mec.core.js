@@ -215,6 +215,7 @@ aly: {
     polChgVel: { get scl() {return mec.m_u}, type:'vec', name:'u_P', unit:'m/s', get drwscl() {return 40*mec.m_u} },
     accPole: { type:'pnt', name:'Q', unit:'m' },
     inflPole: { type:'pnt', name:'I', unit:'m' },
+    t: { get scl() { return 1 }, type:'num', name:'t', unit:'sec' }
 },
 /**
  * unit specifiers and relations
