@@ -374,11 +374,29 @@ mec.view.chart = {
      * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        //obv not finished ...
-        const std = {elemtype: 'graph', id:this.id,idx}
-        if (this.xaxis === undefined  || this.yaxis === undefined)
-            return { mid: 'E_ELEM_REF_MISSING',...std,reftype:'node or timer',name:'of'};
-        return false;
+        const def = {elemtype: 'view as chart', id: this.id, idx};
+        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
+        const x = this.xaxis;
+        if (x.of === undefined)
+            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in xaxis' };
+        if (y.some(e => e.of === undefined))
+            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in yaxis'};
+
+        if(!this.model.elementById(x.of))
+            return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.xaxis.of };
+        // else this.xaxis.of = this.model.elementById(this.xaxis.of);
+
+        y.forEach(e => {
+            if(!this.model.elementById(e.of))
+                return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.xaxis.of };
+        });
+
+        if (x.show && !(x.show in x.of))
+            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: x.of, name: x.show };
+        y.forEach(e => {
+            if(e.show && !(e.show in e.of))
+                return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
+        });
     },
     elem(a) {
         const ret = model.elementById(a.of) || model[a.of] || undefined;
