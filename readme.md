@@ -33,7 +33,7 @@ Its API is minimal and easy to understand. The library is tiny and fast. Mechani
 
 - todo -
 
-## How do i use it?
+## How do I use it?
 
 You can build an environment yourself.
 
@@ -91,6 +91,27 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 *mec2* is licensed under the terms of the MIT License.
 
 # Change Log
+
+### 0.8.6 - 2019-01-06 (changes are non-breaking)
+
+* `mec.model.tick(dt)` is now strictly using a fixed time step of `dt=1/60` seconds regardless of the `dt` argument.
+* `mec.model.preview()` supports *preview*ing capabilities of some `mec.view` elements. 
+* `mec.model.energy` getter added (total sum of kinetik + potential energy).
+* `mec.model.pre` model pre-processing reimplemented with respect to use a *semi-implicite Euler* integrator now with `mec.node.pre`. 
+* `mec.core` some additions due to `mec.model.energy` and minor bug removals.
+* `mec.node.pre` now implements the *semi-implicite Euler* integrator. So pure node-spring models are working now nearly as expected.
+* `mec.constraint` now supports previewing of drives with *input*s.
+* `mec.load` ... some minor modifications and additions.
+* `mec.load.trace` ... add preview capability.
+* `mec.load.trace` ... add optional reference node and orientation (temporarily).
+* `mec.drive.ramp` ... removed (not used afaik).
+* `mec.drive.seq` ... added. A composite sequence of drive segments ('ramps' can be build with that).
+* `mec.drive['const']` ... added. Frequently used as drive segment.
+
+### 0.8.5 - 2018-12-20
+
+* reworked constraints and added support for bidirectional references.
+* moved everything graphics related (flags, colors) to `mec.core.show`.
 
 ### 0.8.5 - 2018-12-20
 

@@ -157,7 +157,6 @@ mec.constraint = {
          * Reset constraint
          */
         reset() {
-//        console.log('reset')
             this.r0 = this.len.hasOwnProperty('r0') ? this.len.r0 : Math.hypot(this.ay,this.ax);
             this.w0 = this.ori.hasOwnProperty('w0') ? this.angle(this.ori.w0) : this.angle(Math.atan2(this.ay,this.ax));
             this._angle = this.w0;
@@ -186,7 +185,23 @@ mec.constraint = {
         /**
          * Moment value in [N*u]
          */
-        get moment() { return -this.lambda_w*this.r; },
+        get moment() { return -this.lambda_w/this.r; },
+        /**
+         * Instantaneous centre of velocity 
+         */
+        get pole() {
+            return { x:this.p1.x-this.p1.yt/this.wt, y:this.p1.y+this.p1.xt/this.wt };
+        },
+        get velPole() { return this.pole; },
+        /**
+         * Inflection pole 
+         */
+        get inflPole() {
+            return { 
+                x:this.p1.x + this.p1.xtt/this.wt**2-this.wtt/this.wt**3*this.p1.xt, 
+                y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt 
+            };
+        },
 
         /**
          * Check constraint for unfinished drives.
@@ -336,8 +351,9 @@ mec.constraint = {
                     ref.dlambda_r -= ratio*impulse/dt;
                 }
                 else {
-                    ref.ori_impulse_vel(this.r/ref.r*ratio*impulse);
-                    ref.dlambda_w -= this.r/ref.r*ratio*impulse/dt;
+                    const refimp = this.r/ref.r*ratio*impulse;
+                    ref.ori_impulse_vel(-refimp);
+                    ref.dlambda_w -= refimp/dt;
                 }
             }
 
@@ -537,7 +553,9 @@ mec.constraint = {
                                             Dt: ori.Dt,
                                             t: ori.t,
                                             bounce: ori.bounce,
-                                            repeat: ori.repeat });
+                                            repeat: ori.repeat,
+                                            args: ori.args
+                                         });
 
             if (!!ori.ref) {
                 const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
@@ -649,7 +667,7 @@ mec.constraint = {
             if (len.input) {
                 // maintain a local input controlled time 'local_t'.
                 len.local_t = 0;
-                len.t = () => len.local_t;
+                len.t = () => !this.model.state.preview ? len.local_t : this.model.timer.t;
                 len.inputCallbk = (u) => { len.local_t = u*len.Dt/len.Dr; };
             }
             else
@@ -663,7 +681,9 @@ mec.constraint = {
                                           Dt: len.Dt,
                                           t: len.t,
                                           bounce: len.bounce,
-                                          repeat: len.repeat });
+                                          repeat: len.repeat,
+                                          args: len.args
+                                        });
 
             if (!!len.ref) {
                 const ref = len.ref = this.model.constraintById(len.ref) || len.ref,

@@ -1,5 +1,5 @@
 /**
- * mec.node (c) 2018 Stefan Goessner
+ * mec.node (c) 2018-19 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
  * @requires mec.model.js
@@ -90,7 +90,7 @@ mec.node = {
             var e = 0;
             if (!this.base) {
                 if (this.model.hasGravity)
-                    e += this.m*(-this.x*this.model.gravity.x - this.y*this.model.gravity.y);
+                    e += this.m*(-(this.x-this.x0)*mec.from_m(this.model.gravity.x) - (this.y-this.y0)*mec.from_m(this.model.gravity.y));
                 e += 0.5*this.m*(this.xt**2 + this.yt**2);
             }
             return e;
@@ -121,27 +121,48 @@ mec.node = {
             this.xtt = this.ytt = 0;
             this.dxt = this.dyt = 0;
         },
-        pre(dt) {
-            // symplectic euler ... partially
-            this.x += (this.xt + 0.5*this.dxt)*dt;
-            this.y += (this.yt + 0.5*this.dyt)*dt;
-//            this.x += this.model.direc*(this.xt + 0.5*this.dxt)*dt;
-//            this.y += this.model.direc*(this.yt + 0.5*this.dyt)*dt;
-            // position verlet  ... just for investigating in future
-//            this.x += this.model.direc*(this.xt - 0.5*this.dxt)*dt;
-//            this.y += this.model.direc*(this.yt - 0.5*this.dyt)*dt;
-            // if applied forces are acting, set velocity diffs initially by forces.
-            //console.log('node('+this.id+')=['+this.Qx+','+this.Qy+']')
-            if (this.Qx || this.Qy) {
-                this.dxt = this.Qx*this.im * dt;
-                this.dyt = this.Qy*this.im * dt;
-            }
-            else
-                this.dxt = this.dyt = 0;  // zero out velocity differences .. important !!
+
+        /**
+         * First step of node pre-processing.
+         * Zeroing out node forces and differential velocities.
+         * @method
+         */
+        pre_0() {
+            this.Qx = this.Qy = 0;
+            this.dxt = this.dyt = 0;
         },
+        /**
+         * Second step of node pre-processing.
+         * @method
+         * @param {number} dt - time increment [s].
+         * @returns {boolean} dependency exists.
+         */
+        pre(dt) {
+            // apply optional gravitational force
+            if (!this.base && this.model.hasGravity) {
+                this.Qx += this.m*mec.from_m(this.model.gravity.x);
+                this.Qy += this.m*mec.from_m(this.model.gravity.y);
+            }
+            // semi-implicite Euler step ... !
+            this.dxt += this.Qx*this.im * dt;
+            this.dyt += this.Qy*this.im * dt;
+
+            // increasing velocity is done dynamically and implicitly by using `xtcur, ytcur` during iteration ...
+
+            // increase positions using previously incremented velocities ... !
+            // x = x0 + (dx/dt)*dt + 1/2*(dv/dt)*dt^2
+            this.x += (this.xt + 1.5*this.dxt)*dt;
+            this.y += (this.yt + 1.5*this.dyt)*dt;
+        },
+
+        /**
+         * Node post-processing.
+         * @method
+         * @param {number} dt - time increment [s].
+         * @returns {boolean} dependency exists.
+         */
         post(dt) {
-            // symplectic euler ... partially
-//            console.log(`${this.id}:${this.dxt}/${this.dyt},${dt}`)
+            // update velocity from `xtcur, ytcur`
             this.xt += this.dxt;
             this.yt += this.dyt;
             // get accelerations from velocity differences...
@@ -157,6 +178,7 @@ mec.node = {
 
         // analysis getters
         get force() { return {x:this.Qx,y:this.Qy}; },
+        get pos() { return {x:this.x,y:this.y}; },
         get vel() { return {x:this.xt,y:this.yt}; },
         get acc() { return {x:this.xtt,y:this.ytt}; },
         get forceAbs() { return Math.hypot(this.Qx,this.Qy); },

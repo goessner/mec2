@@ -99,8 +99,9 @@ mec.load.force = {
 
  // cartesian components
     get w() { return this.wref ? this.wref.w + this.w0 : this.w0; },
-    get Qx() { return this._value*Math.cos(this.w)},
-    get Qy() { return this._value*Math.sin(this.w)},
+    get Qx() { return this._value*Math.cos(this.w); },
+    get Qy() { return this._value*Math.sin(this.w); },
+    get energy() { return 0; },
     reset() {},
     apply() {
         this.p.Qx += this.Qx;
@@ -224,9 +225,10 @@ mec.load.spring = {
     // cartesian components
     get len() { return Math.hypot(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
     get w() { return Math.atan2(this.p2.y-this.p1.y,this.p2.x-this.p1.x); },
-    get force() { return this._k*(this.len - this.len0); },                           // todo: rename due to analysis convention .. !
+    get force() { return this._k*(this.len - this.len0); },                      // todo: rename due to analysis convention .. !
     get Qx() { return this.force*Math.cos(this.w)},
     get Qy() { return this.force*Math.sin(this.w)},
+    get energy() { return 0.5*this._k*(this.len - this.len0)**2; },
     reset() {},
     apply() {
         const f = this.force, w = this.w,

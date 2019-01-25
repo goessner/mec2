@@ -10,13 +10,16 @@
  * They are named and implemented after VDI 2145 and web easing functions.
  */
 mec.drive = {
-    create({func,z0,Dz,t0,Dt,t,bounce,repeat}) {
+    create({func,z0,Dz,t0,Dt,t,bounce,repeat,args}) {
         const isin = (x,x1,x2) => x >= x1 && x < x2;
-        let drv = func && func in mec.drive ? mec.drive[func] :  mec.drive.linear;
+        let drv = func && func in mec.drive ? mec.drive[func] : mec.drive.linear;
 
-        if (bounce  && func !== 'static') {
+        if (typeof drv === 'function') {
+            drv = drv(args);
+        }
+        if (bounce && func !== 'static') {
             drv = mec.drive.bounce(drv);
-            Dt *= 2;  // preserve duration per repetition
+            Dt *= 2;  // preserve duration while bouncing
         }
         if (repeat && func !== 'static') {
             drv = mec.drive.repeat(drv,repeat);
@@ -27,6 +30,9 @@ mec.drive = {
             ft:  () => isin(t(),t0,t0+Dt) ? drv.fd((t()-t0)/Dt)*Dz/Dt : 0,
             ftt: () => isin(t(),t0,t0+Dt) ? drv.fdd((t()-t0)/Dt)*Dz/Dt/Dt : 0
         };
+    },
+    "const": {   // used for resting segments in a composite drive sequence.
+        f: (q) => 0, fd: (q) => 0, fdd: (q) => 0
     },
     linear: {
         f: (q) =>q, fd: (q) => 1, fdd: (q) => 0
@@ -54,34 +60,45 @@ mec.drive = {
     static: {   // used for actuators (Stellantrieb) without velocities and accelerations
         f: (q) =>q, fd: (q) => 0, fdd: (q) => 0
     },
-    ramp(dq) {
-        dq = mec.clamp(dq,0,0.5);
-        if (dq === 0)
-            return mec.drive.linear;
-        else if (dq === 0.5)
-            return mec.drive.quadratic;
-        else {
-            const a =  1/((1-dq)*dq);
-            return {f: function(q) {
-                        return (q < dq)   ? 1/2*a*q*q
-                             : (q < 1-dq) ? a*(q - 1/2*dq)*dq
-                             :              a*(1 - 3/2*dq)*dq + a*(q+dq-1)*dq - 1/2*a*(q+dq-1)*(q+dq-1);
-                    },
-                    fd: function(q) {
-                        return (q < dq)   ? a*q
-                             : (q < 1-dq) ? a*dq
-                             :              a*dq - a*(q+dq-1);
-                    },
-                    fdd: function(q) {
-                        return (q < dq)   ? a
-                             : (q < 1-dq) ? 0
-                             :             -a;
+    seq(segments) {
+        let zmin = Number.POSITIVE_INFINITY,
+            zmax = Number.NEGATIVE_INFINITY,
+            z = 0, Dz = 0, Dt = 0,
+            segof = (t) => {
+                let tsum = 0, zsum = 0, dz;
+                for (const seg of segments) {
+                    dz = seg.dz||0;
+                    if (tsum <= t && t <= tsum + seg.dt) {
+                        return {
+                            f: zsum + mec.drive[seg.func].f((t-tsum)/seg.dt)*dz,
+                            fd: mec.drive[seg.func].fd((t-tsum)/seg.dt)*dz/Dt,
+                            fdd: mec.drive[seg.func].fdd((t-tsum)/seg.dt)*dz/Dt/Dt
+                        }
                     }
+                    tsum += seg.dt;
+                    zsum += dz;
+                }
+                return {};  // error
             };
+
+        for (const seg of segments) {
+            if (typeof seg.func === 'string') { // add error logging here ..
+                Dt += seg.dt;
+                z += seg.dz || 0;
+                zmin = Math.min(z, zmin);
+                zmax = Math.max(z, zmax);
+            }
+        }
+        Dz = zmax - zmin;
+//        console.log({Dt,Dz,zmin,zmax,segof:segof(0.5*Dt).f})
+        return {
+            f: (q) => (segof(q*Dt).f - zmin)/Dz,
+            fd: (q) => segof(q*Dt).fd/Dz,
+            fdd: (q) => 0
         }
     },
     // todo .. test valid velocity and acceleration signs with bouncing !!
-    bounce: function(drv) {
+    bounce(drv) {
         if (typeof drv === 'string') drv = mec.drive[drv];
         return {
             f: q => drv.f(q < 0.5 ? 2*q : 2-2*q),
@@ -89,7 +106,7 @@ mec.drive = {
             fdd: q => drv.fdd(q < 0.5 ? 2*q : 2-2*q)*(q < 0.5 ? 1 : -1)
         }
     },
-    repeat: function(drv,n) {
+    repeat(drv,n) {
         if (typeof drv === 'string') drv = mec.drive[drv];
         return {
             f: q => drv.f((q*n)%1),

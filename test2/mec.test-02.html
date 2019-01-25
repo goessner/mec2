@@ -11,17 +11,18 @@
         {"id":"B0","x":200,"y":0,"base":true},
         {"id":"A","x":0,"y":50},
         {"id":"B","x":225,"y":100},
-        {"id":"C","x":125,"y":150}
+        {"id":"C","x":125,"y":150},
+        {"id":"C0","x":350,"y":0,"base":true}
     ],
     "constraints":[
-        {"id":"a","p1":"A0","p2":"A","len":{"type":"const"},"ori":{"type":"drive","func":"quadratic","Dt":3,"bounce":true,"input":true}},
+        {"id":"a","p1":"A0","p2":"A","len":{"type":"const"},"ori":{"type":"drive","func":"linear","Dt":2}},
         {"id":"b","p1":"A","p2":"B","len":{"type":"const"}},
         {"id":"c","p1":"B0","p2":"B","len":{"type":"const"}},
         {"id":"b2","p1":"A","p2":"C","len":{"type":"const"},"ori":{"type":"const","ref":"b"}}
     ],
     "views":[
-        {"type":"trace","p":"C","t0":1,"Dt":1,"mode":"preview","fill":"orange"},
-        {"type":"vector","p":"C","value":"vel"}
+        {"show":"pos","of":"C","as":"trace","mode":"dynamic","Dt":1,"fill":"orange"},
+        {"show":"vel","of":"C","as":"vector","at":"C0"}
     ]
 }
 </mec-2>

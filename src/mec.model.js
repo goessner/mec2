@@ -1,5 +1,5 @@
 /**
- * mec.model (c) 2018 Stefan Goessner
+ * mec.model (c) 2018-19 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
  * @requires mec.node.js
@@ -169,14 +169,14 @@ mec.model = {
          * Perform timer tick.
          * Model time is incremented by `dt`.
          * Model time is independent of system time.
-         * Input elements may set simulation time and `dt` explicite.
+         * Input elements may set simulation time and `dt` explicite. Depricated, they maintain their local time in parallel !
          * `model.tick()` is then called with `dt = 0`.
          * @method
          * @param {number} [dt=0] - time increment.
          * @returns {object} model
          */
         tick(dt) {
-            if (dt) { // sliders (dt == 0) are setting simulation time explicite .. !
+            if (dt) { // sliders (dt == 0) are setting simulation time explicite .. depricated, they maintain their local time in parallel !
                 dt = 1/60;  // BUG ?? fix: dt as a constant for now (study variable time step theoretically !!)
                 this.timer.t += (this.timer.dt = dt);
             }
@@ -272,6 +272,34 @@ mec.model = {
                 active = active || constraint.hasActiveDrives(this.timer.t);
             return active;
         },
+        /**
+         * Energy [kgu^2/s^2]
+         */
+        get energy() {
+            var e = 0;
+            for (const node of this.nodes)
+                e += node.energy;
+            for (const load of this.loads)
+                e += load.energy;
+            return e;
+        },
+        /**
+         * center of gravity 
+         */
+        get cog() {
+            var center = {x:0,y:0}, m = 0;
+            for (const node of this.nodes) {
+                if (!node.base) {
+                    center.x += node.x*node.m;
+                    center.y += node.y*node.m;
+                    m += node.m;
+                }
+            }
+            center.x /= m;
+            center.y /= m;
+            return center;
+        },
+
         /**
          * Check, if other elements are dependent on specified element.
          * @method
@@ -370,7 +398,8 @@ mec.model = {
             return this.nodeById(id)
                 || this.constraintById(id)
                 || this.loadById(id)
-                || this.viewById(id);
+                || this.viewById(id)
+                || id === 'model' && this;
         },
         /**
          * Add node to model.
@@ -628,8 +657,8 @@ mec.model = {
             for (const node of this.nodes) {
                 node.Qx = node.Qy = 0;
                 if (!node.base && this.hasGravity) {
-                    node.Qx = node.m*mec.from_N(this.gravity.x);
-                    node.Qy = node.m*mec.from_N(this.gravity.y);
+                    node.Qx = node.m*mec.from_m(this.gravity.x);
+                    node.Qy = node.m*mec.from_m(this.gravity.y);
                 }
             }
             // Apply external loads.
@@ -694,7 +723,8 @@ mec.model = {
          * @method
          * @returns {object} model
          */
-        pre() {
+/*
+         pre() {
             this.applyLoads();
             // pre process nodes
             for (const node of this.nodes)
@@ -710,6 +740,29 @@ mec.model = {
                     view.pre(this.timer.dt);
             return this;
         },
+*/
+        pre() {
+            // Clear node loads and velocity differences.
+            for (const node of this.nodes)
+                node.pre_0();
+            // Apply external loads.
+            for (const load of this.loads)
+                load.apply();
+            // pre process nodes
+            for (const node of this.nodes)
+                node.pre(this.timer.dt);
+            // pre process constraints
+            for (const constraint of this.constraints)
+                constraint.pre(this.timer.dt);
+            // eliminate drift ...
+            this.asmPos(this.timer.dt);
+            // pre process views
+            for (const view of this.views)
+                if (view.pre)
+                    view.pre(this.timer.dt);
+            return this;
+        },
+
         /**
          * Perform iteration steps until constraints are valid or max-iteration
          * steps for assembly are reached.
@@ -728,18 +781,18 @@ mec.model = {
          * @returns {object} model
          */
         post() {
-            // post process constraints
-            for (const constraint of this.constraints)
-                constraint.post(this.timer.dt);
             // post process nodes
             for (const node of this.nodes)
                 node.post(this.timer.dt);
+            // post process constraints
+            for (const constraint of this.constraints)
+                constraint.post(this.timer.dt);
             // post process views
             for (const view of this.views)
                 if (view.post)
                     view.post(this.timer.dt);
 
-//    console.log(this.state.itrpos)
+//    console.log('E:'+mec.to_J(this.energy))
             return this;
         },
         /**
@@ -748,11 +801,11 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {  // todo: draw all components via 'x.draw(g)' call !
+        draw(g) {  // todo: draw all elements via 'x.draw(g)' call !
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)
-                g.ins(view);
+                view.draw(g);
             for (const constraint of this.constraints)
                 g.ins(constraint);
             for (const load of this.loads)
