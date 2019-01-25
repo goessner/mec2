@@ -215,6 +215,7 @@ aly: {
     polChgVel: { get scl() {return mec.m_u}, type:'vec', name:'u_P', unit:'m/s', get drwscl() {return 40*mec.m_u} },
     accPole: { type:'pnt', name:'Q', unit:'m' },
     inflPole: { type:'pnt', name:'I', unit:'m' },
+    t: { get scl() { return 1 }, type:'num', name:'t', unit:'sec' }
 },
 /**
  * unit specifiers and relations
@@ -1895,19 +1896,19 @@ mec.view.point = {
      * Check point view properties for validity.
      * @method
      * @param {number} idx - index in views array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.of === undefined) 
+        if (this.of === undefined)
             return { mid:'E_ELEM_MISSING',elemtype:'view as point',id:this.id,idx,reftype:'element',name:'of'};
-        if (!this.model.elementById(this.of)) 
+        if (!this.model.elementById(this.of))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as point',id:this.id,idx,reftype:'element',name:this.of};
         else
             this.of = this.model.elementById(this.of);
 
         if (this.show && !(this.show in this.of))
             return { mid:'E_ALY_PROP_INVALID',elemtype:'view as point',id:this.id,idx,reftype:this.of,name:this.show};
-        
+
         return false;
     },
     /**
@@ -1928,7 +1929,7 @@ mec.view.point = {
     reset() {
         Object.assign(this.p,this.of[this.show]);
     },
-    post() { 
+    post() {
         Object.assign(this.p,this.of[this.show]);
     },
     asJSON() {
@@ -1963,14 +1964,14 @@ mec.view.vector = {
      * Check vector view properties for validity.
      * @method
      * @param {number} idx - index in views array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.show === undefined) 
+        if (this.show === undefined)
             return { mid:'E_SHOW_PROP_MISSING',elemtype:'view as vector',id:this.id,idx,name:'show'};
-        if (this.of === undefined) 
+        if (this.of === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'view as vector',id:this.id,idx,reftype:'node',name:'of'};
-        if (!this.model.elementById(this.of)) 
+        if (!this.model.elementById(this.of))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as vector',id:this.id,idx,reftype:'node',name:this.of};
         else
             this.of = this.model.elementById(this.of);
@@ -1991,7 +1992,7 @@ mec.view.vector = {
             else
                 return { mid:'E_SHOW_VEC_ANCHOR_INVALID',elemtype:'view as vector',id:this.id,idx,name:'at' };
         }
-        
+
         return false;
     },
     /**
@@ -2065,12 +2066,12 @@ mec.view.trace = {
      * Check vector view properties for validity.
      * @method
      * @param {number} idx - index in views array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
         if (this.of === undefined)
             return { mid:'E_ELEM_MISSING',elemtype:'view as trace',id:this.id,idx,reftype:'element',name:'of'};
-        if (!this.model.elementById(this.of)) 
+        if (!this.model.elementById(this.of))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as trace',id:this.id,idx,reftype:'element',name:this.of};
         else
             this.of = this.model.elementById(this.of);
@@ -2078,7 +2079,7 @@ mec.view.trace = {
         if (this.show && !(this.show in this.of))
             return { mid:'E_ALY_INVALID_PROP',elemtype:'view as trace',id:this.id,idx,reftype:this.of,name:this.show};
 
-        if (this.ref && !this.model.constraintById(this.ref)) 
+        if (this.ref && !this.model.constraintById(this.ref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as trace',id:this.id,idx,reftype:'constraint',name:this.ref};
         else
             this.ref = this.model.constraintById(this.ref);
@@ -2092,7 +2093,7 @@ mec.view.trace = {
                 this.of = this.model.nodeById(this.p);
             }
         }
-        
+
         return false;
     },
     /**
@@ -2103,7 +2104,7 @@ mec.view.trace = {
      */
     init(model,idx) {
         this.model = model;
-        if (!this.model.notifyValid(this.validate(idx))) 
+        if (!this.model.notifyValid(this.validate(idx)))
             return;
 
         this.t0 = this.t0 || 0;
@@ -2122,7 +2123,7 @@ mec.view.trace = {
               sw = this.ref ? Math.sin(this.ref.w) : 0,      // transform to ..
               cw = this.ref ? Math.cos(this.ref.w) : 1,      // reference system, i.e ...
               xp = pnt.x - (this.ref ? this.ref.p1.x : 0),   // `ref.p1` as origin ...
-              yp = pnt.y - (this.ref ? this.ref.p1.y : 0),   
+              yp = pnt.y - (this.ref ? this.ref.p1.y : 0),
               p = {x:cw*xp+sw*yp,y:-sw*xp+cw*yp};
 //console.log("wref="+this.wref)
         if (this.mode === 'static' || this.mode === 'preview') {
@@ -2213,11 +2214,143 @@ mec.view.info = {
             const usrval = q => (q*aly.scl).toPrecision(3);
 
             return (this.name||aly.name||this.value) + ': '
-                 + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.x)+'}'
+                 + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.y)+'}'
                                    : usrval(val))
                  + ' ' + aly.unit;
         }
         return '?';
+    }
+}
+
+/**
+ * @param {object} - chart view.
+*/
+mec.view.chart = {
+    constructor() {}, // always parameterless .. !
+    /**
+     * Check vector view properties for validity.
+     * @method
+     * @param {number} idx - index in views array.
+     * @returns {boolean} false - if no error / warning was detected.
+     */
+    validate(idx) {
+        const def = {elemtype: 'view as chart', id: this.id, idx};
+        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
+        const x = this.xaxis;
+        if (x.of === undefined)
+            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in xaxis' };
+        if (y.some(e => e.of === undefined))
+            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in yaxis'};
+
+        const xelem = model.elementById(x.of) || model[x.of];
+        const yelem = y.map(e => model.elementById(e.of) || model[e.of]);
+
+        if(!xelem)
+            return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.xaxis.of };
+        // else this.xaxis.of = this.model.elementById(this.xaxis.of);
+        y.forEach(e => {
+            if(!yelem)
+                return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.xaxis.of };
+        });
+
+        if (x.show && !(x.show in xelem))
+            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: x.of, name: x.show };
+        y.forEach(e => {
+            if(e.show && !(e.show in yelem))
+                return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
+        });
+
+        return false;
+    },
+    elem(a) {
+        const ret = model.elementById(a.of) || model[a.of] || undefined;
+        return ret ? ret[a.show] : undefined;
+    },
+    aly(val) {
+        return mec.aly[val.show]
+            || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
+    },
+    title(t) {
+        return t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
+    },
+    /**
+     * Initialize view. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in views array.
+     */
+    init(model, idx) {
+        this.model = model;
+        this.mode = this.mode || 'static';
+        if (!model.notifyValid(this.validate(idx))) {
+            return;
+        }
+        const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
+        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
+        y.forEach((a) => a.aly = this.aly(a));
+        this.t0 = this.t0 || 0;
+        this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
+        this.graph       = Object.assign({x:0 ,y:0, funcs: []},this);
+        this.graph.xaxis = Object.assign({title:this.title([x]),grid:true,origin:true}, this.xaxis);
+        this.graph.yaxis = Object.assign({title:this.title( y ),grid:true,origin:true}, this.yaxis);
+        this.data = {
+            x: () => x.aly.scl * this.elem(this.xaxis),
+            y: y.map((e,idx) => {
+                this.graph.funcs[idx] = {data:[]};
+                return () => e.aly.scl * this.elem(e);
+            })
+        };
+    },
+    dependsOn(elem) {
+        return this.yaxis.some(y => y.of === elem) || this.xaxis.of === elem;
+    },
+    addPoint() {
+        const g = this.graph;
+        const t = this.model.timer.t;
+        if (this.mode === 'static' || this.mode === 'preview') {
+            if (this.t0 <= t && t <= this.t0 + this.Dt) {
+                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+            }
+        }
+        else if (this.mode === 'dynamic') {
+            if (this.t0 < t) {
+                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+            }
+            if (this.Dt && this.t0 + this.Dt < t) {
+                for (const e of g.funcs) {
+                    e.data.shift(); e.data.shift();
+                }
+            }
+        }
+        // Redundant when g2.chart gets respective update ...
+        [g.xmin, g.xmax, g.ymin, g.ymax] = [];
+    },
+    preview() {
+        if (this.mode === 'preview')
+            this.addPoint();
+    },
+    reset(preview) {
+        if (this.graph && preview || this.mode !== 'preview')
+                this.graph.funcs.forEach((d) => d.data = []);
+    },
+    post() {
+        if (this.mode !== 'preview')
+            this.addPoint();
+    },
+    asJSON() {
+        return JSON.stringify({
+            type: this.type,
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            t0: this.t0,
+            Dt: this.Dt,
+            xaxis: this.xaxis,
+            yaxis: this.yaxis
+        }).replace('"yaxis"', '\n"yaxis"');
+    },
+    draw(g) {
+        return g.chart(this.graph)
     }
 }
 /**
