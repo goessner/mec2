@@ -382,21 +382,25 @@ mec.view.chart = {
         if (y.some(e => e.of === undefined))
             return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in yaxis'};
 
-        if(!this.model.elementById(x.of))
+        const xelem = model.elementById(x.of) || model[x.of];
+        const yelem = y.map(e => model.elementById(e.of) || model[e.of]);
+
+        if(!xelem)
             return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.xaxis.of };
         // else this.xaxis.of = this.model.elementById(this.xaxis.of);
-
         y.forEach(e => {
-            if(!this.model.elementById(e.of))
+            if(!yelem)
                 return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.xaxis.of };
         });
 
-        if (x.show && !(x.show in x.of))
+        if (x.show && !(x.show in xelem))
             return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: x.of, name: x.show };
         y.forEach(e => {
-            if(e.show && !(e.show in e.of))
+            if(e.show && !(e.show in yelem))
                 return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
         });
+
+        return false;
     },
     elem(a) {
         const ret = model.elementById(a.of) || model[a.of] || undefined;
@@ -418,7 +422,7 @@ mec.view.chart = {
     init(model, idx) {
         this.model = model;
         this.mode = this.mode || 'static';
-        if (!model.notifyValid(this.validate(model, idx))) {
+        if (!model.notifyValid(this.validate(idx))) {
             return;
         }
         const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
@@ -440,7 +444,7 @@ mec.view.chart = {
     dependsOn(elem) {
         return this.yaxis.some(y => y.of === elem) || this.xaxis.of === elem;
     },
-    build() {
+    addPoint() {
         const g = this.graph;
         const t = this.model.timer.t;
         if (this.mode === 'static' || this.mode === 'preview') {
@@ -463,15 +467,15 @@ mec.view.chart = {
     },
     preview() {
         if (this.mode === 'preview')
-            this.build();
+            this.addPoint();
     },
     reset(preview) {
-        if (preview || this.mode !== 'preview')
+        if (this.graph && preview || this.mode !== 'preview')
                 this.graph.funcs.forEach((d) => d.data = []);
     },
     post() {
         if (this.mode !== 'preview')
-            this.build();
+            this.addPoint();
     },
     asJSON() {
         return JSON.stringify({
@@ -485,7 +489,7 @@ mec.view.chart = {
             yaxis: this.yaxis
         }).replace('"yaxis"', '\n"yaxis"');
     },
-    g2() {
-        return g2().chart(this.graph)
+    draw(g) {
+        return g.chart(this.graph)
     }
 }
