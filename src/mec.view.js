@@ -306,7 +306,8 @@ mec.view.trace = {
         return false;
     },
     g2() {
-        return g2().ply({pts: this.pts,
+        return this.g2cache
+           || (this.g2cache = g2().ply({pts: this.pts,
                                         format: '{x,y}',
                                         x: this.ref ? ()=>this.ref.p1.x : 0,
                                         y: this.ref ? ()=>this.ref.p1.y : 0,
@@ -315,7 +316,7 @@ mec.view.trace = {
                                         lw: 1.5,
                                         fs: this.fill || 'transparent',
                                         sh: ()=>this.sh
-        });
+        }));
     },
     draw(g) { g.ins(this); },
 }
