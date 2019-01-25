@@ -300,7 +300,7 @@ mec.view.chart = {
         };
     },
     dependsOn(elem) {
-        /* ... */
+        return this.yaxis.some(y => y.of === elem) || this.xaxis.of === elem;
     },
     build() {
         const g = this.graph;
@@ -336,10 +336,18 @@ mec.view.chart = {
             this.build();
     },
     asJSON() {
-        /* ... */
+        return JSON.stringify({
+            type: this.type,
+            id: this.id,
+            x: this.x,
+            y: this.y,
+            t0: this.t0,
+            Dt: this.Dt,
+            xaxis: this.xaxis,
+            yaxis: this.yaxis
+        }).replace('"yaxis"', '\n"yaxis"');
     },
     g2() {
-        return g2().chart(this.graph);
-    },
-
+        return g2().chart(this.graph)
+    }
 }
