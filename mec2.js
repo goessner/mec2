@@ -800,21 +800,21 @@ mec.constraint = {
         /**
          * Moment value in [N*u]
          */
-        get moment() { return -this.lambda_w/this.r; },
+        get moment() { return -this.lambda_w*this.r; },
         /**
-         * Instantaneous centre of velocity 
+         * Instantaneous centre of velocity
          */
         get pole() {
             return { x:this.p1.x-this.p1.yt/this.wt, y:this.p1.y+this.p1.xt/this.wt };
         },
         get velPole() { return this.pole; },
         /**
-         * Inflection pole 
+         * Inflection pole
          */
         get inflPole() {
-            return { 
-                x:this.p1.x + this.p1.xtt/this.wt**2-this.wtt/this.wt**3*this.p1.xt, 
-                y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt 
+            return {
+                x:this.p1.x + this.p1.xtt/this.wt**2-this.wtt/this.wt**3*this.p1.xt,
+                y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt
             };
         },
 
@@ -852,7 +852,7 @@ mec.constraint = {
         /*
         deepDependsOn(target) {
             return this === target
-                || this.dependsOn(target) 
+                || this.dependsOn(target)
                 || this.model.deepDependsOn(this.p1,target)
                 || this.model.deepDependsOn(this.p2,target)
                 || this.ori && this.model.deepDependsOn(this.ori.ref,target)
