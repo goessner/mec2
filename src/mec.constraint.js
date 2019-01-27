@@ -202,6 +202,19 @@ mec.constraint = {
                 y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt
             };
         },
+        /**
+         * Acceleration pole
+         */
+        get accPole() {
+            const wt2  = this.wt**2,
+                  wtt  = this.wtt,
+                  den  = wtt**2 + wt2**2;
+            return {
+                x:this.p1.x + (wt2*this.p1.xtt - wtt*this.p1.ytt)/den,
+                y:this.p1.y + (wt2*this.p1.ytt + wtt*this.p1.xtt)/den
+            };
+        },
+
 
         /**
          * Check constraint for unfinished drives.

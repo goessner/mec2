@@ -32,7 +32,7 @@ EPS: 1.19209e-07,
  * @const
  * @type {number}
  */
-lenTol: 0.001,
+lenTol: 0.0001,
 /**
  * Angular tolerance for orientation correction.
  * @const
@@ -817,6 +817,19 @@ mec.constraint = {
                 y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt
             };
         },
+        /**
+         * Acceleration pole
+         */
+        get accPole() {
+            const wt2  = this.wt**2,
+                  wtt  = this.wtt,
+                  den  = wtt**2 + wt2**2;
+            return {
+                x:this.p1.x + (wt2*this.p1.xtt - wtt*this.p1.ytt)/den,
+                y:this.p1.y + (wt2*this.p1.ytt + wtt*this.p1.xtt)/den
+            };
+        },
+
 
         /**
          * Check constraint for unfinished drives.
@@ -2061,9 +2074,9 @@ mec.view.vector = {
 mec.view.trace = {
     constructor() {
         this.pts = [];  // allocate array
-    }, // always parameterless .. !
+    },
     /**
-     * Check vector view properties for validity.
+     * Check trace view properties for validity.
      * @method
      * @param {number} idx - index in views array.
      * @returns {boolean} false - if no error / warning was detected.
@@ -2138,7 +2151,7 @@ mec.view.trace = {
         }
     },
     preview() {
-        if (this.mode === 'preview')
+        if (this.mode === 'preview' && this.model.valid)
             this.addPoint();
     },
     reset(preview) {
@@ -2146,7 +2159,7 @@ mec.view.trace = {
             this.pts.length = 0;
     },
     post(dt) {  // add model.timer.t to parameter list .. or use timer as parameter everywhere !
-        if (this.mode !== 'preview')
+        if (this.mode !== 'preview' && this.model.valid)
             this.addPoint();
     },
     asJSON() {
@@ -2225,7 +2238,7 @@ mec.view.info = {
 
 /**
  * @param {object} - chart view.
-*/
+ */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
     /**
@@ -3574,7 +3587,7 @@ mec.model = {
             this.itrvel = 0;
             while (!valid && this.itrvel++ < mec.asmItrMax)
                 valid = this.velStep();
-            return valid;
+            return this.valid = valid;
         },
         /**
          * Velocity iteration step over all constraints.
@@ -3642,7 +3655,8 @@ mec.model = {
          * @returns {object} model
          */
         itr() {
-            this.asmVel();
+            if (this.valid)  // valid asmPos as prerequisite ...
+                this.asmVel();
             return this;
         },
         /**
