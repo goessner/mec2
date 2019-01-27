@@ -1476,8 +1476,8 @@ mec.drive = {
         }
         return {
             f:   () => z0 + drv.f(Math.max(0,Math.min((t() - t0)/DtTotal,1)))*Dz,
-            ft:  () => isin(t(),t0,t0+Dt) ? drv.fd((t()-t0)/DtTotal)*Dz/Dt : 0,
-            ftt: () => isin(t(),t0,t0+Dt) ? drv.fdd((t()-t0)/DtTotal)*Dz/Dt/Dt : 0
+            ft:  () => isin(t(),t0,t0+DtTotal) ? drv.fd((t()-t0)/DtTotal)*Dz/Dt : 0,
+            ftt: () => isin(t(),t0,t0+DtTotal) ? drv.fdd((t()-t0)/DtTotal)*Dz/Dt/Dt : 0
         };
     },
     "const": {   // used for resting segments in a composite drive sequence.
