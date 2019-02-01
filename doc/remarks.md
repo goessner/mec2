@@ -27,9 +27,9 @@ The `views` array holds properties the user wants to display during simulation. 
 ```json
 {"show":"velPole","of":"b","as":"point"},
 {"show":"acc","of":"C","as":"vector","at":"pos"},
-{"show":"angVel","of":"b","as":"info"},
+{"show":"wt","of":"b","as":"info"},
 {"show":"pos","of":"C","as":"trace"},
-{"show":"angVel","of":"c","as":"chart"}
+{"show":"wt","of":"c","as":"chart"}
 {"show":"polAcc","of":"b","as":"vector","at":"pole"},
 ```
 
