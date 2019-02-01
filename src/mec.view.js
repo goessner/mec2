@@ -364,7 +364,21 @@ mec.view.info = {
 
 /**
  * @param {object} - chart view.
-*/
+ * @property {string} [mode='dynamic'] - ['static','dynamic','preview'].
+ * @property {number} [t0=0] - trace begin [s].
+ * @property {number} [Dt=1] - trace duration [s].
+ * @property {number} [x=0] - x-position.
+ * @property {number} [y=0] - y-position.
+ * @property {number} [h=100] - height of chart area.
+ * @property {number} [b=150] - breadth / width of chart area.
+ *
+ * @property {object} [xaxis] - definition of xaxis.
+ * @property {object | array} [yaxis] - definition of yaxis (potentially multiple).
+ *
+ * @property {string} show - kind of property to show on axis.
+ * @property {string} of - element property belongs to.
+
+ */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
     /**

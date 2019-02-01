@@ -168,6 +168,90 @@ The trace of a point might also be recorded with respect to a moving coordinate 
 ]
 ```
 
+### Show as chart
+
+Show as chart has the following properties:
+
+| property| value | comment |
+|:-----|:---|:---|
+| `xaxis` | `{}` | Represents the x-axis is to be filled with various properties (See below) |
+| `yaxis` | `{} | []` | Represents the y-axis is to be filled with an y-axis object or an array of those (See below) |
+| `as` | `"chart"` | Obligatory |
+| `t0` | `[0]` | Model time to start filling the chart. |
+| `Dt` | `[1]` | Time span while recording. |
+| `mode` | `["dynamic"]` | Must be one of `["static", "dynamic", "preview"]` (See below) |
+| `x` |`0`| x position of chart area's lower left corner. |
+| `y` |`0`| y position of chart area's lower left corner. |
+| `b` |`150`| breadth / width of chart area. |
+| `h` |`100`| height of chart area. |
+
+Fill the xaxis and yaxis Objects with the following properties:
+| property| value | comment |
+|:-----|:---|:---|
+| `show` | property name | Must be an existing property name of the referenced element returning a point, constraint or time, depending of the chosen `of` property. |
+| `of` | element reference | Must be an existing element id or `timer` |
+
+The following element properties are supported to be shown in a chart: <br>
+Please note, that properties must correspond according the selected element
+
+| property| value | comment |
+|:-----|:---|:---|
+| `t` | number | Current time. Must be used with a timer. |
+| `accAbs` | number | Absolute acceleration of a point. |
+| `velAbs` | number | Absolute speed of a point. |
+| `absForce` | number | Applied force of a point. |
+| `w` | number | Current angle of a constraint. |
+| `wt` | number | Current angular speed of a constraint. |
+| `wtt` | number | Current angular acceleration of a constraint. |
+| `r` | number | Current length of a constraint. |
+| `rt` | number | Current speed of a constraint. |
+| `rtt` | number | Current acceleration of a constraint. |
+
+Recording starts from time t0 during a defined time span Dt. Its behavior is controlled by a property mode of type string being one of ['static','dynamic','preview'], which are very analogous to modes in **Trace**.
+
+#### mode `static`
+
+During constantly advancing model time `model.timer.t` the trace polyline is created between `t0` and `t0+Dt`.
+
+<figure>
+  <img width=400 src="./img/staticChart.gif">
+  <figcaption>Fig.1: static mode</figcaption>
+</figure>
+
+```js
+"views": [
+    { "as": "chart", "x":175, "b":200, "h":150,"t0":0,"Dt":2,"mode":"static",
+        "yaxis": {"show":"wt","of":"be"},
+        "xaxis":{"of":"ab","show":"w"}
+    },
+]
+```
+
+#### mode `dynamic`
+
+During constantly advancing model time `model.timer.t` the recording is created starting at `t0`, then adding points, but holding not more than points generated at the past time span `Dt`.
+
+<figure>
+  <img width=400 src="./img/dynamicChart.gif">
+  <figcaption>Fig.2: dynamic mode</figcaption>
+</figure>
+
+```js
+"views": [
+    { "as": "chart", "x":175, "b":200, "h":150,"t0":0.25,"Dt":2,"mode":"dynamic",
+        "yaxis": [
+            {"show":"wtt","of":"cd"},
+            {"show":"wtt","of":"de"},
+    ],
+        "xaxis":{"of":"ab","show":"w"}
+    },
+]
+```
+
+#### mode `preview`
+
+Before starting the simulation there is a preview step looking for view elements requesting preview. When some are present, a background simulation using a time step `dt=1/30` seconds is done first until the largest `t0+Dt` time value. So when starting the simulation, the precalculated chart is already there.
+
 ## Perfomance Hints (For Implementers only)
 
 * At `init` state creation of temporary objects is mostly avoided. Existing objects are modified or extended.
