@@ -703,7 +703,7 @@ mec.model = {
             this.itrvel = 0;
             while (!valid && this.itrvel++ < mec.asmItrMax)
                 valid = this.velStep();
-            return valid;
+            return this.valid = valid;
         },
         /**
          * Velocity iteration step over all constraints.
@@ -771,7 +771,8 @@ mec.model = {
          * @returns {object} model
          */
         itr() {
-            this.asmVel();
+            if (this.valid)  // valid asmPos as prerequisite ...
+                this.asmVel();
             return this;
         },
         /**

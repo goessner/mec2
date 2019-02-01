@@ -36,19 +36,19 @@ mec.view.point = {
      * Check point view properties for validity.
      * @method
      * @param {number} idx - index in views array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.of === undefined) 
+        if (this.of === undefined)
             return { mid:'E_ELEM_MISSING',elemtype:'view as point',id:this.id,idx,reftype:'element',name:'of'};
-        if (!this.model.elementById(this.of)) 
+        if (!this.model.elementById(this.of))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as point',id:this.id,idx,reftype:'element',name:this.of};
         else
             this.of = this.model.elementById(this.of);
 
         if (this.show && !(this.show in this.of))
             return { mid:'E_ALY_PROP_INVALID',elemtype:'view as point',id:this.id,idx,reftype:this.of,name:this.show};
-        
+
         return false;
     },
     /**
@@ -69,7 +69,7 @@ mec.view.point = {
     reset() {
         Object.assign(this.p,this.of[this.show]);
     },
-    post() { 
+    post() {
         Object.assign(this.p,this.of[this.show]);
     },
     asJSON() {
@@ -107,11 +107,11 @@ mec.view.vector = {
      * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.show === undefined) 
+        if (this.show === undefined)
             return { mid:'E_SHOW_PROP_MISSING',elemtype:'view as vector',id:this.id,idx,name:'show'};
-        if (this.of === undefined) 
+        if (this.of === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'view as vector',id:this.id,idx,reftype:'node',name:'of'};
-        if (!this.model.elementById(this.of)) 
+        if (!this.model.elementById(this.of))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as vector',id:this.id,idx,reftype:'node',name:this.of};
         else
             this.of = this.model.elementById(this.of);
@@ -132,7 +132,7 @@ mec.view.vector = {
             else
                 return { mid:'E_SHOW_VEC_ANCHOR_INVALID',elemtype:'view as vector',id:this.id,idx,name:'at' };
         }
-        
+
         return false;
     },
     /**
@@ -201,9 +201,9 @@ mec.view.vector = {
 mec.view.trace = {
     constructor() {
         this.pts = [];  // allocate array
-    }, // always parameterless .. !
+    },
     /**
-     * Check vector view properties for validity.
+     * Check trace view properties for validity.
      * @method
      * @param {number} idx - index in views array.
      * @returns {boolean} false - if no error / warning was detected.
@@ -211,7 +211,7 @@ mec.view.trace = {
     validate(idx) {
         if (this.of === undefined)
             return { mid:'E_ELEM_MISSING',elemtype:'view as trace',id:this.id,idx,reftype:'element',name:'of'};
-        if (!this.model.elementById(this.of)) 
+        if (!this.model.elementById(this.of))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as trace',id:this.id,idx,reftype:'element',name:this.of};
         else
             this.of = this.model.elementById(this.of);
@@ -219,7 +219,7 @@ mec.view.trace = {
         if (this.show && !(this.show in this.of))
             return { mid:'E_ALY_INVALID_PROP',elemtype:'view as trace',id:this.id,idx,reftype:this.of,name:this.show};
 
-        if (this.ref && !this.model.constraintById(this.ref)) 
+        if (this.ref && !this.model.constraintById(this.ref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'view as trace',id:this.id,idx,reftype:'constraint',name:this.ref};
         else
             this.ref = this.model.constraintById(this.ref);
@@ -233,7 +233,7 @@ mec.view.trace = {
                 this.of = this.model.nodeById(this.p);
             }
         }
-        
+
         return false;
     },
     /**
@@ -263,7 +263,7 @@ mec.view.trace = {
               sw = this.ref ? Math.sin(this.ref.w) : 0,      // transform to ..
               cw = this.ref ? Math.cos(this.ref.w) : 1,      // reference system, i.e ...
               xp = pnt.x - (this.ref ? this.ref.p1.x : 0),   // `ref.p1` as origin ...
-              yp = pnt.y - (this.ref ? this.ref.p1.y : 0),   
+              yp = pnt.y - (this.ref ? this.ref.p1.y : 0),
               p = {x:cw*xp+sw*yp,y:-sw*xp+cw*yp};
 //console.log("wref="+this.wref)
         if (this.mode === 'static' || this.mode === 'preview') {
@@ -278,7 +278,7 @@ mec.view.trace = {
         }
     },
     preview() {
-        if (this.mode === 'preview')
+        if (this.mode === 'preview' && this.model.valid)
             this.addPoint();
     },
     reset(preview) {
@@ -286,7 +286,7 @@ mec.view.trace = {
             this.pts.length = 0;
     },
     post(dt) {  // add model.timer.t to parameter list .. or use timer as parameter everywhere !
-        if (this.mode !== 'preview')
+        if (this.mode !== 'preview' && this.model.valid)
             this.addPoint();
     },
     asJSON() {
@@ -306,7 +306,8 @@ mec.view.trace = {
         return false;
     },
     g2() {
-        return g2().ply({pts: this.pts,
+        return this.g2cache
+           || (this.g2cache = g2().ply({pts: this.pts,
                                         format: '{x,y}',
                                         x: this.ref ? ()=>this.ref.p1.x : 0,
                                         y: this.ref ? ()=>this.ref.p1.y : 0,
@@ -315,7 +316,7 @@ mec.view.trace = {
                                         lw: 1.5,
                                         fs: this.fill || 'transparent',
                                         sh: ()=>this.sh
-        });
+        }));
     },
     draw(g) { g.ins(this); },
 }
@@ -354,7 +355,7 @@ mec.view.info = {
             const usrval = q => (q*aly.scl).toPrecision(3);
 
             return (this.name||aly.name||this.value) + ': '
-                 + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.x)+'}'
+                 + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.y)+'}'
                                    : usrval(val))
                  + ' ' + aly.unit;
         }

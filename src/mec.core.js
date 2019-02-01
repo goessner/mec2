@@ -32,7 +32,7 @@ EPS: 1.19209e-07,
  * @const
  * @type {number}
  */
-lenTol: 0.001,
+lenTol: 0.0001,
 /**
  * Angular tolerance for orientation correction.
  * @const

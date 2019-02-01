@@ -12,23 +12,24 @@
 mec.drive = {
     create({func,z0,Dz,t0,Dt,t,bounce,repeat,args}) {
         const isin = (x,x1,x2) => x >= x1 && x < x2;
-        let drv = func && func in mec.drive ? mec.drive[func] : mec.drive.linear;
+        let drv = func && func in mec.drive ? mec.drive[func] : mec.drive.linear,
+            DtTotal = Dt;
 
         if (typeof drv === 'function') {
             drv = drv(args);
         }
         if (bounce && func !== 'static') {
             drv = mec.drive.bounce(drv);
-            Dt *= 2;  // preserve duration while bouncing
+            DtTotal *= 2;  // preserve duration while bouncing
         }
         if (repeat && func !== 'static') {
             drv = mec.drive.repeat(drv,repeat);
-            Dt *= repeat;  // preserve duration per repetition
+            DtTotal *= repeat;  // preserve duration per repetition
         }
         return {
-            f:   () => z0 + drv.f(Math.max(0,Math.min((t() - t0)/Dt,1)))*Dz,
-            ft:  () => isin(t(),t0,t0+Dt) ? drv.fd((t()-t0)/Dt)*Dz/Dt : 0,
-            ftt: () => isin(t(),t0,t0+Dt) ? drv.fdd((t()-t0)/Dt)*Dz/Dt/Dt : 0
+            f:   () => z0 + drv.f(Math.max(0,Math.min((t() - t0)/DtTotal,1)))*Dz,
+            ft:  () => isin(t(),t0,t0+DtTotal) ? drv.fd((t()-t0)/DtTotal)*Dz/Dt : 0,
+            ftt: () => isin(t(),t0,t0+DtTotal) ? drv.fdd((t()-t0)/DtTotal)*Dz/Dt/Dt : 0
         };
     },
     "const": {   // used for resting segments in a composite drive sequence.

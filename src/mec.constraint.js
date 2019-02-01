@@ -185,23 +185,36 @@ mec.constraint = {
         /**
          * Moment value in [N*u]
          */
-        get moment() { return -this.lambda_w/this.r; },
+        get moment() { return -this.lambda_w*this.r; },
         /**
-         * Instantaneous centre of velocity 
+         * Instantaneous centre of velocity
          */
         get pole() {
             return { x:this.p1.x-this.p1.yt/this.wt, y:this.p1.y+this.p1.xt/this.wt };
         },
         get velPole() { return this.pole; },
         /**
-         * Inflection pole 
+         * Inflection pole
          */
         get inflPole() {
-            return { 
-                x:this.p1.x + this.p1.xtt/this.wt**2-this.wtt/this.wt**3*this.p1.xt, 
-                y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt 
+            return {
+                x:this.p1.x + this.p1.xtt/this.wt**2-this.wtt/this.wt**3*this.p1.xt,
+                y:this.p1.y + this.p1.ytt/this.wt**2-this.wtt/this.wt**3*this.p1.yt
             };
         },
+        /**
+         * Acceleration pole
+         */
+        get accPole() {
+            const wt2  = this.wt**2,
+                  wtt  = this.wtt,
+                  den  = wtt**2 + wt2**2;
+            return {
+                x:this.p1.x + (wt2*this.p1.xtt - wtt*this.p1.ytt)/den,
+                y:this.p1.y + (wt2*this.p1.ytt + wtt*this.p1.xtt)/den
+            };
+        },
+
 
         /**
          * Check constraint for unfinished drives.
@@ -237,7 +250,7 @@ mec.constraint = {
         /*
         deepDependsOn(target) {
             return this === target
-                || this.dependsOn(target) 
+                || this.dependsOn(target)
                 || this.model.deepDependsOn(this.p1,target)
                 || this.model.deepDependsOn(this.p2,target)
                 || this.ori && this.model.deepDependsOn(this.ori.ref,target)
