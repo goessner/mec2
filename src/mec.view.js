@@ -506,12 +506,14 @@ mec.view.chart = {
         }
         // mode is preview and preview was already rendered once
         else if (this.graph.xAxis) {
-            this.data.y.forEach((y,idx) =>
-                this.nods[idx] = this.graph.pntOf({
-                    x: this.data.x() % (this.Dt),
-                    y: y()
-                })
-            );          
+            const g = this.graph;
+            this.data.y.forEach((_y,idx) => {
+                const x = this.data.x();
+                const y = _y();
+                // Hide nods if they are out of bounds
+                const scl =Number(!(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax)); 
+                this.nods[idx] = {...this.graph.pntOf({x, y}), scl};
+            });          
         }
     },
     asJSON() {
@@ -531,10 +533,12 @@ mec.view.chart = {
         if (this.mode === 'preview') {
             const n = this.nods = [];
             this.graph.funcs.forEach((_,i) => {
-                    n.push({x:0,y:0});
+                    // create references for later modification
+                    n.push({x:0,y:0,scl:0});
                     g.nod({
                         x: () => n[i].x,
-                        y: () => n[i].y
+                        y: () => n[i].y,
+                        scl: () => n[i].scl
                     })
                 }
             );
