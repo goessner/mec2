@@ -397,8 +397,8 @@ mec.view.chart = {
         if (y.some(e => e.of === undefined))
             return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in yaxis'};
 
-        const xelem = model.elementById(x.of) || model[x.of];
-        const yelem = y.map(e => model.elementById(e.of) || model[e.of]);
+        const xelem = this.model.elementById(x.of) || this.model[x.of];
+        const yelem = y.map(e => this.model.elementById(e.of) || this.model[e.of]);
 
         if(!xelem)
             return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.xaxis.of };
@@ -417,12 +417,16 @@ mec.view.chart = {
 
         return false;
     },
+    // Get element a. a might be an element of the model, or a timer
     elem(a) {
-        const ret = model.elementById(a.of) || model[a.of] || undefined;
+        const ret = this.model.elementById(a.of) || this.model[a.of] || undefined;
+        // Get the corresponding property from a to show on the graph
         return ret ? ret[a.show] : undefined;
     },
+    // Check the mec.core.aly object for analysing parameters
     aly(val) {
         return mec.aly[val.show]
+        // If it does not exist, take a normalized template
             || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
     },
     title(t) {
@@ -437,19 +441,24 @@ mec.view.chart = {
     init(model, idx) {
         this.model = model;
         this.mode = this.mode || 'static';
-        if (!model.notifyValid(this.validate(idx))) {
+        if (!this.model.notifyValid(this.validate(idx))) {
             return;
         }
+        // Create a copy of xaxis propety and append aly property to created object for later use
         const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
+        // If yaxis is passed as object, put it in an array for uniform processing, then add aly
         const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
         y.forEach((a) => a.aly = this.aly(a));
         this.t0 = this.t0 || 0;
         this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
+        // Create a graph as a baseline for later modification
         this.graph       = Object.assign({x:0 ,y:0, funcs: []},this);
         this.graph.xaxis = Object.assign({title:this.title([x]),grid:true,origin:true}, this.xaxis);
         this.graph.yaxis = Object.assign({title:this.title( y ),grid:true,origin:true}, this.yaxis);
         this.data = {
+            // Return the current value for x translated to its corresponding scl, defined in aly
             x: () => x.aly.scl * this.elem(this.xaxis),
+            // This has to be done for each y value, so it is an array of those functions
             y: y.map((e,idx) => {
                 this.graph.funcs[idx] = {data:[]};
                 return () => e.aly.scl * this.elem(e);
@@ -462,17 +471,20 @@ mec.view.chart = {
     addPoint() {
         const g = this.graph;
         const t = this.model.timer.t;
+        // Add one point into each funcs array of graph
+        const addPoints = () => this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
         if (this.mode === 'static' || this.mode === 'preview') {
             if (this.t0 <= t && t <= this.t0 + this.Dt) {
-                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+                    addPoints();
             }
         }
         else if (this.mode === 'dynamic') {
             if (this.t0 < t) {
-                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+                    addPoints();
             }
             if (this.Dt && this.t0 + this.Dt < t) {
-                for (const e of g.funcs) {
+                for (const e of g.funcs) {    
+                    // Remove last Point of funcs array
                     e.data.shift(); e.data.shift();
                 }
             }
@@ -489,12 +501,22 @@ mec.view.chart = {
                 this.graph.funcs.forEach((d) => d.data = []);
     },
     post() {
-        if (this.mode !== 'preview')
+        if (this.mode !== 'preview') {
             this.addPoint();
+        }
+        // mode is preview and preview was already rendered once
+        else if (this.graph.xAxis) {
+            this.data.y.forEach((y,idx) =>
+                this.nods[idx] = this.graph.pntOf({
+                    x: this.data.x() % (this.Dt),
+                    y: y()
+                })
+            );          
+        }
     },
     asJSON() {
         return JSON.stringify({
-            type: this.type,
+            as: this.as,
             id: this.id,
             x: this.x,
             y: this.y,
@@ -505,6 +527,18 @@ mec.view.chart = {
         }).replace('"yaxis"', '\n"yaxis"');
     },
     draw(g) {
-        return g.chart(this.graph)
+        g.chart(this.graph);
+        if (this.mode === 'preview') {
+            const n = this.nods = [];
+            this.graph.funcs.forEach((_,i) => {
+                    n.push({x:0,y:0});
+                    g.nod({
+                        x: () => n[i].x,
+                        y: () => n[i].y
+                    })
+                }
+            );
+        }
+        return g;
     }
 }
