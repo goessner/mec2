@@ -250,7 +250,24 @@ During constantly advancing model time `model.timer.t` the recording is created 
 
 #### mode `preview`
 
-Before starting the simulation there is a preview step looking for view elements requesting preview. When some are present, a background simulation using a time step `dt=1/30` seconds is done first until the largest `t0+Dt` time value. So when starting the simulation, the precalculated chart is already there.
+Before starting the simulation there is a preview step looking for view elements requesting preview. When some are present, a background simulation using a time step `dt=1/30` seconds is done first until the largest `t0+Dt` time value. So when starting the simulation, the precalculated chart is already there. Additional nods are drawn for each function on their respective curve.
+
+<figure>
+  <img width=400 src="./img/previewChart.gif">
+  <figcaption>Fig.2: preview mode</figcaption>
+</figure>
+
+```js
+"views": [
+    { "as": "chart", "x":175, "b":200, "h":150,"t0":0.25,"Dt":1.75,"mode":"preview",
+        "yaxis": [
+            {"show":"wtt","of":"cd"},
+            {"show":"wtt","of":"de"},
+    ],
+        "xaxis":{"of":"ab","show":"w"}
+    },
+]
+```
 
 ## Perfomance Hints (For Implementers only)
 
