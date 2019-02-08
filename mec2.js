@@ -2486,12 +2486,12 @@ mec.shape.fix = {
      * Check fixed node properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'shape',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'shape',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
@@ -2518,7 +2518,7 @@ mec.shape.fix = {
                 + ' }';
     },
     draw(g) {
-        g.use({grp:'nodfix',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+        g.nodfix({x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
     }
 },
 /**
@@ -2531,12 +2531,12 @@ mec.shape.flt = {
      * Check floating node properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'shape',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'shape',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
@@ -2563,7 +2563,7 @@ mec.shape.flt = {
                 + ' }';
     },
     draw(g) {
-        g.use({grp:'nodflt',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+        g.nodflt({x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
     }
 }
 
@@ -2578,17 +2578,17 @@ mec.shape.slider = {
      * Check slider shape properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'slider',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'slider',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.wref && !this.model.constraintById(this.wref)) 
+        if (this.wref && !this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'slider',id:this.id,idx,reftype:'constraint',name:this.wref};
         else
             this.wref = this.model.constraintById(this.wref);
@@ -2640,19 +2640,19 @@ mec.shape.bar = {
      * Check bar shape properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p1 === undefined) 
+        if (this.p1 === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'bar',id:this.id,idx,reftype:'node',name:'p1'};
-        if (!this.model.nodeById(this.p1)) 
+        if (!this.model.nodeById(this.p1))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'bar',id:this.id,idx,reftype:'node',name:this.p1};
         else
             this.p1 = this.model.nodeById(this.p1);
 
-        if (this.p2 === undefined) 
+        if (this.p2 === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'bar',id:this.id,idx,reftype:'node',name:'p2'};
-        if (!this.model.nodeById(this.p2)) 
+        if (!this.model.nodeById(this.p2))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'bar',id:this.id,idx,reftype:'node',name:this.p2};
         else
             this.p2 = this.model.nodeById(this.p2);
@@ -2697,19 +2697,19 @@ mec.shape.beam = {
      * Check beam shape properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'beam',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'beam',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.wref === undefined) 
+        if (this.wref === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'beam',id:this.id,idx,reftype:'constraint',name:'wref'};
-        if (!this.model.constraintById(this.wref)) 
+        if (!this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'beam',id:this.id,idx,reftype:'constraint',name:this.wref};
         else
             this.wref = this.model.constraintById(this.wref);
@@ -2757,19 +2757,19 @@ mec.shape.wheel = {
      * Check wheel shape properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'wheel',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'wheel',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.wref === undefined) 
+        if (this.wref === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'wheel',id:this.id,idx,reftype:'constraint',name:'wref'};
-        if (!this.model.constraintById(this.wref)) 
+        if (!this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'wheel',id:this.id,idx,reftype:'constraint',name:this.wref};
         else
             this.wref = this.model.constraintById(this.wref);
@@ -2834,24 +2834,24 @@ mec.shape.poly = {
      * Check polygon shape properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.pts === undefined) 
+        if (this.pts === undefined)
             return { mid:'E_POLY_PTS_MISSING',id:this.id,idx};
-        if (this.pts.length < 2) 
+        if (this.pts.length < 2)
             return { mid:'E_POLY_PTS_INVALID',id:this.id,idx};
 
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'polygon',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'polygon',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.wref === undefined) 
+        if (this.wref === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'polygon',id:this.id,idx,reftype:'constraint',name:'wref'};
-        if (!this.model.constraintById(this.wref)) 
+        if (!this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'polygon',id:this.id,idx,reftype:'constraint',name:this.wref};
         else
             this.wref = this.model.constraintById(this.wref);
@@ -2914,20 +2914,20 @@ mec.shape.img = {
      * Check image shape properties for validity.
      * @method
      * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected. 
+     * @returns {boolean} false - if no error / warning was detected.
      */
     validate(idx) {
-        if (this.uri === undefined) 
+        if (this.uri === undefined)
             return { mid:'E_IMG_URI_MISSING',id:this.id,idx};
 
-        if (this.p === undefined) 
+        if (this.p === undefined)
             return { mid:'E_ELEM_REF_MISSING',elemtype:'image',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p)) 
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'image',id:this.id,idx,reftype:'node',name:this.p};
         else
             this.p = this.model.nodeById(this.p);
 
-        if (this.wref && !this.model.constraintById(this.wref)) 
+        if (this.wref && !this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'image',id:this.id,idx,reftype:'constraint',name:this.wref};
         else
             this.wref = this.model.constraintById(this.wref);
