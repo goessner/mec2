@@ -32,7 +32,7 @@ EPS: 1.19209e-07,
  * @const
  * @type {number}
  */
-lenTol: 0.0001,
+lenTol: 0.001,
 /**
  * Angular tolerance for orientation correction.
  * @const
@@ -92,7 +92,7 @@ show: {
      * @const
      * @type {boolean}
      */
-    nodeLabels: true,
+    nodeLabels: false,
     /**
      * flag for showing labels of constraints.
      * @const
@@ -194,7 +194,7 @@ gravity: {x:0,y:-10,active:false},
  * analysing values
  */
 aly: {
-    mass: { get scl() { return 1}, type:'num', name:'m', unit:'kg' },
+    m: { get scl() { return 1}, type:'num', name:'m', unit:'kg' },
     pos: { type:'pnt', name:'p', unit:'m' },
     vel: { get scl() {return mec.m_u}, type:'vec', name:'v', unit:'m/s', get drwscl() {return 40*mec.m_u} },
     acc: { get scl() {return mec.m_u}, type:'vec', name:'a', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },

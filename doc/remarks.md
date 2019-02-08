@@ -1,5 +1,17 @@
-## Drive Sequence
+## Model State
 
+`mec.model.state.active` has three possible values `[mec.idle,mec.done,mec.busy]`.
+
+| `state.active` | comment |
+|:-----|:---|
+| `mec.idle` | Can be set by the controlling *app* and `model.reset` command. |
+| `mec.done` | If `model.timer.t > 1` and all nodes are sleeping. |
+| `mec.busy` | Makes the `model.timer` ticking ...  |
+|  | ... if some drives are time controlled and not done.  |
+|  | ... if `model.dof > 0` and some nodes are moving.  |
+
+
+## Drive Sequence
 Drive functions can be composed as a sequence (`'func':'seq'`) of normalized functions, being one of `['const', 'linear', 'quadratic', 'harmonic', 'sinoid', 'poly5']` each. Every segment of a drive sequence must specify its function type `func`, its duration `dt` (always positive) and its value range `dz` (might be negative).
 
 <figure>
@@ -20,6 +32,10 @@ Drive functions can be composed as a sequence (`'func':'seq'`) of normalized fun
     }
 ]
 ```
+```json
+
+```
+
 
 ## Views
 
@@ -115,7 +131,7 @@ During constantly advancing model time `model.timer.t` the trace polyline is cre
   <figcaption>Fig.1: static mode</figcaption>
 </figure>
 
-```js
+```json
 "views":[
     {"show":"pos","of":"C","as":"trace","t0":1,"Dt":1,
      "mode":"static","fill":"orange"}

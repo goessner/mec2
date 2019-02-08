@@ -215,19 +215,19 @@ mec.constraint = {
             };
         },
 
-
         /**
-         * Check constraint for unfinished drives.
+         * Number of active drives.
          * @method
          * @param {number} t - current time.
-         * @returns {boolean} true, if any drive is active.
+         * @returns {int} Number of active drives.
          */
-        hasActiveDrives(t) {
-            let ori = this.ori, len = this.len;
-            return ori.type === 'drive'
-                && (ori.input || t <= ori.t0 + ori.Dt*(ori.bounce ? 2 : 1)*(ori.repeat || 1) + 0.5*this.model.timer.dt)
-                || len.type === 'drive'
-                && (len.input || t <= len.t0 + len.Dt*(len.bounce ? 2 : 1)*(len.repeat || 1) + 0.5*this.model.timer.dt);
+        activeDriveCount(t) {
+            let ori = this.ori, len = this.len, drvCnt = 0;
+            if (ori.type === 'drive' && (ori.input || t <= ori.t0 + ori.Dt*(ori.bounce ? 2 : 1)*(ori.repeat || 1) + 0.5*this.model.timer.dt)) 
+                ++drvCnt;
+            if (len.type === 'drive' && (len.input || t <= len.t0 + len.Dt*(len.bounce ? 2 : 1)*(len.repeat || 1) + 0.5*this.model.timer.dt))
+                ++drvCnt;
+            return drvCnt;
         },
         /**
          * Check constraint for dependencies on another element.
@@ -584,7 +584,7 @@ mec.constraint = {
                         wt: () => ref.wt + ori.drive.ft(),
                         wtt:() => ref.wtt + ori.drive.ftt(),
                         ori_C:  () => this.r*(this.angle(Math.atan2(this.ay,this.ax)) - this.w0) -this.r*(ref.angle(Math.atan2(ref.ay,ref.ax)) - ref.w0) - this.r*ori.drive.f(),
-                        ori_Ct: () => {console.log('ft='+ori.drive.ft()); return this.ayt*this.cw - this.axt*this.sw - this.r/ref.r*(ref.ayt*ref.cw - ref.axt*ref.sw) - this.r*ori.drive.ft()},
+                        ori_Ct: () => { return this.ayt*this.cw - this.axt*this.sw - this.r/ref.r*(ref.ayt*ref.cw - ref.axt*ref.sw) - this.r*ori.drive.ft()},
                         ori_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + this.r**2/ref.r**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
@@ -686,9 +686,8 @@ mec.constraint = {
             else
                 len.t = () => this.model.timer.t;
 
-
             len.drive = mec.drive.create({func: len.func || len.input && 'static' || 'linear',
-                                          z0: this.r0,
+                                          z0: len.ref ? 0 : this.r0,
                                           Dz: len.Dr,
                                           t0: len.t0,
                                           Dt: len.Dt,
@@ -794,7 +793,7 @@ mec.constraint = {
             if (this.model.env.show.constraints) {
                 const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this;
                 g.beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                        ls:this.model.env.show.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
+                       ls:this.model.env.show.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
                     .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
                             lw:lw+1,lsh:true})
                     .drw({d:mec.constraint.arrow[type],lsh:true})
@@ -830,5 +829,10 @@ mec.constraint = {
         'rot': 'M12,0 8,6 12,0 8,-6Z M0,0 8,0M15,0 35,0M45,0 36,-3 37,0 36,3 Z',
         'tran': 'M0,0 12,0M16,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z',
         'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    },
+    arrowFn: {
+        'rot': g => g.m({x:12,y:0}).l({x:8,y:6}).m({x:12,y:0}).l({x:8,y:-6})
+                     .m({x:0,y:0}).l({x:8,y:0}).m({x:15,y:0}).l({x:35,y:-0})
+                     .m({x:45,y:0}).l({x:36,y:-3}).m({x:37,y:0}).l({x:36,y:3}).z()
     }
 }

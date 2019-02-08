@@ -108,6 +108,12 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 * `mec.drive.seq` ... added. A composite sequence of drive segments ('ramps' can be build with that).
 * `mec.drive['const']` ... added. Frequently used as drive segment.
 
+### 0.9.0 - 2019-02-08
+
+* some more analyses added.
+* chart views integrated.
+* some bugs fixed.
+
 ### 0.8.5 - 2018-12-20
 
 * reworked constraints and added support for bidirectional references.

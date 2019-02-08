@@ -74,14 +74,16 @@ mec.node = {
         get type() { return 'node' }, // needed for ... what .. ?
         get dof() { return this.m === Number.POSITIVE_INFINITY ? 0 : 2 },
         /**
-         * Test, if node is significantly moving
+         * Test, if node is not resting
          * @const
          * @type {boolean}
          */
         get isSleeping() {
             return this.base
                 || mec.isEps(this.xt,mec.velTol)
-                && mec.isEps(this.yt,mec.velTol);
+                && mec.isEps(this.yt,mec.velTol)
+                && mec.isEps(this.xtt,mec.velTol/this.model.timer.dt)
+                && mec.isEps(this.ytt,mec.velTol/this.model.timer.dt);
         },
         /**
          * Energy [kgu^2/s^2]

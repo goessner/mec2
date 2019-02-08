@@ -35,8 +35,8 @@ mec.model = {
             if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
-            this.state = {valid:true,itrpos:0,itrvel:0,preview:false};
-            this.timer = {t:0,dt:1/60};
+            this.state = { valid:true,itrpos:0,itrvel:0,preview:false };
+            this.timer = { t:0,dt:1/60,sleepMin:1 };
             // create empty containers for all elements
             if (!this.nodes) this.nodes = [];
             if (!this.constraints) this.constraints = [];
@@ -102,6 +102,7 @@ mec.model = {
          */
         reset() {
             this.timer.t = 0;
+            this.timer.sleepMin = 1;
             Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             for (const node of this.nodes)
                 node.reset();
@@ -176,10 +177,8 @@ mec.model = {
          * @returns {object} model
          */
         tick(dt) {
-            if (dt) { // sliders (dt == 0) are setting simulation time explicite .. depricated, they maintain their local time in parallel !
-                dt = 1/60;  // BUG ?? fix: dt as a constant for now (study variable time step theoretically !!)
-                this.timer.t += (this.timer.dt = dt);
-            }
+            // fix: ignore dt for now, take it as a constant (study variable time step theoretically) !!
+            this.timer.t += (this.timer.dt = 1/60);
             this.pre().itr().post();
             return this;
         },
@@ -212,8 +211,6 @@ mec.model = {
          */
         get hasGravity() { return this.gravity.active; },
 
-        get dirty() { return this.state.dirty; },  // deprecated !!
-        set dirty(q) { this.state.dirty = q; },
         get valid() { return this.state.valid; },
         set valid(q) { this.state.valid = q; },
         /**
@@ -240,37 +237,69 @@ mec.model = {
          */
         get itrvel() { return this.state.itrvel; },
         set itrvel(q) { this.state.itrvel = q; },
-
         /**
-         * Test, if model is active.
-         * Nodes are moving (nonzero velocities) or active drives.
-         * @type {boolean}
+         * Set offset to current time, when testing nodes for sleeping state shall begin.
+         * @type {number}
          */
-        get isActive() {
-            return this.hasActiveDrives   // active drives
-                || this.dof > 0           // or can move by itself
-                && !this.isSleeping;      // and does exactly that
-        },
+        set sleepMinDelta(dt) { this.timer.sleepMin = this.timer.t + dt; },
         /**
-         * Test, if nodes are significantly moving
+         * Test, if none of the nodes are moving (velocity = 0).
          * @type {boolean}
          */
         get isSleeping() {
-            let sleeping = true;
-            for (const node of this.nodes)
-                sleeping = sleeping && node.isSleeping;
+            let sleeping = this.timer.t > this.timer.sleepMin;  // chance for sleeping exists ...
+            if (sleeping)
+                for (const node of this.nodes)
+                    sleeping = sleeping && node.isSleeping;
             return sleeping;
         },
         /**
-         * Test, if some drives are 'idle' or 'running'
+         * Number of active drives
+         * @const
+         * @type {int}
+         */
+        get activeDriveCount() {
+            let activeCnt = 0;
+            for (const constraint of this.constraints)
+                activeCnt += constraint.activeDriveCount(this.timer.t);
+            return activeCnt;
+        },
+        /**
+         * Some drives are active
+         * deprecated: Use `activeDriveCount` instead.
          * @const
          * @type {boolean}
          */
-        get hasActiveDrives() {
-            let active = false;
-            for (const constraint of this.constraints)
-                active = active || constraint.hasActiveDrives(this.timer.t);
-            return active;
+        get hasActiveDrives() { return this.activeDriveCount > 0; },
+        /**
+         * Array of objects referencing constraints owning at least one input controlled drive.
+         * The array objects are structured like so: 
+         * { constraint: <constraint reference>,
+         *   sub: <string of `['ori', 'len']`
+         * }
+         * If no input controlled drives exist, an empty array is returned.
+         * @const
+         * @type {array} Array holding objects of type {constraint, sub};
+         */
+        get inputControlledDrives() {
+            const inputs = [];
+            for (const constraint of this.constraints) {
+                if (constraint.ori.type === 'drive' && constraint.ori.input)
+                    inputs.push({constraint:constraint,sub:'ori'})
+                if (constraint.len.type === 'drive' && constraint.len.input)
+                    inputs.push({constraint:constraint,sub:'len'})
+            }
+            return inputs;
+        },
+        /**
+         * Test, if model is active.
+         * Nodes are moving (nonzero velocities) or active drives exist.
+         * @type {boolean}
+         */
+        get isActive() {
+            return this.activeDriveCount > 0   // active drives
+                || this.dof > 0           // or can move by itself
+                && !this.isSleeping;      // and does exactly that
         },
         /**
          * Energy [kgu^2/s^2]
@@ -626,6 +655,7 @@ mec.model = {
             const comma = (i,n) => i < n-1 ? ',' : '';
             const str = '{'
                       + '\n  "id":"'+this.id+'"'
+                      + (this.title ? (',\n  "title":"'+this.title+'"') : '')
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
                       + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')

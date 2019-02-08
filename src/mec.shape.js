@@ -503,7 +503,7 @@ mec.shape.img = {
     asJSON() {
         return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":"'+this.p.id+'"'
                 + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ((this.w0 && Math.abs(this.w0) > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
                 + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
                 + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')

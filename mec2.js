@@ -32,7 +32,7 @@ EPS: 1.19209e-07,
  * @const
  * @type {number}
  */
-lenTol: 0.0001,
+lenTol: 0.001,
 /**
  * Angular tolerance for orientation correction.
  * @const
@@ -92,7 +92,7 @@ show: {
      * @const
      * @type {boolean}
      */
-    nodeLabels: true,
+    nodeLabels: false,
     /**
      * flag for showing labels of constraints.
      * @const
@@ -194,7 +194,7 @@ gravity: {x:0,y:-10,active:false},
  * analysing values
  */
 aly: {
-    mass: { get scl() { return 1}, type:'num', name:'m', unit:'kg' },
+    m: { get scl() { return 1}, type:'num', name:'m', unit:'kg' },
     pos: { type:'pnt', name:'p', unit:'m' },
     vel: { get scl() {return mec.m_u}, type:'vec', name:'v', unit:'m/s', get drwscl() {return 40*mec.m_u} },
     acc: { get scl() {return mec.m_u}, type:'vec', name:'a', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },
@@ -458,14 +458,16 @@ mec.node = {
         get type() { return 'node' }, // needed for ... what .. ?
         get dof() { return this.m === Number.POSITIVE_INFINITY ? 0 : 2 },
         /**
-         * Test, if node is significantly moving
+         * Test, if node is not resting
          * @const
          * @type {boolean}
          */
         get isSleeping() {
             return this.base
                 || mec.isEps(this.xt,mec.velTol)
-                && mec.isEps(this.yt,mec.velTol);
+                && mec.isEps(this.yt,mec.velTol)
+                && mec.isEps(this.xtt,mec.velTol/this.model.timer.dt)
+                && mec.isEps(this.ytt,mec.velTol/this.model.timer.dt);
         },
         /**
          * Energy [kgu^2/s^2]
@@ -830,19 +832,19 @@ mec.constraint = {
             };
         },
 
-
         /**
-         * Check constraint for unfinished drives.
+         * Number of active drives.
          * @method
          * @param {number} t - current time.
-         * @returns {boolean} true, if any drive is active.
+         * @returns {int} Number of active drives.
          */
-        hasActiveDrives(t) {
-            let ori = this.ori, len = this.len;
-            return ori.type === 'drive'
-                && (ori.input || t <= ori.t0 + ori.Dt*(ori.bounce ? 2 : 1)*(ori.repeat || 1) + 0.5*this.model.timer.dt)
-                || len.type === 'drive'
-                && (len.input || t <= len.t0 + len.Dt*(len.bounce ? 2 : 1)*(len.repeat || 1) + 0.5*this.model.timer.dt);
+        activeDriveCount(t) {
+            let ori = this.ori, len = this.len, drvCnt = 0;
+            if (ori.type === 'drive' && (ori.input || t <= ori.t0 + ori.Dt*(ori.bounce ? 2 : 1)*(ori.repeat || 1) + 0.5*this.model.timer.dt)) 
+                ++drvCnt;
+            if (len.type === 'drive' && (len.input || t <= len.t0 + len.Dt*(len.bounce ? 2 : 1)*(len.repeat || 1) + 0.5*this.model.timer.dt))
+                ++drvCnt;
+            return drvCnt;
         },
         /**
          * Check constraint for dependencies on another element.
@@ -1199,7 +1201,7 @@ mec.constraint = {
                         wt: () => ref.wt + ori.drive.ft(),
                         wtt:() => ref.wtt + ori.drive.ftt(),
                         ori_C:  () => this.r*(this.angle(Math.atan2(this.ay,this.ax)) - this.w0) -this.r*(ref.angle(Math.atan2(ref.ay,ref.ax)) - ref.w0) - this.r*ori.drive.f(),
-                        ori_Ct: () => {console.log('ft='+ori.drive.ft()); return this.ayt*this.cw - this.axt*this.sw - this.r/ref.r*(ref.ayt*ref.cw - ref.axt*ref.sw) - this.r*ori.drive.ft()},
+                        ori_Ct: () => { return this.ayt*this.cw - this.axt*this.sw - this.r/ref.r*(ref.ayt*ref.cw - ref.axt*ref.sw) - this.r*ori.drive.ft()},
                         ori_mc: () => {
                             let imc = mec.toZero(this.p1.im + this.p2.im) + this.r**2/ref.r**2*mec.toZero(ref.p1.im + ref.p2.im);
                             return imc ? 1/imc : 0;
@@ -1301,9 +1303,8 @@ mec.constraint = {
             else
                 len.t = () => this.model.timer.t;
 
-
             len.drive = mec.drive.create({func: len.func || len.input && 'static' || 'linear',
-                                          z0: this.r0,
+                                          z0: len.ref ? 0 : this.r0,
                                           Dz: len.Dr,
                                           t0: len.t0,
                                           Dt: len.Dt,
@@ -1409,7 +1410,7 @@ mec.constraint = {
             if (this.model.env.show.constraints) {
                 const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this;
                 g.beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                        ls:this.model.env.show.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
+                       ls:this.model.env.show.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
                     .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
                             lw:lw+1,lsh:true})
                     .drw({d:mec.constraint.arrow[type],lsh:true})
@@ -1445,6 +1446,11 @@ mec.constraint = {
         'rot': 'M12,0 8,6 12,0 8,-6Z M0,0 8,0M15,0 35,0M45,0 36,-3 37,0 36,3 Z',
         'tran': 'M0,0 12,0M16,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z',
         'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    },
+    arrowFn: {
+        'rot': g => g.m({x:12,y:0}).l({x:8,y:6}).m({x:12,y:0}).l({x:8,y:-6})
+                     .m({x:0,y:0}).l({x:8,y:0}).m({x:15,y:0}).l({x:35,y:-0})
+                     .m({x:45,y:0}).l({x:36,y:-3}).m({x:37,y:0}).l({x:36,y:3}).z()
     }
 }/**
  * mec.drive (c) 2018 Stefan Goessner
@@ -2195,50 +2201,88 @@ mec.view.trace = {
     draw(g) { g.ins(this); },
 }
 
-
 /**
  * @param {object} - info view.
- * @property {string} elem - referenced elem id.
- * @property {string} value - elem value to view.
- * @property {string} [name] - elem value name to show.
+ * @property {string} show - kind of property to show as info.
+ * @property {string} of - element, the property belongs to.
  */
 mec.view.info = {
     constructor() {}, // always parameterless .. !
-    init(model) {
-        if (typeof this.elem === 'string')
-            this.elem = model.elementById(this.elem);
+    /**
+     * Check info view properties for validity.
+     * @method
+     * @param {number} idx - index in views array.
+     * @returns {boolean} false - if no error / warning was detected.
+     */
+    validate(idx) {
+        if (this.of === undefined)
+            return { mid:'E_ELEM_MISSING',elemtype:'view as info',id:this.id,idx,reftype:'element',name:'of'};
+        if (!this.model.elementById(this.of))
+            return { mid:'E_ELEM_INVALID_REF',elemtype:'view as info',id:this.id,idx,reftype:'element',name:this.of};
+        else
+            this.of = this.model.elementById(this.of);
+
+        if (this.show && !(this.show in this.of))
+            return { mid:'E_ALY_PROP_INVALID',elemtype:'view as infot',id:this.id,idx,reftype:this.of,name:this.show};
+
+        return false;
+    },
+    /**
+     * Initialize view. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in views array.
+     */
+    init(model,idx) {
+        this.model = model;
+        this.model.notifyValid(this.validate(idx));
     },
     dependsOn(elem) {
-        return this.elem === elem;
+        return this.of === elem;
     },
     reset() {},
     asJSON() {
-        return '{ "type":"'+this.type+'","id":"'+this.id+'","elem":"'+this.elem.id+'"'
-                + (this.value ? ',"value":"'+this.value+'"' : '')
-                + (this.name ? ',"name":"'+this.name+'"' : '')
+        return '{ "id":"'+ this.id + '"'
+                + ',"show":"'+this.show+'"'
+                + ',"of":"'+this.of.id+'"'
+                + ',"as":"info"'
                 + ' }';
     },
     get hasInfo() {
-        return this.elem.state === g2.OVER;  // exclude: OVER & DRAG
+        return this.of.state === g2.OVER;  // exclude: OVER & DRAG
     },
     infoString() {
-        if (this.value in this.elem) {
-            const val = this.elem[this.value];
-            const aly = mec.aly[this.value];
+        if (this.show in this.of) {
+            const val = this.of[this.show];
+            const aly = mec.aly[this.name || this.show];
             const type = aly.type;
             const usrval = q => (q*aly.scl).toPrecision(3);
 
-            return (this.name||aly.name||this.value) + ': '
+            return (aly.name||this.show) + ': '
                  + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.y)+'}'
                                    : usrval(val))
                  + ' ' + aly.unit;
         }
         return '?';
-    }
+    },
+    draw(g) {}
 }
 
 /**
  * @param {object} - chart view.
+ * @property {string} [mode='dynamic'] - ['static','dynamic','preview'].
+ * @property {number} [t0=0] - trace begin [s].
+ * @property {number} [Dt=1] - trace duration [s].
+ * @property {number} [x=0] - x-position.
+ * @property {number} [y=0] - y-position.
+ * @property {number} [h=100] - height of chart area.
+ * @property {number} [b=150] - breadth / width of chart area.
+ *
+ * @property {object} [xaxis] - definition of xaxis.
+ * @property {object | array} [yaxis] - definition of yaxis (potentially multiple).
+ *
+ * @property {string} show - kind of property to show on axis.
+ * @property {string} of - element property belongs to.
  */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
@@ -2257,8 +2301,8 @@ mec.view.chart = {
         if (y.some(e => e.of === undefined))
             return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in yaxis'};
 
-        const xelem = model.elementById(x.of) || model[x.of];
-        const yelem = y.map(e => model.elementById(e.of) || model[e.of]);
+        const xelem = this.model.elementById(x.of) || this.model[x.of];
+        const yelem = y.map(e => this.model.elementById(e.of) || this.model[e.of]);
 
         if(!xelem)
             return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.xaxis.of };
@@ -2277,12 +2321,16 @@ mec.view.chart = {
 
         return false;
     },
+    // Get element a. a might be an element of the model, or a timer
     elem(a) {
-        const ret = model.elementById(a.of) || model[a.of] || undefined;
+        const ret = this.model.elementById(a.of) || this.model[a.of] || undefined;
+        // Get the corresponding property from a to show on the graph
         return ret ? ret[a.show] : undefined;
     },
+    // Check the mec.core.aly object for analysing parameters
     aly(val) {
         return mec.aly[val.show]
+        // If it does not exist, take a normalized template
             || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
     },
     title(t) {
@@ -2297,19 +2345,24 @@ mec.view.chart = {
     init(model, idx) {
         this.model = model;
         this.mode = this.mode || 'static';
-        if (!model.notifyValid(this.validate(idx))) {
+        if (!this.model.notifyValid(this.validate(idx))) {
             return;
         }
+        // Create a copy of xaxis propety and append aly property to created object for later use
         const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
+        // If yaxis is passed as object, put it in an array for uniform processing, then add aly
         const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
         y.forEach((a) => a.aly = this.aly(a));
         this.t0 = this.t0 || 0;
         this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
+        // Create a graph as a baseline for later modification
         this.graph       = Object.assign({x:0 ,y:0, funcs: []},this);
         this.graph.xaxis = Object.assign({title:this.title([x]),grid:true,origin:true}, this.xaxis);
         this.graph.yaxis = Object.assign({title:this.title( y ),grid:true,origin:true}, this.yaxis);
         this.data = {
+            // Return the current value for x translated to its corresponding scl, defined in aly
             x: () => x.aly.scl * this.elem(this.xaxis),
+            // This has to be done for each y value, so it is an array of those functions
             y: y.map((e,idx) => {
                 this.graph.funcs[idx] = {data:[]};
                 return () => e.aly.scl * this.elem(e);
@@ -2322,17 +2375,20 @@ mec.view.chart = {
     addPoint() {
         const g = this.graph;
         const t = this.model.timer.t;
+        // Add one point into each funcs array of graph
+        const addPoints = () => this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
         if (this.mode === 'static' || this.mode === 'preview') {
             if (this.t0 <= t && t <= this.t0 + this.Dt) {
-                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+                    addPoints();
             }
         }
         else if (this.mode === 'dynamic') {
             if (this.t0 < t) {
-                this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+                    addPoints();
             }
             if (this.Dt && this.t0 + this.Dt < t) {
-                for (const e of g.funcs) {
+                for (const e of g.funcs) {    
+                    // Remove last Point of funcs array
                     e.data.shift(); e.data.shift();
                 }
             }
@@ -2349,12 +2405,24 @@ mec.view.chart = {
                 this.graph.funcs.forEach((d) => d.data = []);
     },
     post() {
-        if (this.mode !== 'preview')
+        if (this.mode !== 'preview') {
             this.addPoint();
+        }
+        // mode is preview and preview was already rendered once
+        else if (this.graph.xAxis) {
+            const g = this.graph;
+            this.data.y.forEach((_y,idx) => {
+                const x = this.data.x();
+                const y = _y();
+                // Hide nods if they are out of bounds
+                const scl =Number(!(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax)); 
+                this.nods[idx] = {...this.graph.pntOf({x, y}), scl};
+            });          
+        }
     },
     asJSON() {
         return JSON.stringify({
-            type: this.type,
+            as: this.as,
             id: this.id,
             x: this.x,
             y: this.y,
@@ -2365,7 +2433,21 @@ mec.view.chart = {
         }).replace('"yaxis"', '\n"yaxis"');
     },
     draw(g) {
-        return g.chart(this.graph)
+        g.chart(this.graph);
+        if (this.mode === 'preview') {
+            const n = this.nods = [];
+            this.graph.funcs.forEach((_,i) => {
+                    // create references for later modification
+                    n.push({x:0,y:0,scl:0});
+                    g.nod({
+                        x: () => n[i].x,
+                        y: () => n[i].y,
+                        scl: () => n[i].scl
+                    })
+                }
+            );
+        }
+        return g;
     }
 }
 /**
@@ -2873,7 +2955,7 @@ mec.shape.img = {
     asJSON() {
         return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":"'+this.p.id+'"'
                 + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ((this.w0 && Math.abs(this.w0) > 0.0001) ? ',"w0":'+this.w0 : '')
                 + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
                 + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
                 + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')
@@ -2883,7 +2965,8 @@ mec.shape.img = {
         const w0 = this.w0 || 0, w = this.wref ? ()=>this.wref.w + w0 : w0;
         g.img({uri:this.uri,x:()=>this.p.x,y:()=>this.p.y,w,scl:this.scl,xoff:this.xoff,yoff:this.yoff})
     }
-}/**
+}
+/**
  * mec.model (c) 2018-19 Stefan Goessner
  * @license MIT License
  * @requires mec.core.js
@@ -2920,8 +3003,8 @@ mec.model = {
             if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
-            this.state = {valid:true,itrpos:0,itrvel:0,preview:false};
-            this.timer = {t:0,dt:1/60};
+            this.state = { valid:true,itrpos:0,itrvel:0,preview:false };
+            this.timer = { t:0,dt:1/60,sleepMin:1 };
             // create empty containers for all elements
             if (!this.nodes) this.nodes = [];
             if (!this.constraints) this.constraints = [];
@@ -2987,6 +3070,7 @@ mec.model = {
          */
         reset() {
             this.timer.t = 0;
+            this.timer.sleepMin = 1;
             Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
             for (const node of this.nodes)
                 node.reset();
@@ -3061,10 +3145,8 @@ mec.model = {
          * @returns {object} model
          */
         tick(dt) {
-            if (dt) { // sliders (dt == 0) are setting simulation time explicite .. depricated, they maintain their local time in parallel !
-                dt = 1/60;  // BUG ?? fix: dt as a constant for now (study variable time step theoretically !!)
-                this.timer.t += (this.timer.dt = dt);
-            }
+            // fix: ignore dt for now, take it as a constant (study variable time step theoretically) !!
+            this.timer.t += (this.timer.dt = 1/60);
             this.pre().itr().post();
             return this;
         },
@@ -3097,8 +3179,6 @@ mec.model = {
          */
         get hasGravity() { return this.gravity.active; },
 
-        get dirty() { return this.state.dirty; },  // deprecated !!
-        set dirty(q) { this.state.dirty = q; },
         get valid() { return this.state.valid; },
         set valid(q) { this.state.valid = q; },
         /**
@@ -3125,37 +3205,69 @@ mec.model = {
          */
         get itrvel() { return this.state.itrvel; },
         set itrvel(q) { this.state.itrvel = q; },
-
         /**
-         * Test, if model is active.
-         * Nodes are moving (nonzero velocities) or active drives.
-         * @type {boolean}
+         * Set offset to current time, when testing nodes for sleeping state shall begin.
+         * @type {number}
          */
-        get isActive() {
-            return this.hasActiveDrives   // active drives
-                || this.dof > 0           // or can move by itself
-                && !this.isSleeping;      // and does exactly that
-        },
+        set sleepMinDelta(dt) { this.timer.sleepMin = this.timer.t + dt; },
         /**
-         * Test, if nodes are significantly moving
+         * Test, if none of the nodes are moving (velocity = 0).
          * @type {boolean}
          */
         get isSleeping() {
-            let sleeping = true;
-            for (const node of this.nodes)
-                sleeping = sleeping && node.isSleeping;
+            let sleeping = this.timer.t > this.timer.sleepMin;  // chance for sleeping exists ...
+            if (sleeping)
+                for (const node of this.nodes)
+                    sleeping = sleeping && node.isSleeping;
             return sleeping;
         },
         /**
-         * Test, if some drives are 'idle' or 'running'
+         * Number of active drives
+         * @const
+         * @type {int}
+         */
+        get activeDriveCount() {
+            let activeCnt = 0;
+            for (const constraint of this.constraints)
+                activeCnt += constraint.activeDriveCount(this.timer.t);
+            return activeCnt;
+        },
+        /**
+         * Some drives are active
+         * deprecated: Use `activeDriveCount` instead.
          * @const
          * @type {boolean}
          */
-        get hasActiveDrives() {
-            let active = false;
-            for (const constraint of this.constraints)
-                active = active || constraint.hasActiveDrives(this.timer.t);
-            return active;
+        get hasActiveDrives() { return this.activeDriveCount > 0; },
+        /**
+         * Array of objects referencing constraints owning at least one input controlled drive.
+         * The array objects are structured like so: 
+         * { constraint: <constraint reference>,
+         *   sub: <string of `['ori', 'len']`
+         * }
+         * If no input controlled drives exist, an empty array is returned.
+         * @const
+         * @type {array} Array holding objects of type {constraint, sub};
+         */
+        get inputControlledDrives() {
+            const inputs = [];
+            for (const constraint of this.constraints) {
+                if (constraint.ori.type === 'drive' && constraint.ori.input)
+                    inputs.push({constraint:constraint,sub:'ori'})
+                if (constraint.len.type === 'drive' && constraint.len.input)
+                    inputs.push({constraint:constraint,sub:'len'})
+            }
+            return inputs;
+        },
+        /**
+         * Test, if model is active.
+         * Nodes are moving (nonzero velocities) or active drives exist.
+         * @type {boolean}
+         */
+        get isActive() {
+            return this.activeDriveCount > 0   // active drives
+                || this.dof > 0           // or can move by itself
+                && !this.isSleeping;      // and does exactly that
         },
         /**
          * Energy [kgu^2/s^2]
@@ -3511,6 +3623,7 @@ mec.model = {
             const comma = (i,n) => i < n-1 ? ',' : '';
             const str = '{'
                       + '\n  "id":"'+this.id+'"'
+                      + (this.title ? (',\n  "title":"'+this.title+'"') : '')
                       + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
                       + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
                       + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
