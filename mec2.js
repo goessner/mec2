@@ -2551,7 +2551,7 @@ mec.shape.fix = {
                 + ' }';
     },
     draw(g) {
-        g.use({grp:'nodflt',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+        g.nodfix({x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
     }
 },
 /**
@@ -2596,7 +2596,7 @@ mec.shape.flt = {
                 + ' }';
     },
     draw(g) {
-        g.use({grp:'nodflt',x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+        g.nodflt({x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
     }
 }
 
