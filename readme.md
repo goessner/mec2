@@ -92,12 +92,22 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 
 # Change Log
 
+### 0.9.1 - 2019-02-28
+
+* added a flag `mec.show.nodeScaling`. Setting this to `true` enables a visual representation of the nodes masses by their radius as well as magnifying them while being hovered by the mousepointer. Constraint graphics scale accordingly.
+
+### 0.9.0 - 2019-02-08
+
+* some more analyses added.
+* chart views integrated.
+* some bugs fixed.
+
 ### 0.8.6 - 2019-01-06 (changes are non-breaking)
 
 * `mec.model.tick(dt)` is now strictly using a fixed time step of `dt=1/60` seconds regardless of the `dt` argument.
-* `mec.model.preview()` supports *preview*ing capabilities of some `mec.view` elements. 
-* `mec.model.energy` getter added (total sum of kinetik + potential energy).
-* `mec.model.pre` model pre-processing reimplemented with respect to use a *semi-implicite Euler* integrator now with `mec.node.pre`. 
+* `mec.model.preview()` supports *preview*ing capabilities of some `mec.view` elements.
+* `mec.model.energy` getter added (total sum of kinetic + potential energy).
+* `mec.model.pre` model pre-processing reimplemented with respect to use a *semi-implicite Euler* integrator now with `mec.node.pre`.
 * `mec.core` some additions due to `mec.model.energy` and minor bug removals.
 * `mec.node.pre` now implements the *semi-implicite Euler* integrator. So pure node-spring models are working now nearly as expected.
 * `mec.constraint` now supports previewing of drives with *input*s.
@@ -107,12 +117,6 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 * `mec.drive.ramp` ... removed (not used afaik).
 * `mec.drive.seq` ... added. A composite sequence of drive segments ('ramps' can be build with that).
 * `mec.drive['const']` ... added. Frequently used as drive segment.
-
-### 0.9.0 - 2019-02-08
-
-* some more analyses added.
-* chart views integrated.
-* some bugs fixed.
 
 ### 0.8.5 - 2018-12-20
 

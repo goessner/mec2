@@ -65,13 +65,16 @@ mec.node = {
             Object.defineProperty(this,'base',{ get: () => this.im === 0,
                                                 set: (q) => this.im = q ? 0 : 1,
                                                 enumerable:true, configurable:true });
+            this.radius = !!this.base   ?  8
+                        : (this.m > 20) ? 18
+                        : 3.13874*Math.log(12.9244*this.m); // coefficients https://www.wolframalpha.com/input/?i=log+fit+%7B1,8%7D,%7B2,10.1%7D,%7B3,11.6%7D,%7B5,13.3%7D,%7B10,15%7D,%7B20,17.5%7D
         },
         // kinematics
         // current velocity state .. only used during iteration.
         get xtcur() { return this.xt + this.dxt },
         get ytcur() { return this.yt + this.dyt },
         // inverse mass
-        get type() { return 'node' }, // needed for ... what .. ?
+        get type() { return 'node' }, // needed for consistency among components, used in mecEdit
         get dof() { return this.m === Number.POSITIVE_INFINITY ? 0 : 2 },
         /**
          * Test, if node is not resting
@@ -205,22 +208,22 @@ mec.node = {
             else                               { this.x = x; this.y = y; }
         },
         // graphics ...
-        get r() { return mec.node.radius; },
+        get r() { return this.model.env.show.nodeScaling ? this.state & g2.OVER ? 1.5*this.radius : this.radius : mec.node.radius; },
         g2() {
             let g = g2();
             if (this.model.env.show.nodes) {
                 const loc = mec.node.locdir[this.idloc || 'n'],
-                      xid = this.x + 3*this.r*loc[0],
-                      yid = this.y + 3*this.r*loc[1];
+                      xid = this.x + (this.r + 15)*loc[0],
+                      yid = this.y + (this.r + 15)*loc[1];
 
                       g = this.base
                         ? g2().beg({x:this.x,y:this.y,sh:this.sh})
-                              .cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
-                              .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
-                              .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"})
+                              .cir({x:0,y:0,r:this.r,ls:"@nodcolor",fs:"@nodfill"})
+                              .p().m({x:0,y:this.r}).a({dw:Math.PI/2,x:-this.r,y:0}).l({x:this.r,y:0})
+                              .a({dw:-Math.PI/2,x:0,y:-this.r}).z().fill({fs:"@nodcolor"})
                               .end()
                         : g2().cir({x:this.x,y:this.y,r:this.r,
-                                    ls:'#333',fs:'#eee',sh:()=>this.sh});
+                                    ls:'#333',fs:'#eee',sh:this.sh});
                 if (this.model.env.show.nodeLabels)
                     g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:this.model.env.show.txtColor});
             };

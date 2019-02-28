@@ -376,7 +376,8 @@ mec.view.info = {
             const val = this.of[this.show];
             const aly = mec.aly[this.name || this.show];
             const type = aly.type;
-            const usrval = q => (q*aly.scl).toPrecision(3);
+            const nodescl = (this.elem.type === 'node' && this.model.env.show.nodeScaling) ? 1.5 : 1;
+            const usrval = q => (q*aly.scl/nodescl).toPrecision(3);
 
             return (aly.name||this.show) + ': '
                  + (type === 'vec' ? '{x:' + usrval(val.x)+',y:' + usrval(val.y)+'}'
@@ -507,7 +508,7 @@ mec.view.chart = {
                     addPoints();
             }
             if (this.Dt && this.t0 + this.Dt < t) {
-                for (const e of g.funcs) {    
+                for (const e of g.funcs) {
                     // Remove last Point of funcs array
                     e.data.shift(); e.data.shift();
                 }
@@ -535,9 +536,9 @@ mec.view.chart = {
                 const x = this.data.x();
                 const y = _y();
                 // Hide nods if they are out of bounds
-                const scl =Number(!(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax)); 
+                const scl =Number(!(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax));
                 this.nods[idx] = {...this.graph.pntOf({x, y}), scl};
-            });          
+            });
         }
     },
     asJSON() {

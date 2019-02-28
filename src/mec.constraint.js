@@ -791,12 +791,14 @@ mec.constraint = {
         g2() {
             let g = g2();
             if (this.model.env.show.constraints) {
-                const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this;
+                const {p1,p2,w,r,type,ls,ls2,lw,id,idloc} = this, rvis = r - p1.r - p2.r, scaling = this.model.env.show.nodeScaling;
                 g.beg({x:p1.x,y:p1.y,w,scl:1,lw:2,
-                       ls:this.model.env.show.constraintVectorColor,fs:'@ls',lc:'round',sh:()=>this.sh})
-                    .stroke({d:`M50,0 ${r},0`,ls:()=>this.color,
-                            lw:lw+1,lsh:true})
-                    .drw({d:mec.constraint.arrow[type],lsh:true})
+                       ls:this.model.env.show.constraintVectorColor, fs:'@ls', lc:'round', sh:this.sh})
+                    if (rvis > 45) {
+                        g.stroke({d:`M${(scaling ? 50 : 45) + p1.r},0 ${r - p2.r},0`, ls:this.color, // 45 needs to be variable
+                                  lw:lw+1,lsh:true})
+                    }
+                    g.drw({d:mec.constraint[type](p1.r, scaling, rvis), lsh:true})
                   .end();
 
                 if (this.model.env.show.constraintLabels) {
@@ -824,11 +826,32 @@ mec.constraint = {
             return g;
         }
     },
-    arrow: {
-        'ctrl': 'M0,0 35,0M45,0 36,-3 37,0 36,3 Z',
-        'rot': 'M12,0 8,6 12,0 8,-6Z M0,0 8,0M15,0 35,0M45,0 36,-3 37,0 36,3 Z',
-        'tran': 'M0,0 12,0M16,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z',
-        'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    //deprecated
+    // arrow: {
+    //     'ctrl': 'M0,0 35,0M45,0 36,-3 37,0 36,3 Z',
+    //     'rot': 'M12,0 8,6 12,0 8,-6Z M0,0 8,0M15,0 35,0M45,0 36,-3 37,0 36,3 Z',
+    //     'tran': 'M0,0 12,0M16,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z',
+    //     'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    // },
+    ctrl: (r1 = mec.node.radius, scl = false, rvis = 45) => {
+        const l = rvis < 45 ? rvis : 45;
+        return scl ? `${rvis > 20 ? `M${r1},0 ${r1 + l - 10},0` : ''}M${r1 + l},0 ${r1 + l - 9},-3 ${r1 + l - 8},0 ${r1 + l - 9},3 Z`
+                   : 'M0,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    },
+    rot: (r1 = mec.node.radius, scl = false, rvis = 45) => {
+        const l = rvis < 45 ? rvis : 45;
+        return scl ? `M${8 + r1},0 ${4 + r1},6 ${8 + r1},0 ${4 + r1},-6Z ${rvis > 20 ? `M${r1},0 ${4 + r1},0 M${11 + r1},0 ${r1 + l - 10},0` : ''}M${r1 + l},0 ${r1 + l - 9},-3 ${r1 + l - 8},0 ${r1 + l - 9},3 Z` // `M${a},0 ${b},6 ${a},0 ${b},-6Z M0,0 ${b},0 M${15 + dif},0 35,0M45,0 36,-3 37,0 36,3 Z`
+                   : 'M12,0 8,6 12,0 8,-6Z M0,0 8,0M15,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    },
+    tran: (r1 = mec.node.radius, scl = false, rvis = 45) => {
+        const l = rvis < 45 ? rvis : 45;
+        return scl ? `${rvis > 20 ? `M${r1},0 ${5 + r1},0 M${9 + r1},0 ${11 + r1},0 M${15 + r1},0 ${17 + r1},0 M${21 + r1},0 ${r1 + l - 10},0`:''}M${r1 + l},0 ${r1 + l - 9},-3 ${r1 + l - 8},0 ${r1 + l - 9},3 Z`
+                   : 'M0,0 12,0M16,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    },
+    free: (r1 = mec.node.radius, scl = false, rvis = 45) => {
+        const l = rvis < 45 ? rvis : 45;
+        return scl ? `M${8 + r1},0 ${4 + r1},6 ${8 + r1},0 ${4 + r1},-6Z ${rvis > 20 ? `M${r1},0 ${4 + r1},0 M${11 + r1},0 ${13 + r1},0 M${17 + r1},0 ${19 + r1},0 M${23 + r1},0 ${25 + r1},0 ${r1 + l - 10},0` : ''}M${r1 + l},0 ${r1 + l - 9},-3 ${r1 + l - 8},0 ${r1 + l - 9},3 Z`
+                   : 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
     },
     arrowFn: {
         'rot': g => g.m({x:12,y:0}).l({x:8,y:6}).m({x:12,y:0}).l({x:8,y:-6})

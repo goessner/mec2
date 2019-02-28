@@ -82,6 +82,12 @@ corrMax: 64,
 */
 show: {
     /**
+     * flag for radius scaling by nodemass.
+     * @const
+     * @type {boolean}
+     */
+    nodeScaling: false,
+    /**
      * flag for darkmode.
      * @const
      * @type {boolean}
