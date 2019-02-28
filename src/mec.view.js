@@ -415,6 +415,18 @@ mec.view.chart = {
                 return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
         });
 
+        // if there is a reference, check if valid
+        if (this.ref) {
+            const ref = this.ref;
+            if (ref.of === undefined)
+                return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in ref' };
+            const refelem = this.model.elementById(ref.of) || this.model[ref.of];
+            if(!refelem)
+                return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.ref.of };
+            if(ref.show && !(ref.show in refelem))
+                return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: ref.of, name: ref.show };
+        }
+
         return false;
     },
     // Get element a. a might be an element of the model, or a timer
@@ -464,6 +476,11 @@ mec.view.chart = {
                 return () => e.aly.scl * this.elem(e);
             })
         };
+        // If user submits a reference a respective function and data array is created
+        if (this.ref) {
+            this.data.ref = () => this.aly(this.ref).scl * this.elem(this.ref);
+            this.data.refData = {};
+        }
     },
     dependsOn(elem) {
         return this.yaxis.some(y => y.of === elem) || this.xaxis.of === elem;
@@ -472,10 +489,17 @@ mec.view.chart = {
         const g = this.graph;
         const t = this.model.timer.t;
         // Add one point into each funcs array of graph
-        const addPoints = () => this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
+        const addPoints = () => {
+            const x = this.data.x();
+            if (this.ref) this.data.refData[this.data.ref()] = { x, y: [] }
+            this.data.y.forEach((y,idx) => {
+                if (this.ref) this.data.refData[this.data.ref()].y[idx] = y();
+                g.funcs[idx].data.push(x,y());
+            });
+        };
         if (this.mode === 'static' || this.mode === 'preview') {
             if (this.t0 <= t && t <= this.t0 + this.Dt) {
-                    addPoints();
+                addPoints();
             }
         }
         else if (this.mode === 'dynamic') {
@@ -504,15 +528,29 @@ mec.view.chart = {
         if (this.mode !== 'preview') {
             this.addPoint();
         }
-        // mode is preview and preview was already rendered once
+        // If mode is preview and preview was already rendered once
         else if (this.graph.xAxis) {
             const g = this.graph;
+            const x = this.data.x();
+            const ref = this.ref ? (() => {
+                // Get the most fitting value of the reference data
+                const bisect = (val, arr) => {
+                const top = arr.slice(arr.length/2);
+                return arr.length === 1 ? arr[0]
+                    : val < top[0]
+                        ? bisect(val, arr.slice(0,arr.length/2))
+                        : bisect(val, top);
+                }
+                return this.data.refData[bisect(this.data.ref(), Object.keys(this.data.refData))];
+            })() : undefined;
             this.data.y.forEach((_y,idx) => {
-                const x = this.data.x();
                 const y = _y();
-                // Hide nods if they are out of bounds
-                const scl =Number(!(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax)); 
-                this.nods[idx] = {...this.graph.pntOf({x, y}), scl};
+                // Hide nods if they are out of bound
+                const scl = !(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax);
+                this.nods[idx] = {...this.graph.pntOf(
+                    ref ? {x: ref.x, y: ref.y[idx]} 
+                        : {x, y}
+                ), scl};
             });          
         }
     },
@@ -533,7 +571,7 @@ mec.view.chart = {
         if (this.mode === 'preview') {
             const n = this.nods = [];
             this.graph.funcs.forEach((_,i) => {
-                    // create references for later modification
+                    // Create references for automatic modification
                     n.push({x:0,y:0,scl:0});
                     g.nod({
                         x: () => n[i].x,
