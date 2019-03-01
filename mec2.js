@@ -2288,7 +2288,7 @@ mec.view.info = {
             const val = this.of[this.show];
             const aly = mec.aly[this.name || this.show];
             const type = aly.type;
-            const nodescl = (this.elem.type === 'node' && this.model.env.show.nodeScaling) ? 1.5 : 1;
+            const nodescl = (this.of.type === 'node' && this.model.env.show.nodeScaling) ? 1.5 : 1;
             const usrval = q => (q*aly.scl/nodescl).toPrecision(3);
 
             return (aly.name||this.show) + ': '
