@@ -215,7 +215,7 @@ aly: {
     accAbs: { get scl() {return mec.m_u}, type:'num', name:'a', unit:'m/s' },
     forceAbs: { get scl() {return mec.m_u}, type:'num', name:'F', unit:'N' },
     moment: { get scl() {return mec.m_u**2}, type:'num', name:'M', unit:'Nm' },
-    energy: { get scl() {return mec.to_J}, type:'num', name:'E', unit:'J' },
+    energy: { get scl() {return mec.to_J(1)}, type:'num', name:'E', unit:'J' },
     pole: { type:'pnt', name:'P', unit:'m' },
     polAcc: { get scl() {return mec.m_u}, type:'vec', name:'a_P', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },
     polChgVel: { get scl() {return mec.m_u}, type:'vec', name:'u_P', unit:'m/s', get drwscl() {return 40*mec.m_u} },
