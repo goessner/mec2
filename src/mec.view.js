@@ -292,7 +292,7 @@ mec.view.trace = {
             this.addPoint();
     },
     asJSON() {
-        return '{ "show":"'+this.show+'","as":"'+this.as+'"'
+        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"'+this.as+'"'
                 + (this.ref ? ',"ref":'+this.ref.id : '')
                 + (this.mode !== 'dynamic' ? ',"mode":"'+this.mode+'"' : '')
                 + (this.id ? ',"id":"'+this.id+'"' : '')
@@ -547,8 +547,11 @@ mec.view.chart = {
             id: this.id,
             x: this.x,
             y: this.y,
+            b: this.b,
+            h: this.h,
             t0: this.t0,
             Dt: this.Dt,
+            mode: this.mode,
             xaxis: this.xaxis,
             yaxis: this.yaxis
         }).replace('"yaxis"', '\n"yaxis"');
