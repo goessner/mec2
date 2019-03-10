@@ -163,7 +163,9 @@ mec.view.vector = {
     reset() { this.update(); },
     post() {  this.update(); },
     asJSON() {
-        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"vector" }';
+        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"vector"'
+                + (this.id ? ',"id":"'+this.id+'"' : '')
+                + ' }';
     },
     // interaction
     get isSolid() { return false },
@@ -290,7 +292,7 @@ mec.view.trace = {
             this.addPoint();
     },
     asJSON() {
-        return '{ "show":"'+this.show+'"as":"'+this.as
+        return '{ "show":"'+this.show+'","as":"'+this.as+'"'
                 + (this.ref ? ',"ref":'+this.ref.id : '')
                 + (this.mode !== 'dynamic' ? ',"mode":"'+this.mode+'"' : '')
                 + (this.id ? ',"id":"'+this.id+'"' : '')
@@ -362,11 +364,9 @@ mec.view.info = {
     },
     reset() {},
     asJSON() {
-        return '{ "id":"'+ this.id + '"'
-                + ',"show":"'+this.show+'"'
-                + ',"of":"'+this.of.id+'"'
-                + ',"as":"info"'
-                + ' }';
+        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"info"'
+                + (this.id ? ',"id":"'+this.id+'"' : '')
+                + ' }'
     },
     get hasInfo() {
         return this.of.state === g2.OVER;  // exclude: OVER & DRAG
