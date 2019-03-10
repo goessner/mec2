@@ -78,6 +78,8 @@ mec.model = {
             for (let i=0; i < this.shapes.length && this.valid; i++)
                 this.shapes[i].init(this,i);
 
+            this.preview(); // preview traceviews
+
             return this;
         },
         /**
