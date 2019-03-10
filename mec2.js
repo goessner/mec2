@@ -2075,7 +2075,9 @@ mec.view.vector = {
     reset() { this.update(); },
     post() {  this.update(); },
     asJSON() {
-        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"vector" }';
+        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"vector"'
+                + (this.id ? ',"id":"'+this.id+'"' : '')
+                + ' }';
     },
     // interaction
     get isSolid() { return false },
@@ -2202,7 +2204,7 @@ mec.view.trace = {
             this.addPoint();
     },
     asJSON() {
-        return '{ "show":"'+this.show+'"as":"'+this.as
+        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"'+this.as+'"'
                 + (this.ref ? ',"ref":'+this.ref.id : '')
                 + (this.mode !== 'dynamic' ? ',"mode":"'+this.mode+'"' : '')
                 + (this.id ? ',"id":"'+this.id+'"' : '')
@@ -2274,11 +2276,9 @@ mec.view.info = {
     },
     reset() {},
     asJSON() {
-        return '{ "id":"'+ this.id + '"'
-                + ',"show":"'+this.show+'"'
-                + ',"of":"'+this.of.id+'"'
-                + ',"as":"info"'
-                + ' }';
+        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"info"'
+                + (this.id ? ',"id":"'+this.id+'"' : '')
+                + ' }'
     },
     get hasInfo() {
         return this.of.state === g2.OVER;  // exclude: OVER & DRAG
@@ -2459,8 +2459,11 @@ mec.view.chart = {
             id: this.id,
             x: this.x,
             y: this.y,
+            b: this.b,
+            h: this.h,
             t0: this.t0,
             Dt: this.Dt,
+            mode: this.mode,
             xaxis: this.xaxis,
             yaxis: this.yaxis
         }).replace('"yaxis"', '\n"yaxis"');
@@ -3078,6 +3081,8 @@ mec.model = {
                 this.views[i].init(this,i);
             for (let i=0; i < this.shapes.length && this.valid; i++)
                 this.shapes[i].init(this,i);
+
+            this.preview(); // preview traceviews
 
             return this;
         },
