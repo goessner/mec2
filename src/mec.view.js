@@ -415,9 +415,14 @@ mec.view.chart = {
                 return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
         });
 
-        // if there is a reference, check if valid
-        if (this.ref && !this.model.elementById(this.ref)) {
-                return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.ref.of };
+        if (this.ref) {
+            const ref = this.model.elementById(this.ref);
+            if(!ref) {
+                return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.ref };
+            }
+            if(ref.ori.type !== 'drive') {
+                return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: 'ref is no drive' }
+            }
         }
 
         return false;
@@ -486,7 +491,7 @@ mec.view.chart = {
             // In viable time span for static or preview mode
             const inTimeSpan = t <= this.t0 + (this.Dt || 0);
             if (this.mode === 'dynamic' || inTimeSpan) {
-                this.previewTimeTable.push(this.model.timer.t);
+                this.ref && this.previewTimeTable.push(this.model.timer.t);
                 const x = this.data.x();
                 this.data.y.forEach((y,idx) => g.funcs[idx].data.push({x,y:y()}));
                 // Remove tail in dynamic
@@ -513,7 +518,7 @@ mec.view.chart = {
             this.addPoint();
         }
         // If mode is preview and preview was already rendered once
-        else if (this.graph.xAxis) {
+        else if (this.graph.xAxis && this.ref) {
             const g = this.graph;
             const local_t = this.local_t();
             g.funcs.forEach((func,idx) => {
