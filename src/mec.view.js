@@ -440,6 +440,16 @@ mec.view.chart = {
                 return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
         });
 
+        if (this.ref) {
+            const ref = this.model.elementById(this.ref);
+            if(!ref) {
+                return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.ref };
+            }
+            if(ref.ori.type !== 'drive') {
+                return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: 'ref is no drive' }
+            }
+        }
+
         return false;
     },
     // Get element a. a might be an element of the model, or a timer
@@ -489,6 +499,11 @@ mec.view.chart = {
                 return () => e.aly.scl * this.elem(e);
             })
         };
+
+        if (this.ref) {
+            this.previewTimeTable = [];
+            this.local_t = () => this.model.constraintById(this.ref)['ori'].t();
+        }
     },
     dependsOn(elem) {
         return this.yaxis.some(y => y.of === elem) || this.xaxis.of === elem;
@@ -496,30 +511,28 @@ mec.view.chart = {
     addPoint() {
         const g = this.graph;
         const t = this.model.timer.t;
-        // Add one point into each funcs array of graph
-        const addPoints = () => this.data.y.forEach((y,idx) => g.funcs[idx].data.push(this.data.x(),y()));
-        if (this.mode === 'static' || this.mode === 'preview') {
-            if (this.t0 <= t && t <= this.t0 + this.Dt) {
-                    addPoints();
-            }
-        }
-        else if (this.mode === 'dynamic') {
-            if (this.t0 < t) {
-                    addPoints();
-            }
-            if (this.Dt && this.t0 + this.Dt < t) {
-                for (const e of g.funcs) {
-                    // Remove last Point of funcs array
-                    e.data.shift(); e.data.shift();
+
+        if (this.t0 < t) {
+            // In viable time span for static or preview mode
+            const inTimeSpan = t <= this.t0 + (this.Dt || 0);
+            if (this.mode === 'dynamic' || inTimeSpan) {
+                this.ref && this.previewTimeTable.push(this.model.timer.t);
+                const x = this.data.x();
+                this.data.y.forEach((y,idx) => g.funcs[idx].data.push({x,y:y()}));
+                // Remove tail in dynamic
+                if (!inTimeSpan) {
+                    g.funcs.forEach((e) => e.data.shift());
                 }
             }
         }
-        // Redundant when g2.chart gets respective update ...
+
+        // Redundant if g2.chart gets respective update ...
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
     preview() {
-        if (this.mode === 'preview')
+        if (this.mode === 'preview') {
             this.addPoint();
+        }
     },
     reset(preview) {
         if (this.graph && preview || this.mode !== 'preview')
@@ -529,16 +542,16 @@ mec.view.chart = {
         if (this.mode !== 'preview') {
             this.addPoint();
         }
-        // mode is preview and preview was already rendered once
-        else if (this.graph.xAxis) {
+        // If mode is preview and preview was already rendered once
+        else if (this.graph.xAxis && this.ref) {
             const g = this.graph;
-            this.data.y.forEach((_y,idx) => {
-                const x = this.data.x();
-                const y = _y();
-                // Hide nods if they are out of bounds
-                const scl =Number(!(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax));
-                this.nods[idx] = {...this.graph.pntOf({x, y}), scl};
-            });
+            const local_t = this.local_t();
+            g.funcs.forEach((func,idx) => {
+                const pt = this.previewTimeTable.findIndex(t => t > local_t);
+                this.nods[idx] = pt === -1
+                    ? { x:0, y:0, scl: 0 } // If point is out of bounds
+                    : { ...g.pntOf(func.data[pt]), scl: 1}
+            });          
         }
     },
     asJSON() {
@@ -561,7 +574,7 @@ mec.view.chart = {
         if (this.mode === 'preview') {
             const n = this.nods = [];
             this.graph.funcs.forEach((_,i) => {
-                    // create references for later modification
+                    // Create references for automatic modification
                     n.push({x:0,y:0,scl:0});
                     g.nod({
                         x: () => n[i].x,
