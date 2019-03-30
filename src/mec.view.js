@@ -416,15 +416,8 @@ mec.view.chart = {
         });
 
         // if there is a reference, check if valid
-        if (this.ref) {
-            const ref = this.ref;
-            if (ref.of === undefined)
-                return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in ref' };
-            const refelem = this.model.elementById(ref.of) || this.model[ref.of];
-            if(!refelem)
+        if (this.ref && !this.model.elementById(this.ref)) {
                 return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.ref.of };
-            if(ref.show && !(ref.show in refelem))
-                return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: ref.of, name: ref.show };
         }
 
         return false;
@@ -476,10 +469,10 @@ mec.view.chart = {
                 return () => e.aly.scl * this.elem(e);
             })
         };
-        // If user submits a reference a respective function and data array is created
+
         if (this.ref) {
-            this.data.ref = () => this.aly(this.ref).scl * this.elem(this.ref);
-            this.data.refData = {};
+            this.previewTimeTable = [];
+            this.local_t = () => this.model.constraintById(this.ref)['ori'].t();
         }
     },
     dependsOn(elem) {
@@ -488,37 +481,28 @@ mec.view.chart = {
     addPoint() {
         const g = this.graph;
         const t = this.model.timer.t;
-        // Add one point into each funcs array of graph
-        const addPoints = () => {
-            const x = this.data.x();
-            if (this.ref) this.data.refData[this.data.ref()] = { x, y: [] }
-            this.data.y.forEach((y,idx) => {
-                if (this.ref) this.data.refData[this.data.ref()].y[idx] = y();
-                g.funcs[idx].data.push(x,y());
-            });
-        };
-        if (this.mode === 'static' || this.mode === 'preview') {
-            if (this.t0 <= t && t <= this.t0 + this.Dt) {
-                addPoints();
-            }
-        }
-        else if (this.mode === 'dynamic') {
-            if (this.t0 < t) {
-                    addPoints();
-            }
-            if (this.Dt && this.t0 + this.Dt < t) {
-                for (const e of g.funcs) {    
-                    // Remove last Point of funcs array
-                    e.data.shift(); e.data.shift();
+
+        if (this.t0 < t) {
+            // In viable time span for static or preview mode
+            const inTimeSpan = t <= this.t0 + (this.Dt || 0);
+            if (this.mode === 'dynamic' || inTimeSpan) {
+                this.previewTimeTable.push(this.model.timer.t);
+                const x = this.data.x();
+                this.data.y.forEach((y,idx) => g.funcs[idx].data.push({x,y:y()}));
+                // Remove tail in dynamic
+                if (!inTimeSpan) {
+                    g.funcs.forEach((e) => e.data.shift());
                 }
             }
         }
-        // Redundant when g2.chart gets respective update ...
+
+        // Redundant if g2.chart gets respective update ...
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
     preview() {
-        if (this.mode === 'preview')
+        if (this.mode === 'preview') {
             this.addPoint();
+        }
     },
     reset(preview) {
         if (this.graph && preview || this.mode !== 'preview')
@@ -531,26 +515,12 @@ mec.view.chart = {
         // If mode is preview and preview was already rendered once
         else if (this.graph.xAxis) {
             const g = this.graph;
-            const x = this.data.x();
-            const ref = this.ref ? (() => {
-                // Get the most fitting value of the reference data
-                const bisect = (val, arr) => {
-                const top = arr.slice(arr.length/2);
-                return arr.length === 1 ? arr[0]
-                    : val < top[0]
-                        ? bisect(val, arr.slice(0,arr.length/2))
-                        : bisect(val, top);
-                }
-                return this.data.refData[bisect(this.data.ref(), Object.keys(this.data.refData))];
-            })() : undefined;
-            this.data.y.forEach((_y,idx) => {
-                const y = _y();
-                // Hide nods if they are out of bound
-                const scl = !(x<g.xmin||x>g.xmax||y<g.ymin||y>g.ymax);
-                this.nods[idx] = {...this.graph.pntOf(
-                    ref ? {x: ref.x, y: ref.y[idx]} 
-                        : {x, y}
-                ), scl};
+            const local_t = this.local_t();
+            g.funcs.forEach((func,idx) => {
+                const pt = this.previewTimeTable.findIndex(t => t > local_t);
+                this.nods[idx] = pt === -1
+                    ? { x:0, y:0, scl: 0 } // If point is out of bounds
+                    : { ...g.pntOf(func.data[pt]), scl: 1}
             });          
         }
     },
