@@ -464,8 +464,15 @@ mec.view.chart = {
         // If it does not exist, take a normalized template
             || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
     },
-    title(t) {
-        return t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
+    getAxis(t) {
+        const fs = this.model.env.show.darkmode ? 'white' : 'black'; 
+        const text = t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
+        return {
+            title: { text, style: { font:'12px serif', fs } },
+            labels: { style: { fs } },
+            origin: true,
+            grid: true,
+        };
     },
     /**
      * Initialize view. Multiple initialization allowed.
@@ -488,8 +495,8 @@ mec.view.chart = {
         this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
         // Create a graph as a baseline for later modification
         this.graph       = Object.assign({x:0 ,y:0, funcs: []},this);
-        this.graph.xaxis = Object.assign({title:this.title([x]),grid:true,origin:true}, this.xaxis);
-        this.graph.yaxis = Object.assign({title:this.title( y ),grid:true,origin:true}, this.yaxis);
+        this.graph.xaxis = Object.assign(this.getAxis([x]), this.xaxis);
+        this.graph.yaxis = Object.assign(this.getAxis( y ), this.yaxis);
         this.data = {
             // Return the current value for x translated to its corresponding scl, defined in aly
             x: () => x.aly.scl * this.elem(this.xaxis),
