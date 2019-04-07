@@ -204,8 +204,9 @@ mec.node = {
             }
         },
         drag({x,y,mode}) {
-            if (mode === 'edit' && !this.base) { this.x0 = x; this.y0 = y; }
-            else                               { this.x = x; this.y = y; }
+            if ( mode === 'drag' && !this.base) { this.x = x; this.y = y; }
+            else if ( mode === 'edit' )         { this.x0 = this.x = x; this.y0 = this.y = y; }
+            else return false;
         },
         // graphics ...
         get r() { return this.model.env.show.nodeScaling ? this.state & g2.OVER ? 1.5*this.radius : this.radius : mec.node.radius; },
