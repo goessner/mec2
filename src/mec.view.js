@@ -465,11 +465,11 @@ mec.view.chart = {
             || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
     },
     getAxis(t) {
-        const fs = this.model.env.show.darkmode ? 'white' : 'black'; 
+        const fs = () => this.model.env.show.darkmode ? 'white' : 'black'; 
         const text = t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
         return {
-            title: { text, style: { font:'12px serif', fs } },
-            labels: { style: { fs } },
+            title: { text, style: { font:'12px serif', fs: () => fs() } },
+            labels: { style: { fs: () => fs() } },
             origin: true,
             grid: true,
         };
