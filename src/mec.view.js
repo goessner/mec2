@@ -565,6 +565,7 @@ mec.view.chart = {
         return JSON.stringify({
             as: this.as,
             id: this.id,
+            canvas: this.canvas,
             x: this.x,
             y: this.y,
             b: this.b,
