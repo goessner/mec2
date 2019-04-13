@@ -2378,8 +2378,8 @@ mec.view.chart = {
             || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
     },
     getAxis(t) {
-        const fs = () => this.model.env.show.darkmode ? 'white' : 'black'; 
-        const text = t.map((a) => a.of + '.' + a.show + ' (' + a.aly.unit + ') ').join(' / ');
+        const fs = () => this.model.env.show.darkmode ? 'white' : 'black';
+        const text = t.map((a) => a.of + '.' + a.show + ' [' + a.aly.unit + '] ').join(' / ');
         return {
             title: { text, style: { font:'12px serif', fs: () => fs() } },
             labels: { style: { fs: () => fs() } },
@@ -2471,13 +2471,14 @@ mec.view.chart = {
                 this.nods[idx] = pt === -1
                     ? { x:0, y:0, scl: 0 } // If point is out of bounds
                     : { ...g.pntOf(func.data[pt]), scl: 1}
-            });          
+            });
         }
     },
     asJSON() {
         return JSON.stringify({
             as: this.as,
             id: this.id,
+            canvas: this.canvas,
             x: this.x,
             y: this.y,
             b: this.b,
@@ -3862,8 +3863,10 @@ mec.model = {
         draw(g) {  // todo: draw all elements via 'x.draw(g)' call !
             for (const shape of this.shapes)
                 shape.draw(g);
-            for (const view of this.views)
-                view.draw(g);
+            for (const view of this.views) {
+                if (!(view.as === 'chart' && view.canvas)) // app handles charts with canvas properties
+                    view.draw(g);
+            }
             for (const constraint of this.constraints)
                 g.ins(constraint);
             for (const load of this.loads)

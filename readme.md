@@ -92,6 +92,10 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 
 # Change Log
 
+### 0.9.2 - 2019-04-13
+
+* chart-views that have a property `canvas` are now excluded from `model.draw()` and have to be handled by the app.
+
 ### 0.9.1 - 2019-02-28
 
 * added a flag `mec.show.nodeScaling`. Setting this to `true` enables a visual representation of the nodes masses by their radius as well as magnifying them while being hovered by the mousepointer. Constraint graphics scale accordingly.

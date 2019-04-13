@@ -1,6 +1,6 @@
 {
   "name": "mec2",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "mec2 - a physics library for simulating planar mechanisms via corrective impulses",
   "keywords": [
     "vector",
@@ -16,6 +16,7 @@
   "main": "mec2.js",
   "scripts": {
     "build": "npm run minify && npm run jsdoc && npm run gzip && npm run cpsamp",
+    "update": "npm run concat && npm run minify",
     "concat": "type .\\src\\mec.core.js .\\src\\mec.node.js .\\src\\mec.constraint.js .\\src\\mec.drive.js .\\src\\mec.load.js .\\src\\mec.view.js .\\src\\mec.shape.js .\\src\\mec.model.js .\\src\\mec.msg.en.js >mec2.js",
     "minify": "uglifyjs ./src/mec.core.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.view.js ./src/mec.shape.js ./src/mec.model.js ./src/mec.msg.en.js -o ./mec2.min.js --comments -m",
     "jsdoc": "jsdoc2md ./mec2.js > ./api/readme.md",
