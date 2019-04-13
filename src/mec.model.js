@@ -837,8 +837,10 @@ mec.model = {
         draw(g) {  // todo: draw all elements via 'x.draw(g)' call !
             for (const shape of this.shapes)
                 shape.draw(g);
-            for (const view of this.views)
-                view.draw(g);
+            for (const view of this.views) {
+                if (!(view.as === 'chart' && view.canvas)) // app handles charts with canvas properties
+                    view.draw(g);
+            }
             for (const constraint of this.constraints)
                 g.ins(constraint);
             for (const load of this.loads)
