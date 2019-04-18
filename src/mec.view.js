@@ -465,11 +465,11 @@ mec.view.chart = {
             || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
     },
     getAxis(t) {
-        const fs = () => this.model.env.show.darkmode ? 'white' : 'black';
+        const fs = () => this.model.env.show.txtColor;
         const text = t.map((a) => a.of + '.' + a.show + ' [' + a.aly.unit + '] ').join(' / ');
         return {
-            title: { text, style: { font:'12px serif', fs: () => fs() } },
-            labels: { style: { fs: () => fs() } },
+            title: { text, style: { font:'12px serif', fs } },
+            labels: { style: { fs } },
             origin: true,
             grid: true,
         };
@@ -502,7 +502,9 @@ mec.view.chart = {
             x: () => x.aly.scl * this.elem(this.xaxis),
             // This has to be done for each y value, so it is an array of those functions
             y: y.map((e,idx) => {
-                this.graph.funcs[idx] = {data:[]};
+                // Copy all properties in e, except `show` and `of` and add them to the graph.
+                const {show, of, ...rest} = e;
+                this.graph.funcs[idx] = {data:[], ...rest};
                 return () => e.aly.scl * this.elem(e);
             })
         };
