@@ -398,6 +398,7 @@ mec.view.info = {
  * @property {number} [y=0] - y-position.
  * @property {number} [h=100] - height of chart area.
  * @property {number} [b=150] - breadth / width of chart area.
+ * @property {boolean | string} [canvas=false] - Id of canvas in dom chart will be rendered to. If property evaluates to true, rendering has to be handled by the app.
  *
  * @property {object} [xaxis] - definition of xaxis.
  * @property {object | array} [yaxis] - definition of yaxis (potentially multiple).
@@ -445,7 +446,7 @@ mec.view.chart = {
             if(!ref) {
                 return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.ref };
             }
-            if(ref.ori.type !== 'drive') {
+            if(ref.ori.type !== 'drive' && ref.len.type !== 'drive') {
                 return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: 'ref is no drive' }
             }
         }
