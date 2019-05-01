@@ -483,6 +483,7 @@ mec.view.chart = {
     init(model, idx) {
         this.model = model;
         this.mode = this.mode || 'static';
+        this.canvas = this.canvas || false;
         if (!this.model.notifyValid(this.validate(idx))) {
             return;
         }
@@ -575,9 +576,10 @@ mec.view.chart = {
             t0: this.t0,
             Dt: this.Dt,
             mode: this.mode,
-            xaxis: this.xaxis,
-            yaxis: this.yaxis
-        }).replace('"yaxis"', '\n"yaxis"');
+            cnv: this.cnv,
+            xaxis: {...this.xaxis, aly:undefined}, // disregard "aly" ...
+            yaxis: {...this.yaxis, aly:undefined},
+        }).replace('"yaxis"', '\n"yaxis"').replace('{"', '{ "').replace('"}', '" }');
     },
     draw(g) {
         g.chart(this.graph);
