@@ -187,17 +187,35 @@ depending on its `shape.type` shapes become one of these objects:
     r: Number
 }
 ```
+### shape.poly
+
+```js
+{
+    type: 'poly'
+    pts: Object | Array
+    p: Node
+    wref: Constraint
+    fill: web color
+    stroke: web color
+}
+```
 ### shape.img
 
 ```js
 {
     type: 'img'
     uri: String
-    p: Node
-    wref: Constraint
-    w0: Number
+    p: Node | Object
+    b: Number
+    h: Number
+    sx: Number
+    sy: Number
+    sb: Number
+    sh: Number
     xoff: Number
     yoff: Number
+    wref: Constraint
+    w0: Number
     scl: Number
 }
 ```

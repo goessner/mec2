@@ -92,6 +92,11 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 
 # Change Log
 
+### 0.9.3 - 2019-05-08
+
+* Updated `shape.img` to support reworked g2.img() API. See [changes.md -> shape.img](./changes.md#shapeimg) or inline documentation.
+* Made some properties of `shape.poly` optional. See [changes.md -> shape.poly](./changes.md#shapepoly) or inline documentation.
+
 ### 0.9.2 - 2019-04-13
 
 * chart-views that have a property `canvas` are now excluded from `model.draw()` and have to be handled by the app.
