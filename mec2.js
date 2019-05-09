@@ -3047,7 +3047,7 @@ mec.shape.img = {
             sh: this.sh,
             xoff: (this.xoff && Math.abs(this.xoff) > 0.0001) ? this.xoff : undefined,
             yoff: (this.yoff && Math.abs(this.yoff) > 0.0001) ? this.yoff : undefined,
-            w0: (this.w0 && Math.abs(this.w0) > 0.0001) ? this.w : undefined,
+            w0: (this.w0 && Math.abs(this.w0) > 0.0001) ? this.w0 : undefined,
             wref: this.wref && !!Object.getOwnPropertyDescriptor(this.wref, 'w').get ? this.wref.id : undefined, // if w isn't getter, wref can be omitted
             scl: (this.scl && Math.abs(this.scl - 1) > 0.0001) ? this.scl : undefined
         }).replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }'); // indent object properties
