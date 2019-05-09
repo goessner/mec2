@@ -368,21 +368,21 @@ Before starting the simulation there is a preview step looking for view elements
 ### Poly
 
 * Polygon shapes must have `pts` array containing at least two points in global coordinates.
-* Polygon shapes are connected to a reference node.
-* They need to have a valid reference `p` to their reference node.
+* Polygon shapes may be connected to a reference node.
+* They can have a property `p` of type `String` that references a node as their origin. `p` can also be omitted. In that case it defaults to the first valid coordinates of the `pts` array.
 * Polygon shapes have a fixed orientation specified by `w0` (default value `0`).
 * Polygon shapes can have an optional reference `wref` to a constraint for aligning their orientation to it. `w0` is interpreted as a constant relative angular offset then.
 
 ### Img
 
 * Image shapes must have a uniform resource locator string `uri` defined.
-* Image shapes are connected to a reference node.
-* They need to have a valid reference `p` to their reference node.
-* Image shapes are connected with their lower left corner to their node (cartesian coordinate system assumed).
+* They can have a property `p` of type `String` that references a node as their origin. `p` can also be either an object in the form of `{x:number,y:number}` or omitted. In the second case `p` defaults to `{x:0,y:0}`.
+* Image shapes are connected with their lower left corner to their reference in `p` (cartesian coordinate system assumed).
 * A local offset to the lower left corner can be specified by `xoff` and `yoff`.
 * Image shapes have a fixed orientation specified by `w0` (default value `0`).
 * Image shapes can have an optional reference `wref` to a constraint for aligning their orientation to it. `w0` is interpreted as a constant relative angular offset then.
 * Image shapes have a scaling factor specified by `scl` (default value `1`).
+* For most properties the `canvasContext.drawImage()` API can be consulted [`drawImage()` specification](https://www.w3.org/TR/2dcontext/#drawing-images-to-the-canvas).
 
 ## Time and Display Refresh Rate
 
