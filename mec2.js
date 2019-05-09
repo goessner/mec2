@@ -3009,7 +3009,7 @@ mec.shape.img = {
         return false;
     },
     /**
-     * Initialize polygon shape. Multiple initialization allowed.
+     * Initialize image shape. Multiple initialization allowed.
      * @method
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
@@ -3038,7 +3038,7 @@ mec.shape.img = {
         return JSON.stringify({
             type: this.type,
             uri: this.uri,
-            p: this.p && this.p.id ? this.p.id : {x:this.p.x, y:this.p.y},
+            p: this.p && this.p.id ? this.p.id : undefined,
             b: this.b,
             h: this.h,
             sx: (this.sx && Math.abs(this.sx) > 0.0001) ? this.sx : undefined,
