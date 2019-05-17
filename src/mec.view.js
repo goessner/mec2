@@ -555,14 +555,18 @@ mec.view.chart = {
         }
         // If mode is preview and preview was already rendered once
         else if (this.graph.xAxis && this.ref) {
-            const g = this.graph;
-            const local_t = this.local_t();
-            g.funcs.forEach((func,idx) => {
-                const pt = this.previewTimeTable.findIndex(t => t > local_t);
-                this.nods[idx] = pt === -1
-                    ? { x:0, y:0, scl: 0 } // If point is out of bounds
-                    : { ...g.pntOf(func.data[pt]), scl: 1}
-            });
+            // const ref = this.model.constraintById(this.ref)
+            // if (!(ref.p1.state & g2.DRAG || ref.p2.state & g2.DRAG)) { // only execute block if no node is being dragged
+            if (!this.model.env.editing) {  // alternative, true if undefined
+                const g = this.graph;
+                const local_t = this.local_t();
+                g.funcs.forEach((func,idx) => {
+                    const pt = this.previewTimeTable.findIndex(t => t > local_t);
+                    this.nods[idx] = pt === -1
+                        ? { x:0, y:0, scl: 0 } // If point is out of bounds
+                        : { ...g.pntOf(func.data[pt] || {x:0, y:0}), scl: 1}
+                });
+            }
         }
     },
     asJSON() {
