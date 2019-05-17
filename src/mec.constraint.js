@@ -560,7 +560,7 @@ mec.constraint = {
                 ori.t = () => this.model.timer.t;
 
             ori.drive = mec.drive.create({ func: ori.func || ori.input && 'static' || 'linear',
-                                            z0: ori.ref ? 0 : this.w0,
+                                            z0: () => ori.ref ? 0 : this.w0,
                                             Dz: ori.Dw,
                                             t0: ori.t0,
                                             Dt: ori.Dt,
@@ -687,7 +687,7 @@ mec.constraint = {
                 len.t = () => this.model.timer.t;
 
             len.drive = mec.drive.create({func: len.func || len.input && 'static' || 'linear',
-                                          z0: len.ref ? 0 : this.r0,
+                                          z0: () => len.ref ? 0 : this.r0,
                                           Dz: len.Dr,
                                           t0: len.t0,
                                           Dt: len.Dt,
