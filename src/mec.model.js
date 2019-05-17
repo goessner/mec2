@@ -134,7 +134,7 @@ mec.model = {
             if (previewMode) {
                 this.reset();
                 this.state.preview = true;
-                this.timer.dt = 1/30;
+                this.timer.dt = mec.clamp(1/this.env.fps || 1/30, 1/30, 1/5);
 
                 for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
                     this.pre().itr().post();
