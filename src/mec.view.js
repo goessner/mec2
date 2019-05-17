@@ -582,9 +582,10 @@ mec.view.chart = {
             Dt: this.Dt,
             mode: this.mode,
             cnv: this.cnv,
+            ref: this.ref,
             xaxis: {...this.xaxis, aly:undefined}, // disregard "aly" ...
             yaxis: {...this.yaxis, aly:undefined},
-        }).replace('"yaxis"', '\n"yaxis"').replace('{"', '{ "').replace('"}', '" }');
+        }).replace('"xaxis"', '\n      "xaxis"').replace('}}', '}\n   }').replace('"yaxis"', '\n      "yaxis"').replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }');
     },
     draw(g) {
         g.chart(this.graph);
