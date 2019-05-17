@@ -92,6 +92,12 @@ If you don't want to do that, check out the project [_mecEdit_](https://github.c
 
 # Change Log
 
+### 0.9.4 - 2019-05-17
+
+* If the controlling app has a member `fps`, it should be of type `Number`. This property will now be used to feed the current app-performance back into `model.preview()` and adjust the timestep and thus the accuracy accordingly.
+* Trailing points of chart-views with referenced constraints are now prevented from being calculated if the controlling app has a member `editing` which evaluates to `true`.
+* Internal changes to constraint drive function to make editing more convenient.
+
 ### 0.9.3 - 2019-05-08
 
 * Updated `shape.img` to support reworked g2.img() API. See [changes.md -> shape.img](./changes.md#shapeimg) or inline documentation.
