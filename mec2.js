@@ -2428,7 +2428,10 @@ mec.view.chart = {
 
         if (this.ref) {
             this.previewTimeTable = [];
-            this.local_t = () => this.model.constraintById(this.ref)['ori'].t();
+            const ref = this.model.constraintById(this.ref);
+            this.local_t = ref.ori.type === "drive"
+                ? () => ref.ori.t()
+                : () => ref.len.t();
         }
     },
     dependsOn(elem) {
