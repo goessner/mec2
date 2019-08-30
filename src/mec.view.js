@@ -400,11 +400,12 @@ mec.view.info = {
  * @property {number} [b=150] - breadth / width of chart area.
  * @property {boolean | string} [canvas=false] - Id of canvas in dom chart will be rendered to. If property evaluates to true, rendering has to be handled by the app.
  *
- * @property {object} [xaxis] - definition of xaxis.
- * @property {object | array} [yaxis] - definition of yaxis (potentially multiple).
- *
- * @property {string} show - kind of property to show on axis.
+ * @property {string} show - kind of property to show on yaxis.
  * @property {string} of - element property belongs to.
+ * 
+ * @property {object} [ref] -- definition of xaxis.
+ * @property {string} [ref.show=t] -- kind of property to show on xaxis.
+ * @property {string} [ref.of=timer] -- element property belongs to.
  */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
