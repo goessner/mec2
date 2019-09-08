@@ -421,7 +421,7 @@ mec.view.chart = {
             return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of' };
         if (this.ref.of === undefined)
             return { mod: 'E_ELEM_MISSING', ...def, reftype: 'element', name: 'of in ref' };
-
+        
         const xelem = this.model.elementById(this.ref.of) || this.model[this.ref.of];
         const yelem = this.model.elementById(this.of) || this.model[this.of]
 
@@ -429,9 +429,9 @@ mec.view.chart = {
             return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.ref.of };
         if(!yelem)
             return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', anme: this.of };
-
         if (this.show && !(this.show in yelem))
             return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.of, name: this.show };
+        
         if (this.ref.show && !(this.ref.show in xelem))
             return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.ref.of, name: this.ref.show };
 
@@ -470,22 +470,17 @@ mec.view.chart = {
         this.mode = this.mode || 'static';
         this.canvas = this.canvas || false;
         this.t0 = this.t0 || 0;
-        this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
+        this.Dt = this.Dt || 1;
         // The xAxis is referenced by the timer if not otherwise specified
-        // TODO check if valid
         this.ref = Object.assign({ show: 't', of: 'timer' }, { ...this.ref });
-
         if (!this.model.notifyValid(this.validate(idx))) {
             return;
         }
-
         this.graph = Object.assign({
             x: 0, y: 0, funcs: [{data:[]}],
-            // NOTE unexpected behavior possible...
             xaxis: Object.assign(this.getAxis(this.ref)),
             yaxis: Object.assign(this.getAxis(this))
         }, this);
-        this.data = this.graph.funcs[0].data; // just a shorthand
     },
 
     get local_t() {
@@ -511,20 +506,22 @@ mec.view.chart = {
         return this.aly(this.ref).scl * this.elem(this.ref);
     },
     get previewNod() {
+        const data =  this.graph.funcs[0].data;
         // this.graph.xAxis is not defined if the graph was never rendered.
-        // Therefore the pntOf(...) function was not inherited by the graph...
+        // Therefore the pntOf(...) function is not inherited by the graph => no previewNod
         if (this.mode !== 'preview' || !this.graph.xAxis || this.model.env.editing) {
             return undefined
         }
-        const pt = this.data.findIndex(data => data.t > this.local_t)
+        const pt = data.findIndex(data => data.t > this.local_t)
         return pt === -1
             ? { x: 0, y: 0, scl:    0 } // If point is out of bounds
-            : { ...this.graph.pntOf(this.data[pt] || { x: 0, y: 0 }), scl: 1 };
+            : { ...this.graph.pntOf(data[pt] || { x: 0, y: 0 }), scl: 1 };
     },
     dependsOn(elem) {
         return this.ref.of === elem || this.of === elem;
     },
     addPoint() {
+        const data =  this.graph.funcs[0].data;
         if (this.t0 >= this.model.timer.t) {
             return;
         }
@@ -534,9 +531,9 @@ mec.view.chart = {
             return;
         }
         // local_t is necessary to determine the previewNod (undefined if mode is not preview)
-        this.data.push({ x: this.currentX, y: this.currentY, t: this.local_t });
+        data.push({ x: this.currentX, y: this.currentY, t: this.local_t });
         // Remove tail in dynamic mode
-        inTimeSpan || this.data.shift();
+        inTimeSpan || data.shift();
         // Redundant if g2.chart gets respective update ...
         const g = this.graph;
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
@@ -547,8 +544,8 @@ mec.view.chart = {
         }
     },
     reset(preview) {
-        if (this.graph && preview || this.mode !== 'preview') {
-            this.data = this.graph.funcs[0].data = [];
+        if (this.graph && (preview || this.mode !== 'preview')) {
+            this.graph.funcs[0].data = [];
         }
     },
     post() {
