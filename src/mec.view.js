@@ -451,7 +451,8 @@ mec.view.chart = {
     },
     getAxis({show, of}) {
         const fs = () => this.model.env.show.txtColor;
-        const text = `${show} of ${of} [ ${this.aly({show, of}).unit} ]`;
+        // Don't show text "of timer" (which is default) in x-axis
+        const text = `${show} ${of !== 'timer' ? `of ${of}` : ''} [ ${this.aly({show, of}).unit} ]`;
         return {
             title: { text, style: { font: '12px serif', fs } },
             labels: { style: { fs } },
