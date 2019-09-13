@@ -2,7 +2,5 @@ node_modules
 bin
 samples
 papers
-test
-test2
-tst
+test*
 package-lock.json

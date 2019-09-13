@@ -27,7 +27,7 @@ mec.drive = {
             DtTotal *= repeat;  // preserve duration per repetition
         }
         return {
-            f:   () => z0() + drv.f(Math.max(0,Math.min((t() - t0)/DtTotal,1)))*Dz,
+            f:   () => z0 + drv.f(Math.max(0,Math.min((t() - t0)/DtTotal,1)))*Dz,
             ft:  () => isin(t(),t0,t0+DtTotal) ? drv.fd((t()-t0)/DtTotal)*Dz/Dt : 0,
             ftt: () => isin(t(),t0,t0+DtTotal) ? drv.fdd((t()-t0)/DtTotal)*Dz/Dt/Dt : 0
         };

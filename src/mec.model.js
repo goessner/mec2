@@ -35,6 +35,7 @@ mec.model = {
             if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
+            this.showInfo = { nodes:this.env.show.nodeInfo, constraints:this.env.show.constraintInfo, loads:false };
             this.state = { valid:true,itrpos:0,itrvel:0,preview:false };
             this.timer = { t:0,dt:1/60,sleepMin:1 };
             // create empty containers for all elements
@@ -65,20 +66,21 @@ mec.model = {
                 this.gravity = Object.assign({},mec.gravity,{active:true});
             else if (!this.gravity)
                 this.gravity = Object.assign({},mec.gravity,{active:false});
+         // else ... gravity might be given by user as vector !
+
+            if (!this.tolerance) this.tolerance = 'medium';
 
             this.state.valid = true;  // clear previous logical error result ...
             for (let i=0; i < this.nodes.length && this.valid; i++)
                 this.nodes[i].init(this,i);
-            for (let i=0; i < this.constraints.length && this.valid; i++)
-                this.constraints[i].init(this,i);
+            for (let i=0; i < this.constraints.length && this.valid; i++) // just in time initialization with 'ref' possible .. !
+                if (!this.constraints[i].initialized) this.constraints[i].init(this,i);
             for (let i=0; i < this.loads.length && this.valid; i++)
                 this.loads[i].init(this,i);
             for (let i=0; i < this.views.length && this.valid; i++)
                 this.views[i].init(this,i);
             for (let i=0; i < this.shapes.length && this.valid; i++)
                 this.shapes[i].init(this,i);
-
-            this.preview(); // preview traceviews
 
             return this;
         },
@@ -134,7 +136,7 @@ mec.model = {
             if (previewMode) {
                 this.reset();
                 this.state.preview = true;
-                this.timer.dt = mec.clamp(1/this.env.fps || 1/30, 1/30, 1/10);
+                this.timer.dt = 1/30;
 
                 for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
                     this.pre().itr().post();
@@ -221,12 +223,24 @@ mec.model = {
          */
         get msg() { return this.state.msg; },
         get info() {
+            if (this.showInfo.nodes)
+                for (const node of this.nodes)
+                    if (node.showInfo)
+                        return node.info(this.showInfo.nodes);
+            if (this.showInfo.constraints)
+                for (const constraint of this.constraints)
+                    if (constraint.showInfo)
+                        return constraint.info(this.showInfo.constraints);
+        },
+/*
+        get info() {
             let str = '';
             for (const view of this.views)
                 if (view.hasInfo)
                     str += view.infoString()+'<br>';
             return str.length === 0 ? false : str;
         },
+*/
         /**
          * Number of positional iterations.
          * @type {number}
@@ -755,24 +769,6 @@ mec.model = {
          * @method
          * @returns {object} model
          */
-/*
-         pre() {
-            this.applyLoads();
-            // pre process nodes
-            for (const node of this.nodes)
-                node.pre(this.timer.dt);
-            // pre process constraints
-            for (const constraint of this.constraints)
-                constraint.pre(this.timer.dt);
-            // eliminate drift ...
-            this.asmPos(this.timer.dt);
-            // pre process views
-            for (const view of this.views)
-                if (view.pre)
-                    view.pre(this.timer.dt);
-            return this;
-        },
-*/
         pre() {
             // Clear node loads and velocity differences.
             for (const node of this.nodes)
@@ -834,19 +830,17 @@ mec.model = {
          * @param {object} g - g2 object.
          * @returns {object} model
          */
-        draw(g) {  // todo: draw all elements via 'x.draw(g)' call !
+        draw(g) {
             for (const shape of this.shapes)
                 shape.draw(g);
-            for (const view of this.views) {
-                if (!(view.as === 'chart' && view.canvas)) // app handles charts with canvas properties
-                    view.draw(g);
-            }
+            for (const view of this.views)
+                view.draw(g);
             for (const constraint of this.constraints)
-                g.ins(constraint);
+                constraint.draw(g);
             for (const load of this.loads)
-                g.ins(load);
+                load.draw(g);
             for (const node of this.nodes)
-                g.ins(node);
+                node.draw(g);
             return this;
         }
     }

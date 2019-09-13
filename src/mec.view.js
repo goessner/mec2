@@ -400,11 +400,12 @@ mec.view.info = {
  * @property {number} [b=150] - breadth / width of chart area.
  * @property {boolean | string} [canvas=false] - Id of canvas in dom chart will be rendered to. If property evaluates to true, rendering has to be handled by the app.
  *
- * @property {object} [xaxis] - definition of xaxis.
- * @property {object | array} [yaxis] - definition of yaxis (potentially multiple).
- *
- * @property {string} show - kind of property to show on axis.
+ * @property {string} show - kind of property to show on yaxis.
  * @property {string} of - element property belongs to.
+ * 
+ * @property {object} [against] -- definition of xaxis.
+ * @property {string} [against.show=t] -- kind of property to show on xaxis.
+ * @property {string} [against.of=timer] -- element property belongs to.
  */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
@@ -416,40 +417,23 @@ mec.view.chart = {
      */
     validate(idx) {
         const def = {elemtype: 'view as chart', id: this.id, idx};
-        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
-        const x = this.xaxis;
-        if (x.of === undefined)
-            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in xaxis' };
-        if (y.some(e => e.of === undefined))
-            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of in yaxis'};
-
-        const xelem = this.model.elementById(x.of) || this.model[x.of];
-        const yelem = y.map(e => this.model.elementById(e.of) || this.model[e.of]);
+        if (this.of === undefined)
+            return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of' };
+        if (this.against.of === undefined)
+            return { mod: 'E_ELEM_MISSING', ...def, reftype: 'element', name: 'of in against' };
+        
+        const xelem = this.model.elementById(this.against.of) || this.model[this.against.of];
+        const yelem = this.model.elementById(this.of) || this.model[this.of]
 
         if(!xelem)
-            return { mid:'E_ELEM_INVALID_REF',...def, reftype: 'element', name: this.xaxis.of };
-        // else this.xaxis.of = this.model.elementById(this.xaxis.of);
-        y.forEach(e => {
-            if(!yelem)
-                return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.xaxis.of };
-        });
-
-        if (x.show && !(x.show in xelem))
-            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: x.of, name: x.show };
-        y.forEach(e => {
-            if(e.show && !(e.show in yelem))
-                return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: e.of, name: e.show};
-        });
-
-        if (this.ref) {
-            const ref = this.model.elementById(this.ref);
-            if(!ref) {
-                return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.ref };
-            }
-            if(ref.ori.type !== 'drive' && ref.len.type !== 'drive') {
-                return { mid:'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: 'ref is no drive' }
-            }
-        }
+            return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.against.of };
+        if(!yelem)
+            return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', anme: this.of };
+        if (this.show && !(this.show in yelem))
+            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.of, name: this.show };
+        
+        if (this.against.show && !(this.against.show in xelem))
+            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.against.of, name: this.against.show };
 
         return false;
     },
@@ -462,14 +446,15 @@ mec.view.chart = {
     // Check the mec.core.aly object for analysing parameters
     aly(val) {
         return mec.aly[val.show]
-        // If it does not exist, take a normalized template
-            || { get scl() { return 1}, type:'num', name:val.show, unit:val.unit || '' };
+            // If it does not exist, take a normalized template
+            || { get scl() { return 1 }, type: 'num', name: val.show, unit: val.unit || '' };
     },
-    getAxis(t) {
+    getAxis({show, of}) {
         const fs = () => this.model.env.show.txtColor;
-        const text = t.map((a) => a.of + '.' + a.show + ' [' + a.aly.unit + '] ').join(' / ');
+        // Don't show text "of timer" (which is default) in x-axis
+        const text = `${show} ${of !== 'timer' ? `of ${of}` : ''} [ ${this.aly({show, of}).unit} ]`;
         return {
-            title: { text, style: { font:'12px serif', fs } },
+            title: { text, style: { font: '12px serif', fs } },
             labels: { style: { fs } },
             origin: true,
             grid: true,
@@ -485,62 +470,73 @@ mec.view.chart = {
         this.model = model;
         this.mode = this.mode || 'static';
         this.canvas = this.canvas || false;
+        this.t0 = this.t0 || 0;
+        this.Dt = this.Dt || 1;
+        // The xAxis is referenced by the timer if not otherwise specified
+        this.against = Object.assign({ show: 't', of: 'timer' }, { ...this.against });
         if (!this.model.notifyValid(this.validate(idx))) {
             return;
         }
-        // Create a copy of xaxis propety and append aly property to created object for later use
-        const x = Object.assign(this.xaxis, {aly: this.aly(this.xaxis)});
-        // If yaxis is passed as object, put it in an array for uniform processing, then add aly
-        const y = Array.isArray(this.yaxis) ? this.yaxis : [this.yaxis];
-        y.forEach((a) => a.aly = this.aly(a));
-        this.t0 = this.t0 || 0;
-        this.Dt = this.Dt || (this.mode === 'dynamic' ? 0 : 1);
-        // Create a graph as a baseline for later modification
-        this.graph       = Object.assign({x:0 ,y:0, funcs: []},this);
-        this.graph.xaxis = Object.assign(this.getAxis([x]), this.xaxis);
-        this.graph.yaxis = Object.assign(this.getAxis( y ), this.yaxis);
-        this.data = {
-            // Return the current value for x translated to its corresponding scl, defined in aly
-            x: () => x.aly.scl * this.elem(this.xaxis),
-            // This has to be done for each y value, so it is an array of those functions
-            y: y.map((e,idx) => {
-                // Copy all properties in e, except `show` and `of` and add them to the graph.
-                const {show, of, ...rest} = e;
-                this.graph.funcs[idx] = {data:[], ...rest};
-                return () => e.aly.scl * this.elem(e);
-            })
-        };
+        this.graph = Object.assign({
+            x: 0, y: 0, funcs: [{data:[]}],
+            xaxis: Object.assign(this.getAxis(this.against)),
+            yaxis: Object.assign(this.getAxis(this))
+        }, this);
+    },
 
-        if (this.ref) {
-            this.previewTimeTable = [];
-            const ref = this.model.constraintById(this.ref);
-            this.local_t = ref.ori.type === "drive"
-                ? () => ref.ori.t()
-                : () => ref.len.t();
+    get local_t() {
+        if (this.mode !== 'preview') {
+            return undefined
         }
+        const drive = this.model.inputControlledDrives[0]
+            && this.model.inputControlledDrives[0].constraint;
+        if (!drive) {
+            return undefined;
+        }
+        if (drive.ori.type === 'drive') {
+            return drive.ori.t();
+        }
+        else if (drive.len.type === 'drive') {
+            return drive.len.t();
+        }
+    },
+    get currentY() {
+        return this.aly(this).scl * this.elem(this);
+    },
+    get currentX() {
+        return this.aly(this.against).scl * this.elem(this.against);
+    },
+    get previewNod() {
+        const data =  this.graph.funcs[0].data;
+        // this.graph.xAxis is not defined if the graph was never rendered.
+        // Therefore the pntOf(...) function is not inherited by the graph => no previewNod
+        if (this.mode !== 'preview' || !this.graph.xAxis || this.model.env.editing) {
+            return undefined
+        }
+        const pt = data.findIndex(data => data.t > this.local_t)
+        return pt === -1
+            ? { x: 0, y: 0, scl:    0 } // If point is out of bounds
+            : { ...this.graph.pntOf(data[pt] || { x: 0, y: 0 }), scl: 1 };
     },
     dependsOn(elem) {
-        return this.data.y.some(y => y.of === elem) || this.data.x.of === elem;
+        return this.against.of === elem || this.of === elem;
     },
     addPoint() {
-        const g = this.graph;
-        const t = this.model.timer.t;
-
-        if (this.t0 < t) {
-            // In viable time span for static or preview mode
-            const inTimeSpan = t <= this.t0 + (this.Dt || 0);
-            if (this.mode === 'dynamic' || inTimeSpan) {
-                this.ref && this.previewTimeTable.push(this.model.timer.t);
-                const x = this.data.x();
-                this.data.y.forEach((y,idx) => g.funcs[idx].data.push({x,y:y()}));
-                // Remove tail in dynamic
-                if (!inTimeSpan) {
-                    g.funcs.forEach((e) => e.data.shift());
-                }
-            }
+        const data =  this.graph.funcs[0].data;
+        if (this.t0 >= this.model.timer.t) {
+            return;
         }
-
+        // In viable time span for static or preview mode
+        const inTimeSpan = this.model.timer.t <= this.t0 + (this.Dt || 0);
+        if (this.mode !== 'dynamic' && !inTimeSpan) {
+            return;
+        }
+        // local_t is necessary to determine the previewNod (undefined if mode is not preview)
+        data.push({ x: this.currentX, y: this.currentY, t: this.local_t });
+        // Remove tail in dynamic mode
+        inTimeSpan || data.shift();
         // Redundant if g2.chart gets respective update ...
+        const g = this.graph;
         [g.xmin, g.xmax, g.ymin, g.ymax] = [];
     },
     preview() {
@@ -549,27 +545,13 @@ mec.view.chart = {
         }
     },
     reset(preview) {
-        if (this.graph && preview || this.mode !== 'preview')
-                this.graph.funcs.forEach((d) => d.data = []);
+        if (this.graph && (preview || this.mode !== 'preview')) {
+            this.graph.funcs[0].data = [];
+        }
     },
     post() {
         if (this.mode !== 'preview') {
             this.addPoint();
-        }
-        // If mode is preview and preview was already rendered once
-        else if (this.graph.xAxis && this.ref) {
-            // const ref = this.model.constraintById(this.ref)
-            // if (!(ref.p1.state & g2.DRAG || ref.p2.state & g2.DRAG)) { // only execute block if no node is being dragged
-            if (!this.model.env.editing) {  // alternative, true if undefined
-                const g = this.graph;
-                const local_t = this.local_t();
-                g.funcs.forEach((func,idx) => {
-                    const pt = this.previewTimeTable.findIndex(t => t > local_t);
-                    this.nods[idx] = pt === -1
-                        ? { x:0, y:0, scl: 0 } // If point is out of bounds
-                        : { ...g.pntOf(func.data[pt] || {x:0, y:0}), scl: 1}
-                });
-            }
         }
     },
     asJSON() {
@@ -585,25 +567,23 @@ mec.view.chart = {
             Dt: this.Dt,
             mode: this.mode,
             cnv: this.cnv,
-            ref: this.ref,
-            xaxis: {...this.xaxis, aly:undefined}, // disregard "aly" ...
-            yaxis: {...this.yaxis, aly:undefined},
-        }).replace('"xaxis"', '\n      "xaxis"').replace('}}', '}\n   }').replace('"yaxis"', '\n      "yaxis"').replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }');
+            against: this.against,
+            show: this.show,
+            of: this.of });
+        // TODO insert replace statements for readability....
+        // .replace('"show"', '\n      "show"').replace('}}', '}\n   }')
+        // .replace('"against"', '\n      "against"').replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }');
     },
     draw(g) {
         g.chart(this.graph);
+        // Preview is set, and an input drive is identified
         if (this.mode === 'preview') {
-            const n = this.nods = [];
-            this.graph.funcs.forEach((_,i) => {
-                    // Create references for automatic modification
-                    n.push({x:0,y:0,scl:0});
-                    g.nod({
-                        x: () => n[i].x,
-                        y: () => n[i].y,
-                        scl: () => n[i].scl
-                    })
-                }
-            );
+            // Create references for automatic modification
+            g.nod({
+                x: () => this.previewNod.x,
+                y: () => this.previewNod.y,
+                scl: () => this.previewNod.scl
+            });
         }
         return g;
     }

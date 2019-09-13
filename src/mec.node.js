@@ -22,6 +22,8 @@ mec.node = {
     extend(node) { Object.setPrototypeOf(node, this.prototype); node.constructor(); return node; },
     prototype: {
         constructor() { // always parameterless .. !
+            this.x = this.x || 0;
+            this.y = this.y || 0;
             this.x0 = this.x;
             this.y0 = this.y;
             this.xt = this.yt = 0;
@@ -65,16 +67,15 @@ mec.node = {
             Object.defineProperty(this,'base',{ get: () => this.im === 0,
                                                 set: (q) => this.im = q ? 0 : 1,
                                                 enumerable:true, configurable:true });
-            this.radius = !!this.base   ?  8
-                        : (this.m > 20) ? 18
-                        : 3.13874*Math.log(12.9244*this.m); // coefficients https://www.wolframalpha.com/input/?i=log+fit+%7B1,8%7D,%7B2,10.1%7D,%7B3,11.6%7D,%7B5,13.3%7D,%7B10,15%7D,%7B20,17.5%7D
+
+            this.g2cache = false;
         },
         // kinematics
         // current velocity state .. only used during iteration.
         get xtcur() { return this.xt + this.dxt },
         get ytcur() { return this.yt + this.dyt },
         // inverse mass
-        get type() { return 'node' }, // needed for consistency among components, used in mecEdit
+        get type() { return 'node' }, // needed for ... what .. ?
         get dof() { return this.m === Number.POSITIVE_INFINITY ? 0 : 2 },
         /**
          * Test, if node is not resting
@@ -192,9 +193,19 @@ mec.node = {
         get accAbs() { return Math.hypot(this.xtt,this.ytt); },
 
         // interaction
-        get isSolid() { return true },
-        get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] : false; },
-        _info() { return `x:${this.x}<br>y:${this.y}` },
+        get showInfo() {
+            return this.state & g2.OVER; 
+        },
+        get infos() {
+            return {
+                'id': () => `'${this.id}'`,
+                'pos': () => `p=(${this.x.toFixed(0)},${this.y.toFixed(0)})`,
+                'vel': () => `v=(${mec.to_m(this.xt).toFixed(2)},${mec.to_m(this.yt).toFixed(2)})m/s`,
+                'm': () => `m=${this.m}`
+            }
+        },
+        info(q) { const i =  this.infos[q]; return i ? i() : '?'; },
+//        _info() { return `x:${this.x.toFixed(1)}<br>y:${this.y.toFixed(1)}` },
         hitInner({x,y,eps}) {
             return g2.isPntInCir({x,y},this,eps);
         },
@@ -205,34 +216,39 @@ mec.node = {
             }
         },
         drag({x,y,mode}) {
-            if ( mode === 'drag' && !this.base) { this.x = x; this.y = y; }
-            else if ( mode === 'edit' )         { this.x0 = this.x = x; this.y0 = this.y = y; }
-            else return false;
+            if (mode === 'edit' && !this.base) { this.x0 = x; this.y0 = y; }
+            else                               { this.x = x; this.y = y; }
         },
         // graphics ...
-        get r() { return this.model.env.show.nodeScaling ? this.state & g2.OVER ? 1.5*this.radius : this.radius : mec.node.radius; },
-        g2() {
-            let g = g2();
-            if (this.model.env.show.nodes) {
-                const loc = mec.node.locdir[this.idloc || 'n'],
-                      xid = this.x + (this.r + 15)*loc[0],
-                      yid = this.y + (this.r + 15)*loc[1];
+        get isSolid() { return true },
+        get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] 
+                        : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] 
+                        : false; },
+        get r() { return mec.node.radius; },
 
-                      g = this.base
-                        ? g2().beg({x:this.x,y:this.y,sh:this.sh})
-                              .cir({x:0,y:0,r:this.r,ls:"@nodcolor",fs:"@nodfill"})
-                              .p().m({x:0,y:this.r}).a({dw:Math.PI/2,x:-this.r,y:0}).l({x:this.r,y:0})
-                              .a({dw:-Math.PI/2,x:0,y:-this.r}).z().fill({fs:"@nodcolor"})
-                              .end()
-                        : g2().cir({x:this.x,y:this.y,r:this.r,
-                                    ls:'#333',fs:'#eee',sh:this.sh});
-                if (this.model.env.show.nodeLabels)
-                    g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:this.model.env.show.txtColor});
-            };
+        g2() {
+            const g = g2().use({grp: this.base ? mec.node.g2BaseNode 
+                                               : mec.node.g2Node, x:this.x, y:this.y, sh:this.sh});
+            if (this.model.env.show.nodeLabels) {
+                const loc = mec.node.locdir[this.idloc || 'n'];
+                g.txt({str:this.id||'?',
+                        x: this.x + 3*this.r*loc[0],
+                        y: this.y + 3*this.r*loc[1],
+                        thal:'center',tval:'middle',
+                        ls:this.model.env.show.txtColor});
+            }
             return g;
+        },
+        draw(g) {
+            if (this.model.env.show.nodes)
+                g.ins(this); 
         }
     },
     radius: 5,
     locdir: { e:[ 1,0],ne:[ Math.SQRT2/2, Math.SQRT2/2],n:[0, 1],nw:[-Math.SQRT2/2, Math.SQRT2/2],
-              w:[-1,0],sw:[-Math.SQRT2/2,-Math.SQRT2/2],s:[0,-1],se:[ Math.SQRT2/2,-Math.SQRT2/2] }
+              w:[-1,0],sw:[-Math.SQRT2/2,-Math.SQRT2/2],s:[0,-1],se:[ Math.SQRT2/2,-Math.SQRT2/2] },
+    g2BaseNode: g2().cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
+                    .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
+                    .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"}),
+    g2Node:     g2().cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
 }

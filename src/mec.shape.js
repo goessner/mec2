@@ -372,8 +372,8 @@ mec.shape.wheel = {
 /**
  * @param {object} - filled polygon shape.
  * @property {array} pts - array of points.
- * @property {string} [p={pts[0]}] - referenced node id for reference point position.
- * @property {string} [wref={w:0,w0:0}] - referenced constraint id for orientation.
+ * @property {string} p - referenced node id for reference point position.
+ * @property {string} wref - referenced constraint id for orientation.
  * @property {string} [fill='#aaaaaa88'] - fill color.
  * @property {string} [stroke='transparent'] - stroke color.
  */
@@ -390,22 +390,19 @@ mec.shape.poly = {
         if (this.pts.length < 2)
             return { mid:'E_POLY_PTS_INVALID',id:this.id,idx};
 
-        if (!!this.p && !this.model.nodeById(this.p))
+        if (this.p === undefined)
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'polygon',id:this.id,idx,reftype:'node',name:'p'};
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'polygon',id:this.id,idx,reftype:'node',name:this.p};
-        else {
-            const firstElm = this.pts[0];
-            this.p = !!this.p ? this.model.nodeById(this.p) :
-                     typeof firstElm === 'number' ? {x:firstElm,y:this.pts[1],x0:firstElm,y0:this.pts[1]} :
-                     typeof firstElm === 'object' &&  Array.isArray(firstElm) ? {x:firstElm[0],y:firstElm[1],x0:firstElm[0],y0:firstElm[1]} :
-                     typeof firstElm === 'object' && !Array.isArray(firstElm) ? firstElm :
-                     undefined;
+        else
+            this.p = this.model.nodeById(this.p);
 
-            if (this.p === undefined)
-                return { mid:'E_POLY_PTS_INVALID',elemtype:'polygon',id:this.id,idx}
-        }
-
-        if (!!this.wref && !this.model.constraintById(this.wref))
+        if (this.wref === undefined)
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'polygon',id:this.id,idx,reftype:'constraint',name:'wref'};
+        if (!this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'polygon',id:this.id,idx,reftype:'constraint',name:this.wref};
+        else
+            this.wref = this.model.constraintById(this.wref);
 
         return false;
     },
@@ -419,8 +416,7 @@ mec.shape.poly = {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
-        this.wref   = !!this.wref ? this.model.constraintById(this.wref) : {w:0,w0:0};
-        this.fill   = this.fill || '#aaaaaa88';
+        this.fill = this.fill || '#aaaaaa88';
         this.stroke = this.stroke || 'transparent';
     },
     get x0() { return  this.p.x0; },
@@ -439,9 +435,8 @@ mec.shape.poly = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","pts":'+JSON.stringify(this.pts)
-                + (this.p.id ? ',"p":"'+this.p.id+'"' : '')
-                + (this.wref.id ? ',"wref":"'+this.wref.id+'"' : '')
+        return '{ "type":"'+this.type+'","pts":'+JSON.stringify(this.pts)+',"p":"'+this.p.id+'"'
+                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
                 + ((this.w0 && this.w0 > 0.0001 && !(this.wref.w0 === this.w0 )) ? ',"w0":'+this.w0 : '')
                 + (this.stroke && !(this.stroke === 'transparent') ? ',"stroke":"'+this.stroke+'"' : '')
                 + (this.fill && !(this.fill === '#aaaaaa88') ? ',"fill":"'+this.fill+'"' : '')
@@ -455,17 +450,11 @@ mec.shape.poly = {
 /**
  * @param {object} - image shape.
  * @property {string} uri - image uri
- * @property {string | object} [p={x:0,y:0}] - referenced node id for origin point position. If an object is passed it needs to have a x and y property type number.
- * @property {number} [b] - in mec2 object undefined but defaults to width of the image on the canvas in g2().img()
- * @property {number} [h] - in mec2 object undefined but defaults to height of the image on the canvas in g2().img()
- * @property {number} [sx=0] - x-origin on the source image to start the cutout
- * @property {number} [sy=0] - y-origin on the source image to start the cutout
- * @property {number} [sb] - in mec2 object undefined but defaults to source image width in g2().img()
- * @property {number} [sh] - in mec2 object undefined but defaults to source image height in g2().img()
- * @property {number} [xoff=0] - x offset to p.x on the canvas
- * @property {number} [yoff=0] - y offset to p.y on the canvas
+ * @property {string} p - referenced node id for center point position.
  * @property {string} [wref] - referenced constraint id for orientation.
  * @property {number} [w0=0] - start / offset angle [rad].
+ * @property {number} [xoff=0] - x offset value.
+ * @property {number} [yoff=0] - y offset value.
  * @property {number} [scl=1] - scaling factor.
  */
 mec.shape.img = {
@@ -479,22 +468,22 @@ mec.shape.img = {
         if (this.uri === undefined)
             return { mid:'E_IMG_URI_MISSING',id:this.id,idx};
 
-        // if (this.p === undefined)
-        //     return { mid:'E_ELEM_REF_MISSING',elemtype:'image',id:this.id,idx,reftype:'node',name:'p'};
-        if (!!this.p && !!this.p.id && !this.model.nodeById(this.p))
+        if (this.p === undefined)
+            return { mid:'E_ELEM_REF_MISSING',elemtype:'image',id:this.id,idx,reftype:'node',name:'p'};
+        if (!this.model.nodeById(this.p))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'image',id:this.id,idx,reftype:'node',name:this.p};
-        // else
-        //     this.p = this.model.nodeById(this.p);
+        else
+            this.p = this.model.nodeById(this.p);
 
-        if (!!this.wref && !this.model.constraintById(this.wref))
+        if (this.wref && !this.model.constraintById(this.wref))
             return { mid:'E_ELEM_INVALID_REF',elemtype:'image',id:this.id,idx,reftype:'constraint',name:this.wref};
         else
-            this.wref = this.wref ? this.model.constraintById(this.wref) : {w:0, w0:0};
+            this.wref = this.model.constraintById(this.wref);
 
         return false;
     },
     /**
-     * Initialize image shape. Multiple initialization allowed.
+     * Initialize polygon shape. Multiple initialization allowed.
      * @method
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
@@ -503,57 +492,25 @@ mec.shape.img = {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
-        this.p    = !!this.p ? this.model.nodeById(this.p) ? this.model.nodeById(this.p) : {x:this.p.x, y:this.p.y} : {x:0,y:0};
-        this.b    = this.b,
-        this.h    = this.h,
-        this.sx   = this.sx || 0;
-        this.sy   = this.sy || 0;
-        this.sb   = this.sb,
-        this.sh   = this.sh,
+        this.w0 = this.w0 || 0;
         this.xoff = this.xoff || 0;
         this.yoff = this.yoff || 0;
-        this.w0   = this.w0 || 0;
-        // this.wref = this.wref ? this.model.constraintById(this.wref) : {w:0,w0:0}; // is set in validate()
-        this.scl  = this.scl || 1;
+        this.scl = this.scl || 1;
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return JSON.stringify({
-            type: this.type,
-            uri: this.uri,
-            p: this.p && this.p.id ? this.p.id : undefined,
-            b: this.b,
-            h: this.h,
-            sx: (this.sx && Math.abs(this.sx) > 0.0001) ? this.sx : undefined,
-            sy: (this.sy && Math.abs(this.sy) > 0.0001) ? this.sy : undefined,
-            sb: this.sb,
-            sh: this.sh,
-            xoff: (this.xoff && Math.abs(this.xoff) > 0.0001) ? this.xoff : undefined,
-            yoff: (this.yoff && Math.abs(this.yoff) > 0.0001) ? this.yoff : undefined,
-            w0: (this.w0 && Math.abs(this.w0) > 0.0001) ? this.w0 : undefined,
-            wref: this.wref && !!Object.getOwnPropertyDescriptor(this.wref, 'w').get ? this.wref.id : undefined, // if w isn't getter, wref can be omitted
-            scl: (this.scl && Math.abs(this.scl - 1) > 0.0001) ? this.scl : undefined
-        }).replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }'); // indent object properties
+        return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":"'+this.p.id+'"'
+                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
+                + ((this.w0 && Math.abs(this.w0) > 0.0001) ? ',"w0":'+this.w0 : '')
+                + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
+                + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
+                + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')
+                + ' }';
     },
     draw(g) {
-        const w = this.wref ? ()=>this.wref.w + this.w0 : this.w0;
-
-        g.img({
-            uri:this.uri,
-            x:()=>this.p.x,
-            y:()=>this.p.y,
-            b:this.b,
-            h:this.h,
-            sx:this.sx,
-            sy:this.sy,
-            sb:this.sb,
-            sh:this.sh,
-            xoff:this.xoff,
-            yoff:this.yoff,
-            w,
-            scl:this.scl
-        })
+        const w0 = this.w0 || 0, w = this.wref ? ()=>this.wref.w + w0 : w0;
+        g.img({uri:this.uri,x:()=>this.p.x,y:()=>this.p.y,w,scl:this.scl,xoff:this.xoff,yoff:this.yoff})
     }
 }
