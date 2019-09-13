@@ -570,6 +570,7 @@ mec.node = {
         asJSON() {
             return '{ "id":"'+this.id+'","x":'+this.x0+',"y":'+this.y0
                  + (this.base ? ',"base":true' : '')
+                 + ((!this.base && this.m !== 1) ? ',"m":'+this.m : '')
                  + (this.idloc ? ',"idloc":"'+this.idloc+'"' : '')
                  + ' }';
         },
@@ -2078,7 +2079,7 @@ mec.view.point = {
         Object.assign(this.p,this.of[this.show]);
     },
     asJSON() {
-        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"point" }';
+        return '{ "show":"'+this.show+'","of":"'+(this.show==='cog'?'model':this.of.id)+'","as":"point" }';
     },
     // interaction
     get r() { return 6; },
@@ -2297,7 +2298,7 @@ mec.view.trace = {
             this.addPoint();
     },
     asJSON() {
-        return '{ "show":"'+this.show+'","of":"'+this.of.id+'","as":"'+this.as+'"'
+        return '{ "show":"'+this.show+'","of":"'+(this.show==='cog'?'model':this.of.id)+'","as":"'+this.as+'"'
                 + (this.ref ? ',"ref":'+this.ref.id : '')
                 + (this.mode !== 'dynamic' ? ',"mode":"'+this.mode+'"' : '')
                 + (this.id ? ',"id":"'+this.id+'"' : '')
