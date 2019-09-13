@@ -113,41 +113,46 @@ mec.load.force = {
     get isSolid() { return false },
     get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] : false; },
     hitContour({x,y,eps}) {
-        const len = 45,   // const length for all force arrows
-              p = this.p,
-              cw = Math.cos(this.w), sw = Math.sin(this.w),
+        const len = mec.load.force.arrowLength,   // const length for all force arrows
+              p = this.p, w = this.w,
+              cw = w ? Math.cos(w) : 1, sw = w ? Math.sin(w) : 0,
               off = 2*mec.node.radius,
               x1 = this.mode === 'push' ? p.x - (len+off)*cw
                                         : p.x + off*cw,
               y1 = this.mode === 'push' ? p.y - (len+off)*sw
                                         : p.y + off*sw;
-         return g2.isPntOnLin({x,y},{x:x1+off*cw, y:y1+off*sw},
-                                    {x:x1+(len+off)*cw,y:y1+(len+off)*sw},eps);
+         return g2.isPntOnLin({x,y},{x:x1, y:y1},
+                                    {x:x1+len*cw,y:y1+len*sw},eps);
     },
     g2() {
         const w = this.w,
-              cw = Math.cos(w), sw = Math.sin(w),
+              cw = w ? Math.cos(w) : 1, sw = w ? Math.sin(w) : 0,
               p = this.p,
               len = mec.load.force.arrowLength,
               off = 2*mec.node.radius,
-              idsign = this.mode === 'push' ? -1 : 1,
-              xid = p.x + idsign*25*cw - 12*sw,
-              yid = p.y + idsign*25*sw + 12*cw,
-              x = this.mode === 'push' ? () => p.x - (len+off)*cw
-                                       : () => p.x + off*cw,
-              y = this.mode === 'push' ? () => p.y - (len+off)*sw
-                                       : () => p.y + off*sw,
-              g = g2().beg({x,y,w,scl:1,lw:2,ls:this.model.env.show.forceColor,
-                            lc:'round',sh:()=>this.sh,fs:'@ls'})
-                      .drw({d:mec.load.force.arrow,lsh:true})
-                      .end();
-        if (this.model.env.show.loadLabels)
-            g.txt({str:this.id||'?',x:xid,y:yid,thal:'center',tval:'middle',ls:this.model.env.show.txtColor});
+              x = this.mode === 'push' ? p.x - (len+off)*cw
+                                       : p.x + off*cw,
+              y = this.mode === 'push' ? p.y - (len+off)*sw
+                                       : p.y + off*sw,
+              g = g2().p().use({grp:mec.load.force.arrow,x,y,w,lw:2,
+                                ls:this.model.env.show.forceColor,
+                                lc:'round',sh:this.sh,fs:'@ls'});
+
+        if (this.model.env.show.loadLabels && this.id) {
+            const idsign = this.mode === 'push' ? 1 : 1,
+                  side = this.idloc === 'right' ? -1 : 1,
+                  xid = x + idsign*25*cw - 12*side*sw,
+                  yid = y + idsign*25*sw + 12*side*cw;
+            g.txt({str:this.id,x:xid,y:yid,thal:'center',tval:'middle',ls:this.model.env.show.txtColor});
+        }
         return g;
     },
-    arrowLength: 45,   // draw all forces of length ...
-    arrow: 'M0,0 35,0M45,0 36,-3 37,0 36,3 Z'
+    draw(g) {
+        g.ins(this); 
+    }
 }
+mec.load.force.arrowLength = 45;
+mec.load.force.arrow = g2().p().m({x:0,y:0}).l({x:35,y:0}).m({x:45,y:0}).l({x:36,y:-3}).l({x:37,y:0}).l({x:36,y:3}).z().drw();  // implicit arrow length ...
 
 /**
  * @param {object} - spring load.
@@ -246,28 +251,48 @@ mec.load.spring = {
     get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] : false; },
     hitContour({x,y,eps}) {
         const p1 = this.p1, p2 = this.p2,
-              cw = Math.cos(this.w), sw = Math.sin(this.w),
+              w = this.w,
+              cw = w ? Math.cos(w) : 1, sw = w ? Math.sin(w) : 0,
               off = 2*mec.node.radius;
         return g2.isPntOnLin({x,y},{x:p1.x+off*cw, y:p1.y+off*sw},
                                    {x:p2.x-off*cw, y:p2.y-off*sw},eps);
     },
     g2() {
-        const h = 16;
-        const x1 = this.p1.x, y1 = this.p1.y;
-        const x2 = this.p2.x, y2 = this.p2.y;
-        const len = Math.hypot(x2-x1,y2-y1);
-        const xm = (x1+x2)/2;
-        const ym = (y1+y2)/2;
-        const ux = (x2-x1)/len;
-        const uy = (y2-y1)/len;
-        const off = 2*mec.node.radius;
-        return g2().p()
-                   .m({x:x1+ux*off,y:y1+uy*off})
-                   .l({x:xm-ux*h/2,y:ym-uy*h/2})
-                   .l({x:xm+(-ux/6+uy/2)*h,y:ym+(-uy/6-ux/2)*h})
-                   .l({x:xm+( ux/6-uy/2)*h,y:ym+( uy/6+ux/2)*h})
-                   .l({x:xm+ux*h/2,y:ym+uy*h/2})
-                   .l({x:x2-ux*off,y:y2-uy*off})
-                   .stroke(Object.assign({}, {ls:this.model.env.show.springColor},this,{fs:'transparent',lc:'round',lw:2,lj:'round',sh:()=>this.sh,lsh:true}));
+        const h = 16,
+              x1 = this.p1.x, y1 = this.p1.y,
+              dx = this.p2.x - x1, dy = this.p2.y - y1,
+              len = Math.hypot(dy,dx),
+              w = Math.atan2(dy,dx),
+              xm = len/2,
+              off = 2*mec.node.radius,
+              g = g2().beg({x:x1,y:y1,w})
+                        .p()
+                        .m({x:off, y:0})
+                        .l({x:xm-h/2,y:0})
+                        .l({x:xm-h/6,y:-h/2})
+                        .l({x:xm+h/6,y: h/2})
+                        .l({x:xm+h/2,y:0})
+                        .l({x:len-off,y:0})
+                        .stroke({ls:this.model.env.show.springColor,lw:2,lc:'round',lj:'round',sh:this.sh,lsh:true})
+                      .end();
+
+        if (this.model.env.show.loadLabels && this.id) {
+            const cw = len ? dx/len : 1, sw = len ? dy/len : 0,
+                  idloc = this.idloc,
+                  u = idloc === 'left' ? 0.5
+                    : idloc === 'right' ? -0.5
+                    : idloc + 0 === idloc ? idloc  // is numeric
+                    : 0.5,
+                  lam = Math.abs(u)*len, mu = u > 0 ? 20 : -25;
+
+            g.txt({str: this.id,
+                   x:x1 + lam*cw - mu*sw,
+                   y:y1 + lam*sw + mu*cw,
+                   thal:'center',tval:'middle',ls:this.model.env.show.txtColor})
+        }
+        return g;
+    },
+    draw(g) {
+        g.ins(this); 
     }
 }

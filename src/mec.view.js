@@ -403,9 +403,9 @@ mec.view.info = {
  * @property {string} show - kind of property to show on yaxis.
  * @property {string} of - element property belongs to.
  * 
- * @property {object} [ref] -- definition of xaxis.
- * @property {string} [ref.show=t] -- kind of property to show on xaxis.
- * @property {string} [ref.of=timer] -- element property belongs to.
+ * @property {object} [against] -- definition of xaxis.
+ * @property {string} [against.show=t] -- kind of property to show on xaxis.
+ * @property {string} [against.of=timer] -- element property belongs to.
  */
 mec.view.chart = {
     constructor() {}, // always parameterless .. !
@@ -419,21 +419,21 @@ mec.view.chart = {
         const def = {elemtype: 'view as chart', id: this.id, idx};
         if (this.of === undefined)
             return { mid: 'E_ELEM_MISSING', ...def, reftype: 'element', name:'of' };
-        if (this.ref.of === undefined)
-            return { mod: 'E_ELEM_MISSING', ...def, reftype: 'element', name: 'of in ref' };
+        if (this.against.of === undefined)
+            return { mod: 'E_ELEM_MISSING', ...def, reftype: 'element', name: 'of in against' };
         
-        const xelem = this.model.elementById(this.ref.of) || this.model[this.ref.of];
+        const xelem = this.model.elementById(this.against.of) || this.model[this.against.of];
         const yelem = this.model.elementById(this.of) || this.model[this.of]
 
         if(!xelem)
-            return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.ref.of };
+            return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', name: this.against.of };
         if(!yelem)
             return { mid: 'E_ELEM_INVALID_REF', ...def, reftype: 'element', anme: this.of };
         if (this.show && !(this.show in yelem))
             return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.of, name: this.show };
         
-        if (this.ref.show && !(this.ref.show in xelem))
-            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.ref.of, name: this.ref.show };
+        if (this.against.show && !(this.against.show in xelem))
+            return { mid: 'E_ALY_INVALID_PROP', ...def, reftype: this.against.of, name: this.against.show };
 
         return false;
     },
@@ -473,13 +473,13 @@ mec.view.chart = {
         this.t0 = this.t0 || 0;
         this.Dt = this.Dt || 1;
         // The xAxis is referenced by the timer if not otherwise specified
-        this.ref = Object.assign({ show: 't', of: 'timer' }, { ...this.ref });
+        this.against = Object.assign({ show: 't', of: 'timer' }, { ...this.against });
         if (!this.model.notifyValid(this.validate(idx))) {
             return;
         }
         this.graph = Object.assign({
             x: 0, y: 0, funcs: [{data:[]}],
-            xaxis: Object.assign(this.getAxis(this.ref)),
+            xaxis: Object.assign(this.getAxis(this.against)),
             yaxis: Object.assign(this.getAxis(this))
         }, this);
     },
@@ -493,10 +493,10 @@ mec.view.chart = {
         if (!drive) {
             return undefined;
         }
-        if (drive.ori) {
+        if (drive.ori.type === 'drive') {
             return drive.ori.t();
         }
-        else if (drive.len) {
+        else if (drive.len.type === 'drive') {
             return drive.len.t();
         }
     },
@@ -504,7 +504,7 @@ mec.view.chart = {
         return this.aly(this).scl * this.elem(this);
     },
     get currentX() {
-        return this.aly(this.ref).scl * this.elem(this.ref);
+        return this.aly(this.against).scl * this.elem(this.against);
     },
     get previewNod() {
         const data =  this.graph.funcs[0].data;
@@ -519,7 +519,7 @@ mec.view.chart = {
             : { ...this.graph.pntOf(data[pt] || { x: 0, y: 0 }), scl: 1 };
     },
     dependsOn(elem) {
-        return this.ref.of === elem || this.of === elem;
+        return this.against.of === elem || this.of === elem;
     },
     addPoint() {
         const data =  this.graph.funcs[0].data;
@@ -567,13 +567,12 @@ mec.view.chart = {
             Dt: this.Dt,
             mode: this.mode,
             cnv: this.cnv,
-            ref: this.ref,
+            against: this.against,
             show: this.show,
-            of: this.of,
-            ref: { ...this.ref } })
+            of: this.of });
         // TODO insert replace statements for readability....
         // .replace('"show"', '\n      "show"').replace('}}', '}\n   }')
-        // .replace('"ref"', '\n      "ref"').replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }');
+        // .replace('"against"', '\n      "against"').replace(/[{]/gm, '{ ').replace(/[}]/gm, ' }');
     },
     draw(g) {
         g.chart(this.graph);

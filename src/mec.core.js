@@ -28,7 +28,7 @@ msg: {},
  */
 EPS: 1.19209e-07,
 /**
- * Length tolerance for position correction.
+ * Medium length tolerance for position correction.
  * @const
  * @type {number}
  */
@@ -58,10 +58,18 @@ forceTol: 0.1,
  */
 momentTol: 0.01,
 /**
- * Maximal value for position correction.
+ * Tolerances (new concept)
+ * accepting ['high','medium','low'].
  * @const
  * @type {number}
  */
+tol: {
+    len: {
+        low: 0.00001,
+        medium: 0.001,
+        high: 0.1
+    }
+},
 maxLinCorrect: 20,
 /**
  * fixed limit of assembly iteration steps.
@@ -81,12 +89,6 @@ corrMax: 64,
 * @type {object}
 */
 show: {
-    /**
-     * flag for radius scaling by nodemass.
-     * @const
-     * @type {boolean}
-     */
-    nodeScaling: false,
     /**
      * flag for darkmode.
      * @const
@@ -126,8 +128,8 @@ show: {
     colors: {
         invalidConstraintColor: '#b11',
         validConstraintColor:   { dark: '#ffffff99',        light: '#777' },
-        forceColor:             { dark: 'crimson',          light: 'orange' },
-        springColor:            { dark: 'lightslategray',   light: '#aaa' },
+        forceColor:             { dark: 'orangered',        light: 'orange' },
+        springColor:            { dark: '#ccc',             light: '#aaa' },
         constraintVectorColor:  { dark: 'orange',           light: 'green' },
         hoveredElmColor:        { dark: 'white',            light: 'gray' },
         selectedElmColor:       { dark: 'yellow',           light: 'blue' },
@@ -215,13 +217,13 @@ aly: {
     accAbs: { get scl() {return mec.m_u}, type:'num', name:'a', unit:'m/s' },
     forceAbs: { get scl() {return mec.m_u}, type:'num', name:'F', unit:'N' },
     moment: { get scl() {return mec.m_u**2}, type:'num', name:'M', unit:'Nm' },
-    energy: { get scl() {return mec.to_J(1)}, type:'num', name:'E', unit:'J' },
+    energy: { get scl() {return mec.to_J}, type:'num', name:'E', unit:'J' },
     pole: { type:'pnt', name:'P', unit:'m' },
     polAcc: { get scl() {return mec.m_u}, type:'vec', name:'a_P', unit:'m/s^2', get drwscl() {return 10*mec.m_u} },
     polChgVel: { get scl() {return mec.m_u}, type:'vec', name:'u_P', unit:'m/s', get drwscl() {return 40*mec.m_u} },
     accPole: { type:'pnt', name:'Q', unit:'m' },
     inflPole: { type:'pnt', name:'I', unit:'m' },
-    t: { get scl() { return 1 }, type:'num', name:'t', unit:'sec' }
+    t: { get scl() { return 1 }, type:'num', name:'t', unit:'s' }
 },
 /**
  * unit specifiers and relations
