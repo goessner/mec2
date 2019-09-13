@@ -22,7 +22,7 @@
     "jsdoc": "jsdoc2md ./mec2.js > ./doc/api.md",
     "gzip": "7z -tgzip a ./mec2.min.js.gz ./mec2.min.js",
     "cpsamp": "copyfiles -f ./examples/*.html ../goessner.github.io/g2/examples",
-    "mec2html": "type .\\bin\\g2.js .\\bin\\g2.selector.js .\\bin\\canvasInteractor.js .\\mec2.js .\\bin\\mec.slider.js .\\bin\\mec.htmlelement.js >mec2.html.js"
+    "mec2html": "type .\\bin\\g2.js .\\bin\\g2.selector.js .\\bin\\canvasInteractor.js .\\mec2.js .\\bin\\mec.slider.js .\\bin\\mec.htmlelement.js .\\bin\\mec-chart.htmlelement.js >mec2.html.js"
   },
   "author": "Stefan Goessner <fang03@web.de>",
   "repository": {
