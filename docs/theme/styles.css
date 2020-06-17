@@ -4,6 +4,8 @@
     --color-code: #e2f3f3;
     --bgcol-code: #1f3939;
     --color-shade: #666;
+    --bgcol-navigation: #e2f3f3;
+
 }
 
 .theme-light {
@@ -13,6 +15,8 @@
     --bgcol-header: #3c6362;
     --color-link: #4b7776;
     --color-hover: #87acac;
+    --bgcol-navigation: #e2f3f3;
+
 }
 .theme-dark {
     --color-main: snow;
@@ -21,13 +25,14 @@
     --bgcol-header: #e2f3f3;
     --color-link: #c6dddb;
     --color-hover: #6f9999;
+    --bgcol-navigation: #1f3939;
 }
 
 @media screen {
 body {
   margin: 1em 1em;
   padding: 0;
-  background-color: #ddd;
+  background-color: #fff;
   font-size: 12pt;
   font-family: Helvetica, Arial, sans-serif;
   box-shadow: 0 0 0.5em var(--color-shade);
@@ -38,9 +43,17 @@ body {
     margin: 1em auto;
   }
 }
+
+nav{
+  background-color: var(--bgcol-navigation);
+  color:whit
+nav link{
+  color: white;
+}
 main, footer {
   padding: 5px 1em;
 }
+
 main {
   color: var(--color-main);
   background-color: var(--bgcol-main);
