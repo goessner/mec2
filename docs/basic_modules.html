@@ -1,0 +1,168 @@
+<!doctype html>
+<html class="theme-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1,user-scalable=no">
+<meta name="description" content="mec2-basic-modules">
+<meta name="date" content="Tue Jun 09 2020 02:00:00 GMT+0200 (Mitteleuropäische Sommerzeit)">
+<meta name="keywords" content="">
+<title>mec2-basic-modules</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/github-gist.min.css">
+
+<link rel="stylesheet" href="./theme/styles.css">
+</head>
+<body>
+<header>
+  <a href="./index.html" class="left">My Site</a>
+  <a href="./about.html" class="right">About</a>
+</header>
+<main>
+<p>Necessary modules to be able to define a mechanism are:</p>
+<ul>
+<li><strong>mec2.core</strong></li>
+<li><strong>mec2.model</strong></li>
+<li><strong>mec2.nodes</strong></li>
+<li><strong>mec2.constraints</strong></li>
+</ul>
+<p>All of them have to be imported for <strong>mec2</strong> to be usable.
+It is mandatory for the <strong>core</strong> module to be loaded first.<br>
+Please note that the <strong>mec2.js</strong> and <strong>mec2.min.js</strong> in the root of the project contain all modules, so no further imports are necessary.</p>
+<h3 id="core">Core <a class="plnk" href="#core">#</a></h3>
+<p>The <code>core</code> module contains the central <code>mec</code> object on which all other modules build upon.</p>
+<p>It provides the mechanism with:</p>
+<ul>
+<li>Parameters for numerical tolerances.</li>
+<li>Color modes (dark/light) and colors for the individual parts.</li>
+<li>Unit conversion functionality.</li>
+<li>An infrastructure for validation messages.</li>
+<li>Central configuration properties to show and hide certain elements.</li>
+<li>Centralized analyzing parameters for used metrics in calculations.</li>
+</ul>
+<p>It is advised to use the properties given by the central <code>mec</code> object to minimize the overhead when changing the environment. Especially the analyzing capabilities minimize unit errors.</p>
+<p>A <code>mec</code> model is respectively used as environment (<code>env</code>) for all models which are extended through it.</p>
+<h3 id="model">Model <a class="plnk" href="#model">#</a></h3>
+<p>By importing <code>mec.model</code>, the <code>model</code> property is added to the <code>mec</code> object.
+This property provides the <code>extend</code> function, which is designed
+to assign <code>mec</code>'s prototype and thereby all functionality onto a provided
+<code>model</code> object.</p>
+<p>It is recommended to issue <code>model.extend</code> as early as possible to apply all required capabilities to the mechanism.
+An empty model which is extended by <code>mec.model</code> references the <code>mec</code>  by its <code>env</code> property.</p>
+<p>The mechanism model gets a lot of properties which are important for a mechanism:</p>
+<ul>
+<li>Operations on nodes, constraints, drives.</li>
+<li>Iteration functionality.</li>
+<li>Calculations for center of gravity.</li>
+<li>A timer.</li>
+<li>Ability to be drawn on a 2d context via g2.</li>
+</ul>
+<p>Furthermore it provides the necessary infrastructure to call functions on
+delegated modules;
+e.g. by calling <code>init</code> on the <code>model</code>, the respective <code>init</code> functions on all
+underlying elements like <code>nodes</code>, <code>constraints</code> etc. are called.</p>
+<p>Therefore to import and extend the model using <code>model.extend</code> is a necessary step to create a fully functioning mechanism.</p>
+<p>For nodes and constraints (and all other modules) to be delegated in the <code>model</code> it is of course necessary to import the respective modules.</p>
+<h3 id="nodes">Nodes <a class="plnk" href="#nodes">#</a></h3>
+<p><code>nodes</code> are two dimensional particles.</p>
+<!-- TODO die gif is mist... -->
+<p>They are described by the following properties:</p>
+<ul>
+<li><code>id</code> - A unique id to identify single nodes. Ambiguities are not allowed.</li>
+<li><code>x</code> and <code>y</code> - Cartesian coordinates in relation to the origin.</li>
+<li><code>base</code> - A boolean parameter which sets the weight to positive infinity (ground). Default: <code>false</code>.</li>
+<li><code>mass</code> - An optional parameter to set the mass of the node. Default: 1kg. Please note that <code>mass</code> can not be 0.</li>
+</ul>
+<p>Velocity and acceleration can not be determined beforehand, but they are calculated in the simulation process and can be fetched at all times.</p>
+<p>There are no interactions between nodes, except the ones defined by <code>constraints</code>, therefore <code>nodes</code> have two degrees of freedom if they are unconstrained.</p>
+<p>To get an idea of the implementation of nodes the following code suffices to draw them on a dedicated context.</p>
+<pre><code class="code-line language-json"><div>{   
+	<span class="hljs-attr">"nodes"</span>: [
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">150</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">220</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">125</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">225</span> }
+    ]
+}
+</div></code></pre>
+<p><img src="img/nodes.gif" alt="first" class="loading" id="image-hash-805c4280c474cded697ea0442c74e5aa8b7b67e5c927b91c28bef0f2f5c1e06e"></p>
+<h2 id="constraints">Constraints <a class="plnk" href="#constraints">#</a></h2>
+<p><code>constraints</code> define the type of interactions of two <code>nodes</code>.
+Provided a pair of <code>nodes</code>, constraints are defined by their <code>id</code>, using them as properties <code>p1</code> and <code>p2</code>.</p>
+<p><code>constraints</code> have two properties to limit the movement of the respective <code>nodes</code>:</p>
+<ul>
+<li><code>ori</code> - The constraint allows changes in orientation, but not in length.</li>
+<li><code>len</code> - The constraint allows changes in length, but not in orientation.</li>
+</ul>
+<p>Both properties are given as objects, which have a at least a <code>type</code>.
+Without extra modules, the <code>type</code> can be set as <code>const</code> or <code>free</code>, limiting the model in the respective range of motion. By the usage of other modules, e.g. <code>mec2.drive</code> the type can be set as <code>drive</code>, to force a specific motion.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"> </th>
+<th style="text-align:center"> </th>
+<th style="text-align:center"> </th>
+<th style="text-align:center"> </th>
+<th style="text-align:center"> </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"> </td>
+<td style="text-align:center"><img src="img/vec-fix.png" alt="fix" class="loading" id="image-hash-a1c4b4c439ce75e4ecea8e7424d3870e935092f3e8ac6d0939f95fd7e2736f26"></td>
+<td style="text-align:center"><img src="img/vec-trn.png" alt="trn" class="loading" id="image-hash-cf10a705eeb985127df20c0af35d69d5518a5f5b31b96429b6e8f2e72729b489"></td>
+<td style="text-align:center"><img src="img/vec-rot.png" alt="fix" class="loading" id="image-hash-cc237920d7b04ffd011ef470875d5830a733c8775e1b7bd1b4a3dbccebb5b76f"></td>
+<td style="text-align:center"><img src="img/vec-free.png" alt="fix" class="loading" id="image-hash-d96d5bfe1c3eedcc0ef4a65786cbd5e202e88c15dd744a86e0bf105bcf60fa17"></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>length</strong>    </td>
+<td style="text-align:center">const</td>
+<td style="text-align:center">free</td>
+<td style="text-align:center">const</td>
+<td style="text-align:center">free</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>orientation</strong></td>
+<td style="text-align:center">const</td>
+<td style="text-align:center">const</td>
+<td style="text-align:center">free</td>
+<td style="text-align:center">free</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>DOF</strong>*</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">2</td>
+</tr>
+</tbody>
+</table>
+<h6 id="degree-of-freedom">*degree of freedom <a class="plnk" href="#degree-of-freedom">#</a></h6>
+</br>
+<p>Constraints are made available by importing the <code>mec2.constraints</code> module.</p>
+<pre><code class="code-line language-json"><div>{
+    <span class="hljs-attr">"nodes"</span>: [
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">150</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">220</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">125</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">225</span> }
+    ],
+    <span class="hljs-attr">"constraints"</span>: [
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>:<span class="hljs-string">"const"</span> } },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>:<span class="hljs-string">"const"</span> } },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"c"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>:<span class="hljs-string">"const"</span> } },
+        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"d"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"C"</span>,<span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>:<span class="hljs-string">"const"</span> },
+          <span class="hljs-attr">"ori"</span>: { <span class="hljs-attr">"ref"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> } }
+    ]
+}
+</div></code></pre>
+<p><img src="img/constraints.gif" alt="first" class="loading" id="image-hash-3ec77c24079a4b74648e8357c8f9233025a703e01093c939baa8c79b0b4570b5"></p>
+
+</main>
+<footer>
+  <span class="left">&copy; My Site</span>
+  <span class="center">powered by &mu;JAM &amp; VSCode &mdash; hosted by GitHub</span>
+  <span class="right" onclick="document.documentElement.className = document.documentElement.className === 'theme-dark' ? 'theme-light' : 'theme-dark';">&#9788;</span>
+</footer>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!doctype html>
+<html class="theme-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1,user-scalable=no">
+<meta name="description" content="mec2-getting-started">
+<meta name="date" content="Tue Jun 09 2020 02:00:00 GMT+0200 (Mitteleuropäische Sommerzeit)">
+<meta name="keywords" content="">
+<title>mec2-getting-started</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/github-gist.min.css">
+
+<link rel="stylesheet" href="./theme/styles.css">
+</head>
+<body>
+<header>
+  <a href="./index.html" class="left">My Site</a>
+  <a href="./about.html" class="right">About</a>
+</header>
+<main>
+<!-- TODO update chart to current syntax -->
+<p><code>mec2</code> is a physics engine, which purpose is to simulate the movement of two dimensional mechanical linkages.
+It has a new concept of treating elements as particles whose movements follow constraints.</p>
+<p><code>mec2</code> has no dependencies for the simulation and implements all necessary infrastructure on its own.
+For rendering the model the graphics library <code>g2</code> is used.
+To read more about <code>g2</code> have a look <a href="github.com/goessner/g2" data-href="github.com/goessner/g2">here</a>.
+Models are described using the human and machine readable <code>JSON</code> format.</p>
+<p>A <code>mec2</code> model can consist of up to 9 different modules.</p>
+<!-- TODO: Make all of these elements links -->
+<p>Some of them are absolutely necessary and to omit them most likely results in an inapt model:</p>
+<ul>
+<li><a href="#core" data-href="#core">Core</a></li>
+<li><a href="#model" data-href="#model">Model</a></li>
+<li><a href="#nodes" data-href="#nodes">Nodes</a></li>
+<li><a href="#constraints" data-href="#constraints">Constraints</a></li>
+</ul>
+<p>Other modules provide extra functionality and may be included as needed:</p>
+<ul>
+<li><a href="#load" data-href="#load">Load</a></li>
+<li><a href="#drive" data-href="#drive">Drive</a></li>
+<li><a href="#view" data-href="#view">View</a></li>
+<li><a href="#shape" data-href="#shape">Shape</a></li>
+<li><a href="#messages" data-href="#messages">Messages</a></li>
+</ul>
+<p>They are included by the casual <code>&lt;script src=&quot;...&quot;&gt;&lt;/script&gt;</code> syntax and can be included or omitted as needed.
+Alternatively the embedded <code>mec-2</code> HTML custom element can be used.</p>
+<p>To render models the graphics library <code>g2</code> is used, which is not only recommended, but also integrated into <code>mec2</code> in various ways.
+Therefore it is advised to import it as well.</p>
+<h3 id="example">Example <a class="plnk" href="#example">#</a></h3>
+<p><img src="img/view_1.gif" alt="mech" class="loading" id="image-hash-bf26c4ba4d78f235dfb164c0e291463b84a80dbf28f8d371ef4e0af74ed6aedf"></p>
+<p>This mechanism can be generated using two types of syntax.</p>
+<p>The necessary functions to simulate and render the mechanism can be issued manually, or a predefined custom <code>&lt;mec-2&gt;</code> HTML element can be used.</p>
+<pre><code class="code-line language-html"><div><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">meta</span> <span class="hljs-attr">charset</span>=<span class="hljs-string">'utf-8'</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">canvas</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"cv"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"550"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"300"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">canvas</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../g2/src/g2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/mec2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
+    <span class="hljs-keyword">const</span> ctx = <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">"cv"</span>).getContext(<span class="hljs-string">"2d"</span>);
+
+    <span class="hljs-keyword">const</span> model = {
+        <span class="hljs-string">"nodes"</span>: [
+            { <span class="hljs-string">"id"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-string">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-string">"y"</span>: <span class="hljs-number">50</span>, <span class="hljs-string">"base"</span>: <span class="hljs-literal">true</span> },
+            { <span class="hljs-string">"id"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-string">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-string">"y"</span>: <span class="hljs-number">100</span> },
+            { <span class="hljs-string">"id"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-string">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-string">"y"</span>: <span class="hljs-number">170</span> },
+            { <span class="hljs-string">"id"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-string">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-string">"y"</span>: <span class="hljs-number">50</span>, <span class="hljs-string">"base"</span>: <span class="hljs-literal">true</span> },
+            { <span class="hljs-string">"id"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-string">"x"</span>: <span class="hljs-number">125</span>, <span class="hljs-string">"y"</span>: <span class="hljs-number">175</span> }
+        ],
+        <span class="hljs-string">"constraints"</span>: [
+        {
+            <span class="hljs-string">"id"</span>: <span class="hljs-string">"a"</span>, <span class="hljs-string">"p1"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-string">"p2"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-string">"len"</span>: { <span class="hljs-string">"type"</span>:<span class="hljs-string">"const"</span> },
+            <span class="hljs-string">"ori"</span>: { <span class="hljs-string">"type"</span>: <span class="hljs-string">"drive"</span>, <span class="hljs-string">"Dt"</span>: <span class="hljs-number">2</span>, <span class="hljs-string">"Dw"</span>: <span class="hljs-number">6.28</span> }
+        }, {
+            <span class="hljs-string">"id"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-string">"p1"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-string">"p2"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-string">"len"</span>: { <span class="hljs-string">"type"</span>:<span class="hljs-string">"const"</span> }
+        }, {
+            <span class="hljs-string">"id"</span>: <span class="hljs-string">"c"</span>, <span class="hljs-string">"p1"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-string">"p2"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-string">"len"</span>: { <span class="hljs-string">"type"</span>:<span class="hljs-string">"const"</span> }
+        }, {
+            <span class="hljs-string">"id"</span>: <span class="hljs-string">"d"</span>, <span class="hljs-string">"p1"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-string">"p2"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-string">"len"</span>: {       <span class="hljs-string">"type"</span>:<span class="hljs-string">"const"</span> },
+            <span class="hljs-string">"ori"</span>: { <span class="hljs-string">"ref"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-string">"type"</span>: <span class="hljs-string">"const"</span> }
+        }
+        ],
+        <span class="hljs-string">"views"</span>: [
+            {
+                <span class="hljs-string">"show"</span>: <span class="hljs-string">"pos"</span>, <span class="hljs-string">"of"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-string">"as"</span>: <span class="hljs-string">"trace"</span>, <span class="hljs-string">"Dt"</span>:<span class="hljs-number">2.1</span>,
+                <span class="hljs-string">"mode"</span>:<span class="hljs-string">"preview"</span>, <span class="hljs-string">"fill"</span>:<span class="hljs-string">"orange"</span>
+            }, {
+                <span class="hljs-string">"show"</span>: <span class="hljs-string">"vel"</span>, <span class="hljs-string">"of"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-string">"as"</span>: <span class="hljs-string">"vector"</span>
+            }, {
+                <span class="hljs-string">"as"</span>: <span class="hljs-string">"chart"</span>, <span class="hljs-string">"x"</span>: <span class="hljs-number">340</span>, <span class="hljs-string">"y"</span>: <span class="hljs-number">75</span>, <span class="hljs-string">"Dt"</span>: <span class="hljs-number">1.9</span>,
+                <span class="hljs-string">"show"</span>: <span class="hljs-string">"wt"</span>, <span class="hljs-string">"of"</span>: <span class="hljs-string">"b"</span>
+            }
+        ]
+    };
+    mec.model.extend(model);
+    model.init();
+    <span class="hljs-keyword">const</span> g = g2().del().clr().view({ <span class="hljs-attr">cartesian</span>: <span class="hljs-literal">true</span> });
+
+    model.draw(g);
+    (<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">render</span>(<span class="hljs-params"></span>) </span>{
+        model.tick(<span class="hljs-number">1</span>/<span class="hljs-number">60</span>);
+        g.exe(ctx);
+        requestAnimationFrame(render)
+    })();
+</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</div></code></pre>
+<p>The same model (but embedded into a custom <code>&lt;mec-2&gt;</code> HTML element) is issued by:</p>
+<pre><code class="code-line language-html"><div><span class="hljs-tag">&lt;<span class="hljs-name">mec-2</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"501"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"301"</span> <span class="hljs-attr">grid</span> <span class="hljs-attr">cartesian</span>&gt;</span>
+{
+    "nodes": [
+        { "id": "A0", "x": 75, "y": 50, "base": true },
+        { "id": "A", "x": 75, "y": 100 },
+        { "id": "B", "x": 275, "y": 170 },
+        { "id": "B0", "x": 275, "y": 50, "base": true },
+        { "id": "C", "x": 125, "y": 175 }
+    ],
+    "constraints": [
+        {
+            "id": "a", "p1": "A0", "p2": "A", "len": { "type":"const" },
+            "ori": { "type": "drive", "Dt": 2, "Dw": 6.28 }
+        }, {
+            "id": "b", "p1": "A", "p2": "B", "len": { "type":"const" }
+        }, {
+            "id": "c", "p1": "B0", "p2": "B", "len": { "type":"const" }
+        }, {
+            "id": "d", "p1": "B", "p2": "C", "len": { "type":"const" },
+            "ori": { "ref": "b", "type": "const" }
+        }
+    ],
+    "views": [
+        {
+            "show": "pos", "of": "C", "as": "trace", "Dt":2.1,
+            "mode":"preview", "fill":"orange"
+        }, {
+            "show": "vel", "of": "C", "as": "vector"
+        }, {
+            "as": "chart", "x": 340, "y": 75, "Dt": 1.9,
+            "show": "wt", "of": "b"
+        }
+    ]
+}
+<span class="hljs-tag">&lt;/<span class="hljs-name">mec-2</span>&gt;</span>
+
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../g2/src/g2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/bin/g2.selector.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/bin/canvasInteractor.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/mec2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/bin/mec.htmlelement.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</div></code></pre>
+<!-- TODO Create unified import... -->
+<p>Please note that for the current usage of the custom HTML Element additional files have to be imported.</p>
+<p>The custom HTML element provides interactive features to the model.</p>
+<hr>
+<p>Let's go through the process of creating this mechanism step by step.</p>
+<p>At first <code>g2</code> and <code>mec2</code> are imported:</p>
+<pre><code class="code-line language-html"><div><span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../../g2/src/g2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../../mec2/mec2.min.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+</div></code></pre>
+<p>Both consist of different modules, which can be further inspected by looking at the respective wikis.
+Please note that <code>mec2.min</code> is a combination of all (currently) existing mec2 modules.
+If there is no need for minimalism, this is a valid shortcut to include everything mec2 has to offer.</p>
+<p>At this point we already can begin with the definition of our model:</p>
+<p>The model can be composed of different properties based on the respective
+modules. In this very case of <code>nodes</code>, <code>constraints</code> and <code>views</code>.</p>
+<h3 id="nodes">Nodes <a class="plnk" href="#nodes">#</a></h3>
+<p><code>nodes</code> can be seen as particles.
+They do not have any boundaries on their own, but properties which determine their state.
+As you can see they are described solely by their coordinates.
+The <code>id</code> is, hence the name, an identifier for later processing.</p>
+<pre><code class="code-line language-json"><div><span class="hljs-string">"nodes"</span>: [
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">150</span> },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">220</span> },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">275</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">125</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">225</span> }
+],
+</div></code></pre>
+<p>The <code>base</code> flag is used to determine if the <code>node</code> is fixed (treating the particle as if it has infinite mass).`</p>
+<h3 id="constraints">Constraints <a class="plnk" href="#constraints">#</a></h3>
+<p><code>contraints</code> are used to define correlation between different <code>nodes</code>.
+Although <code>nodes</code> are not bound on their own, <code>contraints</code> change that by constraining them to set conditions.</p>
+<pre><code class="code-line language-JSON"><div><span class="hljs-string">"constraints"</span>: [
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> },
+        <span class="hljs-attr">"ori"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"drive"</span>, <span class="hljs-attr">"Dt"</span>: <span class="hljs-number">2</span>, <span class="hljs-attr">"Dw"</span>: <span class="hljs-number">2</span>*Math.PI }
+    },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> } },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"c"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> } },
+    { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"d"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"B"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> }, <span class="hljs-attr">"ori"</span>: { <span class="hljs-attr">"ref"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> } }
+],
+</div></code></pre>
+<p><code>constraints</code> are defined by using the <code>ids</code> of two <code>nodes</code>, using them as property <code>p1</code> and <code>p2</code> respectively.</p>
+<p><code>constraints</code> can change the relation of either the distance of two particles, or the orientation.
+By settings <code>&quot;len&quot;: { &quot;type&quot;: &quot;const&quot; }</code> the distance between two <code>nodes</code> is fixed and only the orientation of them can be changed (resulting in one of the two particles orbiting around the other).
+Respectively by setting <code>&quot;ori&quot;: {&quot;type&quot;: &quot;const&quot;}</code> the orientation is fixed and only a translational shifting is possible.
+By setting both <code>types</code> to <code>const</code> the two particles are &quot;fixed&quot;.</p>
+<p>By setting the type to <code>drive</code> one can determine the behavior of two <code>nodes</code> to one another over time, thus simulating a driven motion.
+For this the <code>mec.drive</code> module has to be imported (incidentally done by <code>mec2.min.js</code>).</p>
+<p>Likewise <code>nodes</code>, <code>constraints</code> have <code>ids</code> to identify them later on for further processing.</p>
+<p>By setting <code>nodes</code> and <code>constraints</code> a fully working mechanism is defined and can already be analyzed.</p>
+<h3 id="views">Views <a class="plnk" href="#views">#</a></h3>
+<p>To support the user with some analysis options <code>views</code> can be used, brought by the <code>mec.views</code> module.</p>
+<pre><code class="code-line language-JSON"><div><span class="hljs-string">"views"</span>: [
+    { <span class="hljs-attr">"show"</span>: <span class="hljs-string">"pos"</span>, <span class="hljs-attr">"of"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"as"</span>: <span class="hljs-string">"trace"</span>, <span class="hljs-attr">"Dt"</span>:<span class="hljs-number">2.1</span>, <span class="hljs-attr">"mode"</span>:<span class="hljs-string">"preview"</span>, <span class="hljs-attr">"fill"</span>:<span class="hljs-string">"orange"</span> },
+    { <span class="hljs-attr">"show"</span>: <span class="hljs-string">"vel"</span>, <span class="hljs-attr">"of"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"as"</span>: <span class="hljs-string">"vector"</span> },
+    { <span class="hljs-attr">"as"</span>: <span class="hljs-string">"chart"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">350</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">150</span>, <span class="hljs-attr">"Dt"</span>: <span class="hljs-number">1.9</span>, <span class="hljs-attr">"t0"</span>: <span class="hljs-number">0.1</span>,
+    <span class="hljs-attr">"xaxis"</span>: {<span class="hljs-attr">"show"</span>: <span class="hljs-string">"w"</span>, <span class="hljs-attr">"of"</span>: <span class="hljs-string">"a"</span>},
+    <span class="hljs-attr">"yaxis"</span>: [
+        {<span class="hljs-attr">"show"</span>: <span class="hljs-string">"wt"</span>, <span class="hljs-attr">"of"</span>: <span class="hljs-string">"d"</span>},
+        {<span class="hljs-attr">"show"</span>: <span class="hljs-string">"wt"</span>, <span class="hljs-attr">"of"</span>: <span class="hljs-string">"c"</span>}
+    ],
+}]
+</div></code></pre>
+<p><code>views</code> offers different options to choose from to make features visible.
+These different options share a lot of properties, which are:</p>
+<ul>
+<li><code>show</code>: which is a mapping to the different properties which can be shown here. (position, velocity, acceleration, momentum, force...)</li>
+<li><code>of</code>: is the <code>id</code> which should be singled out to determine the property which is to visualize. Needless to say the user has to take care that the respective element with this <code>id</code> has to have the property defined by <code>show</code>.</li>
+<li><code>as</code>: determines the <code>view</code> which is to be used. In this example <code>trace</code>, <code>vector</code> and <code>chart</code> are represented, but there are others to choose from.</li>
+<li><code>t0</code>: defines when to start the recording (referring to the model timer).</li>
+<li><code>Dt</code>: defines the duration of the recording after <code>t0</code>.</li>
+</ul>
+<p>To further read about the different <code>views</code> and possible properties to choose from please should have a look to the <a href="../wiki/views" data-href="../wiki/views">respective wiki</a>.</p>
+<h3 id="model-rendering">Model rendering <a class="plnk" href="#model-rendering">#</a></h3>
+<p>Please note that the following steps are automatically executed if the model is implemented using the <code>&lt;mec-2&gt;</code> element.</p>
+<p>At first the functionality offered by the <code>mec</code> object has to be applied to our <code>model</code> object, thus extending it with all the functionality it needs.
+This is done by issuing: <code>mec.model.extend(model);</code></p>
+<p>After doing that, we have to initialize all the properties of the <code>model</code> which were defined earlier on: <code>model.init()</code> is doing that for the whole model.</p>
+<p>The rest of the code is responsible for the rendering of the model:</p>
+<pre><code class="code-line language-js"><div><span class="hljs-keyword">const</span> g = g2().del().clr().view({ <span class="hljs-attr">cartesian</span>: <span class="hljs-literal">true</span> });
+model.draw(g);
+(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">render</span>(<span class="hljs-params"></span>) </span>{
+    model.tick(<span class="hljs-number">1</span>/<span class="hljs-number">60</span>);
+    g.exe(ctx);
+    requestAnimationFrame(render)
+})();
+</div></code></pre>
+<p><code>model.draw(g)</code> applies the model to a <code>g2</code> command queue which is then rendered onto the canvas in the defined context at the top of the code.</p>
+<p>Inside the <code>render</code> queue the <code>model.timer</code> is advanced one sixtieth of a second each iteration by calling <code>model.tick(1/60)</code>.
+Assuming a 60hz Monitor is used (or at least requestAnimationFrame operates in 60hz) this results in a convenient mapping to real time.</p>
+<p>If you want to know more about <code>g2</code> feel free to check out <a href="github.com/goessner/g2" data-href="github.com/goessner/g2">g2's GitHub page</a>.</p>
+
+</main>
+<footer>
+  <span class="left">&copy; My Site</span>
+  <span class="center">powered by &mu;JAM &amp; VSCode &mdash; hosted by GitHub</span>
+  <span class="right" onclick="document.documentElement.className = document.documentElement.className === 'theme-dark' ? 'theme-light' : 'theme-dark';">&#9788;</span>
+</footer>
+</body>
+</html>
