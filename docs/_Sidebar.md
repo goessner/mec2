@@ -9,7 +9,7 @@
 ---
 
  
-  * [Getting started](../wiki/getting_started)
+  * [Getting started](../wiki/index)
   * [Basic modules](../wiki/basic_modules)
   * [Loads](../wiki/loads)
   * [Drive](../wiki/drive)
