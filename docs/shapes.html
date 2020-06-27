@@ -1,83 +1,303 @@
 <!doctype html>
-<html class="theme-dark">
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1,user-scalable=no">
-<meta name="description" content="mec2-shapes">
-<meta name="date" content="Tue Jun 09 2020 02:00:00 GMT+0200 (Mitteleuropäische Sommerzeit)">
-<meta name="keywords" content="">
-<title>mec2-shapes</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/github-gist.min.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1,user-scalable=no">
+    <meta name="description" content=" - microjam page">
 
-<link rel="stylesheet" href="./theme/styles.css">
+    <meta name="keywords" content="">
+    <title></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github-gist.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css" integrity="sha384-9eLZqc9ds8eNjO3TmqPeYcDj8n+Qfa4nuSiGYa6DjLNcv9BtN69ZIulL9+8CqC9Y" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.css">
+    <link rel="stylesheet" href="./theme/styles.css">
 </head>
 <body>
-<header>
-  <a href="./index.html" class="left">mec2</a>
-  <a href="./about.html" class="right">About</a>
-</header>
-<main>
-
-  <div class='navigation'>  
-    <ul>
-    <li><a href="./getting_started.html" data-href="getting_started.html">Getting started</a></li>
-    <li><a href="./basic_modules.html" data-href="basic_modules.html">Basic modules</a></li>
-    <li><a href="./loads.html" data-href="loads.html">Loads</a></li>
-    <li><a href="./drive.html" data-href="drive.html">Drive</a></li>
-    <li><a href="./views.html" data-href="views.html">Views</a></li>
-    <li><a href="./shapes.html" data-href="shapes.html">Shapes</a></li>
-    </ul>
-</div>
-
-<h3 id="shapes">Shapes <a class="plnk" href="#shapes">#</a></h3>
-<p>It is possible to stylize elements with geometric forms or images.
-Those <code>shapes</code> are only cosmetic and serve no functional purpose.</p>
-<p>All <code>shapes</code> need a <code>p</code> or similar references node <code>id</code>s.</p>
-<p>Predefined types for geometries are:</p>
-<ul>
-<li><code>fix</code>: Marks a <code>node</code> as stationary. <code>w0</code> determines an angle. Default: 0.</li>
-<li><code>flt</code>: Same as <code>fix</code>, but marks <code>node</code> as being movable translational.</li>
-<li><code>slider</code>: Same as <code>flt</code>, but represents a movable slider.</li>
-<li><code>bar</code>: Connect <code>node</code> <code>p1</code> and <code>node</code> <code>p2</code> using a bar.</li>
-<li><code>beam</code>: Same as <code>bar</code>, but using only one <code>p</code>. Reference an angle of a constraint with <code>wref</code> and define the length of the beam with <code>len</code>.</li>
-<li><code>wheel</code>: Draw a <code>wheel</code> on a <code>node</code>. <code>wref</code> a constraint for the angle.</li>
-<li><code>poly</code>: Same as <code>beam</code>, but instead of a <code>beam</code>, a polygon is drawn using a <code>pts</code> array of coordinates.</li>
-<li><code>img</code>: Import an image using <a href="https://github.com/goessner/g2/wiki/Elements#images" data-href="https://github.com/goessner/g2/wiki/Elements#images">g2's image function</a>.</li>
-</ul>
-<h3 id="examples">Examples <a class="plnk" href="#examples">#</a></h3>
-<pre><code class="code-line language-json"><div>{
-    <span class="hljs-attr">"nodes"</span>: [
-        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">75</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">125</span>, <span class="hljs-attr">"base"</span>: <span class="hljs-literal">true</span> },
-        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"A"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">100</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">175</span> },
-        { <span class="hljs-attr">"id"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"x"</span>: <span class="hljs-number">300</span>, <span class="hljs-attr">"y"</span>: <span class="hljs-number">125</span> }
-    ],
-    <span class="hljs-attr">"constraints"</span>: [
+    <header>
+        <a href="./index.html" class="left">My Site</a>
+        <a href="./about.html" class="right">About</a>
+    </header>
+    <main>
+        <h3 id="shapes">Shapes</h3>
+        <p>
+            It is possible to stylize elements with geometric forms or images.
+            Those 
+            <code>shapes</code>
+             are only cosmetic and serve no functional purpose.
+        </p>
+        <p>
+            All 
+            <code>shapes</code>
+             need a 
+            <code>p</code>
+             or similar references node 
+            <code>id</code>
+            s.
+        </p>
+        <p>Predefined types for geometries are:</p>
+        <ul>
+            <li>
+                <code>fix</code>
+                : Marks a 
+                <code>node</code>
+                 as stationary. 
+                <code>w0</code>
+                 determines an angle. Default: 0.
+            </li>
+            <li>
+                <code>flt</code>
+                : Same as 
+                <code>fix</code>
+                , but marks 
+                <code>node</code>
+                 as being movable translational.
+            </li>
+            <li>
+                <code>slider</code>
+                : Same as 
+                <code>flt</code>
+                , but represents a movable slider.
+            </li>
+            <li>
+                <code>bar</code>
+                : Connect 
+                <code>node</code>
+                <code>p1</code>
+                 and 
+                <code>node</code>
+                <code>p2</code>
+                 using a bar.
+            </li>
+            <li>
+                <code>beam</code>
+                : Same as 
+                <code>bar</code>
+                , but using only one 
+                <code>p</code>
+                . Reference an angle of a constraint with 
+                <code>wref</code>
+                 and define the length of the beam with 
+                <code>len</code>
+                .
+            </li>
+            <li>
+                <code>wheel</code>
+                : Draw a 
+                <code>wheel</code>
+                 on a 
+                <code>node</code>
+                . 
+                <code>wref</code>
+                 a constraint for the angle.
+            </li>
+            <li>
+                <code>poly</code>
+                : Same as 
+                <code>beam</code>
+                , but instead of a 
+                <code>beam</code>
+                , a polygon is drawn using a 
+                <code>pts</code>
+                 array of coordinates.
+            </li>
+            <li>
+                <code>img</code>
+                : Import an image using 
+                <a href="https://github.com/goessner/g2/wiki/Elements#images" data-href="https://github.com/goessner/g2/wiki/Elements#images">g2's image function</a>
+                .
+            </li>
+        </ul>
+        <h3 id="examples">Examples</h3>
+        <pre>
+            <code class="code-line language-json">
+                <div>
+                    {
+                        
+                    <span class="hljs-attr">"nodes"</span>
+                    : [
+                            { 
+                    <span class="hljs-attr">"id"</span>
+                    : 
+                    <span class="hljs-string">"A0"</span>
+                    , 
+                    <span class="hljs-attr">"x"</span>
+                    : 
+                    <span class="hljs-number">75</span>
+                    , 
+                    <span class="hljs-attr">"y"</span>
+                    : 
+                    <span class="hljs-number">125</span>
+                    , 
+                    <span class="hljs-attr">"base"</span>
+                    : 
+                    <span class="hljs-literal">true</span>
+                     },
+                            { 
+                    <span class="hljs-attr">"id"</span>
+                    : 
+                    <span class="hljs-string">"A"</span>
+                    , 
+                    <span class="hljs-attr">"x"</span>
+                    : 
+                    <span class="hljs-number">100</span>
+                    , 
+                    <span class="hljs-attr">"y"</span>
+                    : 
+                    <span class="hljs-number">175</span>
+                     },
+                            { 
+                    <span class="hljs-attr">"id"</span>
+                    : 
+                    <span class="hljs-string">"B0"</span>
+                    , 
+                    <span class="hljs-attr">"x"</span>
+                    : 
+                    <span class="hljs-number">300</span>
+                    , 
+                    <span class="hljs-attr">"y"</span>
+                    : 
+                    <span class="hljs-number">125</span>
+                     }
+                        ],
+                        
+                    <span class="hljs-attr">"constraints"</span>
+                    : [
+                            {
+                              
+                    <span class="hljs-attr">"id"</span>
+                    : 
+                    <span class="hljs-string">"a"</span>
+                    , 
+                    <span class="hljs-attr">"p1"</span>
+                    : 
+                    <span class="hljs-string">"A0"</span>
+                    , 
+                    <span class="hljs-attr">"p2"</span>
+                    : 
+                    <span class="hljs-string">"A"</span>
+                    ,
+                              
+                    <span class="hljs-attr">"len"</span>
+                    : { 
+                    <span class="hljs-attr">"type"</span>
+                    : 
+                    <span class="hljs-string">"const"</span>
+                     },
+                              
+                    <span class="hljs-attr">"ori"</span>
+                    : { 
+                    <span class="hljs-attr">"type"</span>
+                    : 
+                    <span class="hljs-string">"drive"</span>
+                    , 
+                    <span class="hljs-attr">"repeat"</span>
+                    : 
+                    <span class="hljs-number">3</span>
+                     }
+                            }, {
+                              
+                    <span class="hljs-attr">"id"</span>
+                    : 
+                    <span class="hljs-string">"b"</span>
+                    , 
+                    <span class="hljs-attr">"p1"</span>
+                    : 
+                    <span class="hljs-string">"B0"</span>
+                    , 
+                    <span class="hljs-attr">"p2"</span>
+                    : 
+                    <span class="hljs-string">"A"</span>
+                    ,
+                              
+                    <span class="hljs-attr">"len"</span>
+                    : { 
+                    <span class="hljs-attr">"type"</span>
+                    : 
+                    <span class="hljs-string">"const"</span>
+                     }
+                            }, {
+                              
+                    <span class="hljs-attr">"id"</span>
+                    : 
+                    <span class="hljs-string">"c"</span>
+                    , 
+                    <span class="hljs-attr">"p1"</span>
+                    : 
+                    <span class="hljs-string">"A0"</span>
+                    , 
+                    <span class="hljs-attr">"p2"</span>
+                    : 
+                    <span class="hljs-string">"B0"</span>
+                    ,
+                              
+                    <span class="hljs-attr">"ori"</span>
+                    : { 
+                    <span class="hljs-attr">"type"</span>
+                    : 
+                    <span class="hljs-string">"const"</span>
+                     }
+                            }
+                        ],
+                        
+                    <span class="hljs-attr">"shapes"</span>
+                    : [
+                            { 
+                    <span class="hljs-attr">"type"</span>
+                    : 
+                    <span class="hljs-string">"fix"</span>
+                    , 
+                    <span class="hljs-attr">"p"</span>
+                    : 
+  <span class="hljs-string">"A0"</span>
+                     },
+                            { 
+  <span class="hljs-attr">"type"</span>
+                    : 
+ <span class="hljs-string">"flt"</span>
+                    , 
+<span class="hljs-attr">"p"</span>
+                    : 
+<span class="hljs-string">"B0"</span>
+                     }
+                        ]
+                    }
+                </div>
+            </code>
+        </pre>
+ <mec-2 width="400" height="300" grid cartesian>
         {
-          <span class="hljs-attr">"id"</span>: <span class="hljs-string">"a"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"A"</span>,
-          <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> },
-          <span class="hljs-attr">"ori"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"drive"</span>, <span class="hljs-attr">"repeat"</span>: <span class="hljs-number">3</span> }
-        }, {
-          <span class="hljs-attr">"id"</span>: <span class="hljs-string">"b"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"B0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"A"</span>,
-          <span class="hljs-attr">"len"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> }
-        }, {
-          <span class="hljs-attr">"id"</span>: <span class="hljs-string">"c"</span>, <span class="hljs-attr">"p1"</span>: <span class="hljs-string">"A0"</span>, <span class="hljs-attr">"p2"</span>: <span class="hljs-string">"B0"</span>,
-          <span class="hljs-attr">"ori"</span>: { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"const"</span> }
+            "nodes": [
+                { "id": "A0", "x": 75, "y": 125, "base": true },
+                { "id": "A", "x": 100, "y": 175 },
+                { "id": "B0", "x": 300, "y": 125 }
+            ],
+            "constraints": [
+                {
+                  "id": "a", "p1": "A0", "p2": "A",
+                  "len": { "type": "const" },
+                  "ori": { "type": "drive", "repeat": 3 }
+                }, {
+                  "id": "b", "p1": "B0", "p2": "A",
+                  "len": { "type": "const" }
+                }, {
+                  "id": "c", "p1": "A0", "p2": "B0",
+                  "ori": { "type": "const" }
+                }
+            ],
+            "shapes": [
+                { "type": "fix", "p": "A0" },
+                { "type": "flt", "p": "B0" }
+            ]
         }
-    ],
-    <span class="hljs-attr">"shapes"</span>: [
-        { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fix"</span>, <span class="hljs-attr">"p"</span>: <span class="hljs-string">"A0"</span> },
-        { <span class="hljs-attr">"type"</span>: <span class="hljs-string">"flt"</span>, <span class="hljs-attr">"p"</span>: <span class="hljs-string">"B0"</span> }
-    ]
-}
-</div></code></pre>
-<p><img src="img/shape_1.gif" alt="first" class="loading" id="image-hash-76f44afcfa6fed3964416330a8adb914fd9b52594c9c21fe2e081d8c67385921"></p>
-<!-- TODO example with cool poly shapes. e.g. a dump truck -->
+ </mec-2>
+        <script src="bin/g2.js"></script>
+        <script src="bin/g2.selector.js"></script>
+        <script src="bin/canvasInteractor.js"></script>
+        <script src="bin/mec2.min.js"></script>
+        <script src="bin/mec.htmlelement.js"></script>
 
-</main>
-<footer>
-  <span class="left">&copy; mec2</span>
-  <span class="center">powered by &mu;JAM &amp; VSCode &mdash; hosted by GitHub</span>
-  <span class="right" onclick="document.documentElement.className = document.documentElement.className === 'theme-dark' ? 'theme-light' : 'theme-dark';">&#9788;</span>
-</footer>
+    </main>
+    <footer>&copy; My Site</footer>
 </body>
 </html>
+

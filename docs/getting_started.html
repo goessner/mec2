@@ -1,35 +1,24 @@
 <!doctype html>
-<html class="theme-dark">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1,user-scalable=no">
-<meta name="description" content="mec2-getting-started">
-<meta name="date" content="Tue Jun 09 2020 02:00:00 GMT+0200 (Mitteleuropäische Sommerzeit)">
-<meta name="keywords" content="">
-<title>mec2-getting-started</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/github-gist.min.css">
+<meta name="description" content=" - microjam page">
 
+<meta name="keywords" content="">
+<title></title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github-gist.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css" integrity="sha384-9eLZqc9ds8eNjO3TmqPeYcDj8n+Qfa4nuSiGYa6DjLNcv9BtN69ZIulL9+8CqC9Y" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.css">
 <link rel="stylesheet" href="./theme/styles.css">
 </head>
 <body>
 <header>
-  <a href="./index.html" class="left">mec2</a>
+  <a href="./index.html" class="left">Mec 2</a>
   <a href="./about.html" class="right">About</a>
 </header>
 <main>
-
-    <div class='navigation'>  
-        <ul>
-        <li><a href="./getting_started.html" data-href="getting_started.html">Getting started</a></li>
-        <li><a href="./basic_modules.html" data-href="basic_modules.html">Basic modules</a></li>
-        <li><a href="./loads.html" data-href="loads.html">Loads</a></li>
-        <li><a href="./drive.html" data-href="drive.html">Drive</a></li>
-        <li><a href="./views.html" data-href="views.html">Views</a></li>
-        <li><a href="./shapes.html" data-href="shapes.html">Shapes</a></li>
-        </ul>
-    </div>
-
-<!-- TODO update chart to current syntax -->
+<h2 id="getting-started">Getting started</h2>
 <p><code>mec2</code> is a physics engine, which purpose is to simulate the movement of two dimensional mechanical linkages.
 It has a new concept of treating elements as particles whose movements follow constraints.</p>
 <p><code>mec2</code> has no dependencies for the simulation and implements all necessary infrastructure on its own.
@@ -40,25 +29,59 @@ Models are described using the human and machine readable <code>JSON</code> form
 <!-- TODO: Make all of these elements links -->
 <p>Some of them are absolutely necessary and to omit them most likely results in an inapt model:</p>
 <ul>
-<li><a href="#core" data-href="#core">Core</a></li>
-<li><a href="#model" data-href="#model">Model</a></li>
-<li><a href="#nodes" data-href="#nodes">Nodes</a></li>
-<li><a href="#constraints" data-href="#constraints">Constraints</a></li>
+<li>Core</li>
+<li>Model</li>
+<li>Nodes</li>
+<li>Constraints</li>
 </ul>
 <p>Other modules provide extra functionality and may be included as needed:</p>
 <ul>
-<li><a href="#load" data-href="#load">Load</a></li>
-<li><a href="#drive" data-href="#drive">Drive</a></li>
-<li><a href="#view" data-href="#view">View</a></li>
-<li><a href="#shape" data-href="#shape">Shape</a></li>
-<li><a href="#messages" data-href="#messages">Messages</a></li>
+<li>Load</li>
+<li>Drive</li>
+<li>View</li>
+<li>Shape</li>
+<li>Messages</li>
 </ul>
 <p>They are included by the casual <code>&lt;script src=&quot;...&quot;&gt;&lt;/script&gt;</code> syntax and can be included or omitted as needed.
 Alternatively the embedded <code>mec-2</code> HTML custom element can be used.</p>
 <p>To render models the graphics library <code>g2</code> is used, which is not only recommended, but also integrated into <code>mec2</code> in various ways.
 Therefore it is advised to import it as well.</p>
-<h3 id="example">Example <a class="plnk" href="#example">#</a></h3>
-<p><img src="img/view_1.gif" alt="mech" width="100%" class="loading" id="image-hash-bf26c4ba4d78f235dfb164c0e291463b84a80dbf28f8d371ef4e0af74ed6aedf"></p>
+<h3 id="example">Example</h3>
+<mec-2 width="500" height="300" grid cartesian>
+{
+    "nodes": [
+        { "id": "A0", "x": 75, "y": 50, "base": true },
+        { "id": "A", "x": 75, "y": 100 },
+        { "id": "B", "x": 275, "y": 170 },
+        { "id": "B0", "x": 275, "y": 50, "base": true },
+        { "id": "C", "x": 125, "y": 175 }
+    ],
+    "constraints": [
+        {
+            "id": "a", "p1": "A0", "p2": "A", "len": { "type":"const" },
+            "ori": { "type": "drive", "Dt": 2, "Dw": 6.28 }
+        }, {
+            "id": "b", "p1": "A", "p2": "B", "len": { "type":"const" }
+        }, {
+            "id": "c", "p1": "B0", "p2": "B", "len": { "type":"const" }
+        }, {
+            "id": "d", "p1": "B", "p2": "C", "len": { "type":"const" },
+            "ori": { "ref": "b", "type": "const" }
+        }
+    ],
+    "views": [
+        {
+            "show": "pos", "of": "C", "as": "trace", "Dt":2.1,
+            "mode":"preview", "fill":"orange"
+        }, {
+            "show": "vel", "of": "C", "as": "vector"
+        }, {
+            "as": "chart", "x": 340, "y": 75, "Dt": 1.9,
+            "show": "wt", "of": "b"
+        }
+    ]
+}
+</mec-2>
 <p>This mechanism can be generated using two types of syntax.</p>
 <p>The necessary functions to simulate and render the mechanism can be issued manually, or a predefined custom <code>&lt;mec-2&gt;</code> HTML element can be used.</p>
 <pre><code class="code-line language-html"><div><span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span>
@@ -152,11 +175,6 @@ Therefore it is advised to import it as well.</p>
 }
 <span class="hljs-tag">&lt;/<span class="hljs-name">mec-2</span>&gt;</span>
 
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../g2/src/g2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/bin/g2.selector.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/bin/canvasInteractor.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/mec2.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
-<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"../mec2/bin/mec.htmlelement.js"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
 </div></code></pre>
 <!-- TODO Create unified import... -->
 <p>Please note that for the current usage of the custom HTML Element additional files have to be imported.</p>
@@ -173,7 +191,7 @@ If there is no need for minimalism, this is a valid shortcut to include everythi
 <p>At this point we already can begin with the definition of our model:</p>
 <p>The model can be composed of different properties based on the respective
 modules. In this very case of <code>nodes</code>, <code>constraints</code> and <code>views</code>.</p>
-<h3 id="nodes">Nodes <a class="plnk" href="#nodes">#</a></h3>
+<h3 id="nodes">Nodes</h3>
 <p><code>nodes</code> can be seen as particles.
 They do not have any boundaries on their own, but properties which determine their state.
 As you can see they are described solely by their coordinates.
@@ -187,7 +205,7 @@ The <code>id</code> is, hence the name, an identifier for later processing.</p>
 ],
 </div></code></pre>
 <p>The <code>base</code> flag is used to determine if the <code>node</code> is fixed (treating the particle as if it has infinite mass).`</p>
-<h3 id="constraints">Constraints <a class="plnk" href="#constraints">#</a></h3>
+<h3 id="constraints">Constraints</h3>
 <p><code>contraints</code> are used to define correlation between different <code>nodes</code>.
 Although <code>nodes</code> are not bound on their own, <code>contraints</code> change that by constraining them to set conditions.</p>
 <pre><code class="code-line language-JSON"><div><span class="hljs-string">"constraints"</span>: [
@@ -208,7 +226,7 @@ By setting both <code>types</code> to <code>const</code> the two particles are &
 For this the <code>mec.drive</code> module has to be imported (incidentally done by <code>mec2.min.js</code>).</p>
 <p>Likewise <code>nodes</code>, <code>constraints</code> have <code>ids</code> to identify them later on for further processing.</p>
 <p>By setting <code>nodes</code> and <code>constraints</code> a fully working mechanism is defined and can already be analyzed.</p>
-<h3 id="views">Views <a class="plnk" href="#views">#</a></h3>
+<h3 id="views">Views</h3>
 <p>To support the user with some analysis options <code>views</code> can be used, brought by the <code>mec.views</code> module.</p>
 <pre><code class="code-line language-JSON"><div><span class="hljs-string">"views"</span>: [
     { <span class="hljs-attr">"show"</span>: <span class="hljs-string">"pos"</span>, <span class="hljs-attr">"of"</span>: <span class="hljs-string">"C"</span>, <span class="hljs-attr">"as"</span>: <span class="hljs-string">"trace"</span>, <span class="hljs-attr">"Dt"</span>:<span class="hljs-number">2.1</span>, <span class="hljs-attr">"mode"</span>:<span class="hljs-string">"preview"</span>, <span class="hljs-attr">"fill"</span>:<span class="hljs-string">"orange"</span> },
@@ -231,7 +249,7 @@ These different options share a lot of properties, which are:</p>
 <li><code>Dt</code>: defines the duration of the recording after <code>t0</code>.</li>
 </ul>
 <p>To further read about the different <code>views</code> and possible properties to choose from please should have a look to the <a href="../wiki/views" data-href="../wiki/views">respective wiki</a>.</p>
-<h3 id="model-rendering">Model rendering <a class="plnk" href="#model-rendering">#</a></h3>
+<h3 id="model-rendering">Model rendering</h3>
 <p>Please note that the following steps are automatically executed if the model is implemented using the <code>&lt;mec-2&gt;</code> element.</p>
 <p>At first the functionality offered by the <code>mec</code> object has to be applied to our <code>model</code> object, thus extending it with all the functionality it needs.
 This is done by issuing: <code>mec.model.extend(model);</code></p>
@@ -249,12 +267,13 @@ model.draw(g);
 <p>Inside the <code>render</code> queue the <code>model.timer</code> is advanced one sixtieth of a second each iteration by calling <code>model.tick(1/60)</code>.
 Assuming a 60hz Monitor is used (or at least requestAnimationFrame operates in 60hz) this results in a convenient mapping to real time.</p>
 <p>If you want to know more about <code>g2</code> feel free to check out <a href="github.com/goessner/g2" data-href="github.com/goessner/g2">g2's GitHub page</a>.</p>
+<script src="bin/g2.js"></script>
+<script src="bin/g2.selector.js"></script>
+<script src="bin/canvasInteractor.js"></script>
+<script src="bin/mec2.min.js"></script>
+<script src="bin/mec.htmlelement.js"></script>
 
 </main>
-<footer>
-  <span class="left">&copy; mec2</span>
-  <span class="center">powered by &mu;JAM &amp; VSCode &mdash; hosted by GitHub</span>
-  <span class="right" onclick="document.documentElement.className = document.documentElement.className === 'theme-dark' ? 'theme-light' : 'theme-dark';">&#9788;</span>
-</footer>
+<footer>&copy; Mec 2</footer>
 </body>
 </html>
