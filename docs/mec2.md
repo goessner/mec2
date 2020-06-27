@@ -1,13 +1,4 @@
----
-"layout": "page",
-"title": "mec2-Element",
-"header": "Custom HTML Element",
-"date": "2020-06-22",
-"description": "",
-"permalink": "#",
- "use": [ { "uri": "navigation.md" } ],
-"tags": []
----
+
 
 _mec2_ comes with a [custom HTML element](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements)
 which allows to implement models directly into the page without the necessity of running extra boilerplate code.
