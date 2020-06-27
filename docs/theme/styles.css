@@ -2,7 +2,7 @@
     --color-footer: #e2f3f3;
     --bgcol-footer: #1f3939;
     --color-code: #e2f3f3;
-    --bgcol-code: #1f3939;
+    --bgcol-code: #6db878;
     --color-shade: #666;
     --bgcol-navigation: #e2f3f3;
 
@@ -46,7 +46,8 @@ body {
 
 nav{
   background-color: var(--bgcol-navigation);
-  color:whit
+  color:whit;
+}
 nav link{
   color: white;
 }
@@ -61,11 +62,14 @@ main {
 }
 header {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 200px 1fr;
   align-items: center;  /* vertical align */
   padding: 5px 1em;
-  color: var(--color-header);
-  background-color: var(--bgcol-header);
+  background-color: #3c6362;
+  color: white;
+  justify-content: center;
+  flex-direction: row;
+  width: 100%;
 }
 footer {
   display: grid;
@@ -116,6 +120,10 @@ header a:link, header a:visited {
 }
 header a:hover {
   color: var(--color-hover);
+}
+
+header{
+  
 }
 
 h1>a.plnk,h2>a.plnk,h3>a.plnk {
