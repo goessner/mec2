@@ -109,161 +109,54 @@
         </ul>
         <h3 id="examples">Examples</h3>
         <pre>
-            <code class="code-line language-json">
-                <div>
-                    {
-                        
-                    <span class="hljs-attr">"nodes"</span>
-                    : [
-                            { 
-                    <span class="hljs-attr">"id"</span>
-                    : 
-                    <span class="hljs-string">"A0"</span>
-                    , 
-                    <span class="hljs-attr">"x"</span>
-                    : 
-                    <span class="hljs-number">75</span>
-                    , 
-                    <span class="hljs-attr">"y"</span>
-                    : 
-                    <span class="hljs-number">125</span>
-                    , 
-                    <span class="hljs-attr">"base"</span>
-                    : 
-                    <span class="hljs-literal">true</span>
-                     },
-                            { 
-                    <span class="hljs-attr">"id"</span>
-                    : 
-                    <span class="hljs-string">"A"</span>
-                    , 
-                    <span class="hljs-attr">"x"</span>
-                    : 
-                    <span class="hljs-number">100</span>
-                    , 
-                    <span class="hljs-attr">"y"</span>
-                    : 
-                    <span class="hljs-number">175</span>
-                     },
-                            { 
-                    <span class="hljs-attr">"id"</span>
-                    : 
-                    <span class="hljs-string">"B0"</span>
-                    , 
-                    <span class="hljs-attr">"x"</span>
-                    : 
-                    <span class="hljs-number">300</span>
-                    , 
-                    <span class="hljs-attr">"y"</span>
-                    : 
-                    <span class="hljs-number">125</span>
-                     }
-                        ],
-                        
-                    <span class="hljs-attr">"constraints"</span>
-                    : [
-                            {
-                              
-                    <span class="hljs-attr">"id"</span>
-                    : 
-                    <span class="hljs-string">"a"</span>
-                    , 
-                    <span class="hljs-attr">"p1"</span>
-                    : 
-                    <span class="hljs-string">"A0"</span>
-                    , 
-                    <span class="hljs-attr">"p2"</span>
-                    : 
-                    <span class="hljs-string">"A"</span>
-                    ,
-                              
-                    <span class="hljs-attr">"len"</span>
-                    : { 
-                    <span class="hljs-attr">"type"</span>
-                    : 
-                    <span class="hljs-string">"const"</span>
-                     },
-                              
-                    <span class="hljs-attr">"ori"</span>
-                    : { 
-                    <span class="hljs-attr">"type"</span>
-                    : 
-                    <span class="hljs-string">"drive"</span>
-                    , 
-                    <span class="hljs-attr">"repeat"</span>
-                    : 
-                    <span class="hljs-number">3</span>
-                     }
-                            }, {
-                              
-                    <span class="hljs-attr">"id"</span>
-                    : 
-                    <span class="hljs-string">"b"</span>
-                    , 
-                    <span class="hljs-attr">"p1"</span>
-                    : 
-                    <span class="hljs-string">"B0"</span>
-                    , 
-                    <span class="hljs-attr">"p2"</span>
-                    : 
-                    <span class="hljs-string">"A"</span>
-                    ,
-                              
-                    <span class="hljs-attr">"len"</span>
-                    : { 
-                    <span class="hljs-attr">"type"</span>
-                    : 
-                    <span class="hljs-string">"const"</span>
-                     }
-                            }, {
-                              
-                    <span class="hljs-attr">"id"</span>
-                    : 
-                    <span class="hljs-string">"c"</span>
-                    , 
-                    <span class="hljs-attr">"p1"</span>
-                    : 
-                    <span class="hljs-string">"A0"</span>
-                    , 
-                    <span class="hljs-attr">"p2"</span>
-                    : 
-                    <span class="hljs-string">"B0"</span>
-                    ,
-                              
-                    <span class="hljs-attr">"ori"</span>
-                    : { 
-                    <span class="hljs-attr">"type"</span>
-                    : 
-                    <span class="hljs-string">"const"</span>
-                     }
-                            }
-                        ],
-                        
-                    <span class="hljs-attr">"shapes"</span>
-                    : [
-                            { 
-                    <span class="hljs-attr">"type"</span>
-                    : 
-                    <span class="hljs-string">"fix"</span>
-                    , 
-                    <span class="hljs-attr">"p"</span>
-                    : 
-  <span class="hljs-string">"A0"</span>
-                     },
-                            { 
-  <span class="hljs-attr">"type"</span>
-                    : 
- <span class="hljs-string">"flt"</span>
-                    , 
-<span class="hljs-attr">"p"</span>
-                    : 
-<span class="hljs-string">"B0"</span>
-                     }
-                        ]
-                    }
-                </div>
-            </code>
-        </pre>
+        <code class="code-line language-json">
+        
+        </div></code></pre>
+
+        ```<html>
+        <mec-2 width="300" height="300" grid cartesian>
+        {
+            "nodes": [
+                {
+                    "id":"A0", "x": 75, "y": 125, "base": true
+                }, 
+                {
+                    "id":"A", "x": 100, "y": 175
+                },
+                {
+                    "id":"B0", "x": 300, "y": 125
+                }
+            ],
+            "constraints": [
+                {
+                    "id":"a","p1":"A0","p2":"A",
+                    "len":{"type":"const"},
+                    "ori":{"type":"drive","repeat":3,"Dt":3 }
+                },
+
+                {
+                    "id":"b","p1":"B0","p2":"A",
+                    "len":{"type":"const"}
+                },
+
+                {
+                    "id":"c","p1":"A0","p2":"B0",
+                    "ori":{"type":"const"}
+                }
+            ],
+
+            "shapes": [
+                {
+                    "id":"a","p1":"A0","p2":"A",
+                    "len":{"type":"const"},
+                    "ori":{"type":"drive","repeat":3,"Dt":3 }
+                },
+        }  
+        </mec-2>
+
+        ```
+    </div></code></pre>
+    
  <mec-2 width="400" height="300" grid cartesian>
         {
             "nodes": [
