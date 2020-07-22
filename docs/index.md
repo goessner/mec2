@@ -4,14 +4,14 @@
  "header": "Main Page",
  "date": "2020-07-22",
  "description": "microjam for mec2",
- "use": [ { "uri": "navigation.md" } ],
+ "uses": [ { "uri": "navigation.md" } ],
  "permalink": "#",
  "tags": []
  ---
 
 # mec2
 
-*mec2* is a javascript library for simulating and analysing planar mechanisms or linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Catto's principle of [sequential impulses](http://box2d.org/downloads/), often used by gaming physics engines.
+*mec2* is a javascript library for simulating and analysing planar mechanisms or linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Catto's principle of [sequential impulses](http://box2d.org/), often used by gaming physics engines.
 
 Its API is minimal and easy to understand. The library is tiny and fast. Mechanisms are described using an easy to read JSON format.
 

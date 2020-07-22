@@ -3,6 +3,7 @@
 "title": "mec2-basic-modules",
 "header": "Basic Modules",
 "date": "2020-06-09",
+ "uses": [ { "uri": "navigation.md" } ],
 "description": "",
 "permalink": "#",
 "tags": []

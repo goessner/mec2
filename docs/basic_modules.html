@@ -1,24 +1,40 @@
 <!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1,user-scalable=no">
-<meta name="description" content=" - microjam page">
+  <html class="theme-light">
+  <head>
+  <meta charset="utf-8">
+  <base href="./">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no">
+  <meta name="description" content="mec2-basic-modules">
+  <meta name="date" content="Tue Jun 09 2020 02:00:00 GMT+0200 (Central European Summer Time)">
+  <meta name="keywords" content="">
+  <title>mec2-basic-modules</title>
+  <link rel="shortcut icon" type="image/png" href="./img/favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/vs2015.min.css">
+  
+  <link rel="stylesheet" href="./theme/styles.css">
+  </head>
+  <body id="top">
+  <header>
+  <a href="./index.html" class="right">mec2</a>
+  <a href="./basic_modules.html" class="left">Basic Modules</a>
+  <a href="https://github.com/goessner/mec2"">
+    <svg height="32" viewBox="0 0 16 16" width="32"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z"></path></svg>
+  </a>
+  </header>
+  <main>
+    <nav>
+      <ul>
+<li><a href="getting_started.html" data-href="getting_started.html">Getting started</a></li>
+<li><a href="basic_modules.html" data-href="basic_modules.html">Basic modules</a></li>
+<li><a href="loads.html" data-href="loads.html">Loads</a></li>
+<li><a href="drive.html" data-href="drive.html">Drive</a></li>
+<li><a href="views.html" data-href="views.html">Views</a></li>
+<li><a href="shapes.html" data-href="shapes.html">Shapes</a></li>
+</ul>
 
-<meta name="keywords" content="">
-<title></title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github-gist.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css" integrity="sha384-9eLZqc9ds8eNjO3TmqPeYcDj8n+Qfa4nuSiGYa6DjLNcv9BtN69ZIulL9+8CqC9Y" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.css">
-<link rel="stylesheet" href="./theme/styles.css">
-</head>
-<body>
-<header>
-  <a href="./index.html" class="left">Mec 2</a>
-  <a href="./about.html" class="right">About</a>
-</header>
-<main>
-<p>Necessary modules to be able to define a mechanism are:</p>
+    </nav>
+    <article>
+  <p>Necessary modules to be able to define a mechanism are:</p>
 <ul>
 <li><strong>mec2.core</strong></li>
 <li><strong>mec2.model</strong></li>
@@ -28,7 +44,7 @@
 <p>All of them have to be imported for <strong>mec2</strong> to be usable.
 It is mandatory for the <strong>core</strong> module to be loaded first.<br>
 Please note that the <strong>mec2.js</strong> and <strong>mec2.min.js</strong> in the root of the project contain all modules, so no further imports are necessary.</p>
-<h3 id="core">Core</h3>
+<h3 id="core">Core <a class="plnk" href="#core">#</a></h3>
 <p>The <code>core</code> module contains the central <code>mec</code> object on which all other modules build upon.</p>
 <p>It provides the mechanism with:</p>
 <ul>
@@ -41,7 +57,7 @@ Please note that the <strong>mec2.js</strong> and <strong>mec2.min.js</strong> i
 </ul>
 <p>It is advised to use the properties given by the central <code>mec</code> object to minimize the overhead when changing the environment. Especially the analyzing capabilities minimize unit errors.</p>
 <p>A <code>mec</code> model is respectively used as environment (<code>env</code>) for all models which are extended through it.</p>
-<h3 id="model">Model</h3>
+<h3 id="model">Model <a class="plnk" href="#model">#</a></h3>
 <p>By importing <code>mec.model</code>, the <code>model</code> property is added to the <code>mec</code> object.
 This property provides the <code>extend</code> function, which is designed
 to assign <code>mec</code>'s prototype and thereby all functionality onto a provided
@@ -62,7 +78,7 @@ e.g. by calling <code>init</code> on the <code>model</code>, the respective <cod
 underlying elements like <code>nodes</code>, <code>constraints</code> etc. are called.</p>
 <p>Therefore to import and extend the model using <code>model.extend</code> is a necessary step to create a fully functioning mechanism.</p>
 <p>For nodes and constraints (and all other modules) to be delegated in the <code>model</code> it is of course necessary to import the respective modules.</p>
-<h3 id="nodes">Nodes</h3>
+<h3 id="nodes">Nodes <a class="plnk" href="#nodes">#</a></h3>
 <p><code>nodes</code> are two dimensional particles.</p>
 <!-- TODO die gif is mist... -->
 <p>They are described by the following properties:</p>
@@ -85,18 +101,8 @@ underlying elements like <code>nodes</code>, <code>constraints</code> etc. are c
     ]
 }
 </div></code></pre>
-<mec-2 width="300" height="300" grid cartesian>
-{   
-	"nodes": [
-        { "id": "A0", "x": 75, "y": 100, "base": true },
-        { "id": "A", "x": 75, "y": 150 },
-        { "id": "B", "x": 275, "y": 220 },
-        { "id": "B0", "x": 275, "y": 100, "base": true },
-        { "id": "C", "x": 125, "y": 225 }
-    ]
-}
-</mec-2>
-<h2 id="constraints">Constraints</h2>
+<img src="img/nodes.gif" width=600 alt="first">
+<h2 id="constraints">Constraints <a class="plnk" href="#constraints">#</a></h2>
 <p><code>constraints</code> define the type of interactions of two <code>nodes</code>.
 Provided a pair of <code>nodes</code>, constraints are defined by their <code>id</code>, using them as properties <code>p1</code> and <code>p2</code>.</p>
 <p><code>constraints</code> have two properties to limit the movement of the respective <code>nodes</code>:</p>
@@ -119,10 +125,10 @@ Without extra modules, the <code>type</code> can be set as <code>const</code> or
 <tbody>
 <tr>
 <td style="text-align:left"> </td>
-<td style="text-align:center"><img src="img/vec-fix.png" alt="fix" class="loading" id="image-hash-a1c4b4c439ce75e4ecea8e7424d3870e935092f3e8ac6d0939f95fd7e2736f26"></td>
-<td style="text-align:center"><img src="img/vec-trn.png" alt="trn" class="loading" id="image-hash-cf10a705eeb985127df20c0af35d69d5518a5f5b31b96429b6e8f2e72729b489"></td>
-<td style="text-align:center"><img src="img/vec-rot.png" alt="fix" class="loading" id="image-hash-cc237920d7b04ffd011ef470875d5830a733c8775e1b7bd1b4a3dbccebb5b76f"></td>
-<td style="text-align:center"><img src="img/vec-free.png" alt="fix" class="loading" id="image-hash-d96d5bfe1c3eedcc0ef4a65786cbd5e202e88c15dd744a86e0bf105bcf60fa17"></td>
+<td style="text-align:center"><img src="img/vec-fix.png" alt="fix" class="loading" id="image-hash--379673470"></td>
+<td style="text-align:center"><img src="img/vec-trn.png" alt="trn" class="loading" id="image-hash--591096675"></td>
+<td style="text-align:center"><img src="img/vec-rot.png" alt="fix" class="loading" id="image-hash-1848516932"></td>
+<td style="text-align:center"><img src="img/vec-free.png" alt="fix" class="loading" id="image-hash-17498677"></td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>length</strong>    </td>
@@ -147,7 +153,7 @@ Without extra modules, the <code>type</code> can be set as <code>const</code> or
 </tr>
 </tbody>
 </table>
-<h6 id="degree-of-freedom">*degree of freedom</h6>
+<h6 id="degree-of-freedom">*degree of freedom <a class="plnk" href="#degree-of-freedom">#</a></h6>
 </br>
 <p>Constraints are made available by importing the <code>mec2.constraints</code> module.</p>
 <pre><code class="code-line language-json"><div>{
@@ -167,31 +173,14 @@ Without extra modules, the <code>type</code> can be set as <code>const</code> or
     ]
 }
 </div></code></pre>
-<mec-2 width="300" height="300" grid cartesian>
-{
-    "nodes": [
-        { "id": "A0", "x": 75, "y": 100, "base": true },
-        { "id": "A", "x": 75, "y": 150 },
-        { "id": "B", "x": 275, "y": 220 },
-        { "id": "B0", "x": 275, "y": 100, "base": true },
-        { "id": "C", "x": 125, "y": 225 }
-    ],
-    "constraints": [
-        { "id": "a", "p1": "A0", "p2": "A", "len": { "type":"const" } },
-        { "id": "b", "p1": "A", "p2": "B", "len": { "type":"const" } },
-        { "id": "c", "p1": "B0", "p2": "B", "len": { "type":"const" } },
-        { "id": "d", "p1": "B", "p2": "C","len": { "type":"const" },
-          "ori": { "ref": "b", "type": "const" } }
-    ]
-}
-</mec-2>
-<script src="bin/g2.js"></script>
-<script src="bin/g2.selector.js"></script>
-<script src="bin/canvasInteractor.js"></script>
-<script src="bin/mec2.min.js"></script>
-<script src="bin/mec.htmlelement.js"></script>
+<img src="img/constraints.gif" width=600 alt="first">
 
-</main>
-<footer>&copy; Mec 2</footer>
-</body>
-</html>
+    </article>
+  </main>
+  <footer>
+    <span class="left">&copy; goessner</span>
+    <span class="center">powered by &mu;Jam &amp; VSCode &mdash; hosted by GitHub</span>
+    <span class="right" onclick="document.documentElement.className = document.documentElement.className === 'theme-dark' ? 'theme-light' : 'theme-dark';">&#9788;</span>
+  </footer>
+  </body>
+  </html>
