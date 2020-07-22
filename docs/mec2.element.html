@@ -30,6 +30,7 @@
 <li><a href="drive.html" data-href="drive.html">Drive</a></li>
 <li><a href="views.html" data-href="views.html">Views</a></li>
 <li><a href="shapes.html" data-href="shapes.html">Shapes</a></li>
+<li><a href="mec2.element.html" data-href="mec2.element.html">Element</a></li>
 </ul>
 
     </nav>
@@ -103,6 +104,19 @@ format.</p>
 </blockquote>
 <p>You can issue <code>asJSON</code> on any model designed in the &quot;normal&quot; way to get the JSON
 description of said model.</p>
+<h3 id="the-navigation-bar">The navigation bar <a class="plnk" href="#the-navigation-bar">#</a></h3>
+<p><img src="img/mec2.element.navbar.png" alt="navbar" class="loading" id="image-hash-476785519"></p>
+<p>The interface of the <code>mec2-element</code> aims to be simple and intuitive.
+The top bar includes:</p>
+<ul>
+<li>play/pause button, which is used to start/pause a provided drive on a constraint. More info can be found <a href="drive.html" data-href="drive.html">here</a>.</li>
+<li>the reset button brings the mechanism in its default position, so there is no need to reload the page everytime the mechanism is to be reset.</li>
+<li>the toggle gravity button is used to toggle the <code>&quot;gravity&quot;</code> flag of the model. This is useful to review different behaviour whether gravity is existent, or not.</li>
+<li>coordinates of the mouse for x and y in respect to the origin of the model.</li>
+<li>The frames per second (fps) are a useful indicator whether perfomance issues are existent. Because the animation uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame" data-href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame"><code>requestAnimationFrame</code></a>, this value should be around 60 at all times.</li>
+<li>The degree of freedom (dof) of the mechanism is calculated by the summed degrees of freedom of the nodes, which are constrained by the <code>constraints</code>.</li>
+<li>The last indicator shows the required iterations to reach the termination condition (in respect to position/velocity).</li>
+</ul>
 
     </article>
   </main>

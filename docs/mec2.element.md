@@ -83,3 +83,17 @@ defined in the default way, but as `JSON`.
 
 You can issue `asJSON` on any model designed in the "normal" way to get the JSON
 description of said model.
+
+### The navigation bar
+
+![navbar](img/mec2.element.navbar.png)
+
+The interface of the `mec2-element` aims to be simple and intuitive.
+The top bar includes:
+ - play/pause button, which is used to start/pause a provided drive on a constraint. More info can be found [here](drive.html).
+ - the reset button brings the mechanism in its default position, so there is no need to reload the page everytime the mechanism is to be reset.
+ - the toggle gravity button is used to toggle the `"gravity"` flag of the model. This is useful to review different behaviour whether gravity is existent, or not.
+ - coordinates of the mouse for x and y in respect to the origin of the model.
+ - The frames per second (fps) are a useful indicator whether perfomance issues are existent. Because the animation uses [`requestAnimationFrame`](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame), this value should be around 60 at all times.
+ - The degree of freedom (dof) of the mechanism is calculated by the summed degrees of freedom of the nodes, which are constrained by the `constraints`.
+ - The last indicator shows the required iterations to reach the termination condition (in respect to position/velocity).
