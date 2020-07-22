@@ -1,0 +1,115 @@
+@media screen {
+body {
+  margin: 0;
+  padding: 10px 8px;
+  font-size: 12pt;
+  font-family: Helvetica, Arial, Geneva, sans-serif;
+  background-color: #eee;
+}
+@media screen and (min-width: 768px) {
+  body {
+    max-width: 768px;
+    margin: 0 auto;
+  }
+}
+main, footer {
+  padding: 5px 1em;
+  background-color: white;
+  word-wrap: break-word;
+}
+header {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: center;  /* vertical align */
+  justify-items: stretch;
+  padding: 5px 16px;
+  color: white;
+  background-color: darkslategray;
+  border-radius: 10px;
+}
+header > a {
+  color: white;
+  text-decoration: none;
+}
+header > a:hover {
+  color: #aaa;
+}
+header > .left {
+  text-align: left;
+  font-size: 2em;
+}
+header > .right {
+  text-align: right;
+}
+p, blockquote { 
+  text-align: justify; 
+}
+blockquote {
+    font-size: 11pt;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-left: .25em solid green;
+    color: #666;
+    background-color: #f6f6f6;
+    padding: 0 0.5em;
+}
+
+table {
+    display: table;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto; 
+    border-collapse: collapse;
+}
+table th, table td {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+}
+
+figure {
+    margin: 0.5em auto;
+}
+figure > * {
+    display: block;
+    margin: 0 auto;
+    page-break-inside: avoid;
+    text-align: center;
+}
+figure  img {
+  border-radius: 3px;
+  margin: 4px;
+  box-shadow: 7px 5px #ccc;
+}
+figcaption { 
+    font-size: 11pt;
+    margin-top: 0.5em;
+}
+/* code sections */
+pre > code > code > div,
+pre > code.code-line > div {
+  font-size: 10pt;
+  background-color: #eee;
+  border-radius: 5px;
+  padding: 0.5em;
+  white-space: pre-wrap;
+}
+kbd {
+  font-size: 10pt;
+  border-radius: 3px;
+  padding: 1px 2px 0;
+  margin: 0 2px;
+  color: #444;
+  border: 1px solid #999;
+  background-color: #eee;
+}
+time {
+  color: #666;
+}
+footer {
+  text-align: center;
+  font-size: 0.8em;
+  color: #666;
+}
+}  /* end @media screen */
