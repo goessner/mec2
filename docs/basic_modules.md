@@ -92,8 +92,7 @@ To get an idea of the implementation of nodes the following code suffices to dra
 }
 ```
 
-![first](img/nodes.gif)
-
+<img src="img/nodes.gif" width=600 alt="first">
 
 ## Constraints
 
@@ -136,4 +135,5 @@ Constraints are made available by importing the `mec2.constraints` module.
     ]
 }
 ```
-![first](img/constraints.gif)
+<img src="img/constraints.gif" width=600 alt="first">
+

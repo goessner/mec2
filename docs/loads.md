@@ -40,7 +40,8 @@
 }
 ```
 
-![first](img/load_1.gif)
+<img src="img/load_1.gif" width=600 alt="first">
+
 
 ### Spring
 
@@ -71,7 +72,8 @@
 }
 ```
 
-![first](img/load_2.gif)
+<img src="img/load_2.gif" width=600 alt="first">
+
 
 
 #### Example:
@@ -99,5 +101,6 @@
 }
 ```
 
-![first](img/load_3.gif)
+<img src="img/load_3.gif" width=600 alt="first">
+
 

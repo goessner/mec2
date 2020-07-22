@@ -66,7 +66,8 @@ Each of these views is defined by the following properties:
 }
 ```
 
-![view](img/view_1.gif)
+<img src="img/view_1.gif" width=600 alt="first">
+
 
 ```json
 {
@@ -91,7 +92,8 @@ Each of these views is defined by the following properties:
 }
 ```
 
-![view](img/view_2.gif)
+<img src="img/view_2.gif" width=600 alt="first">
+
 
 ```json
 {
@@ -124,4 +126,5 @@ Each of these views is defined by the following properties:
 }
 ```
 
-![view](img/view_3.gif)
+<img src="img/view_3.gif" width=600 alt="first">
+

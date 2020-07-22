@@ -55,6 +55,7 @@ Predefined types for geometries are:
 }
 ```
 
-![first](img/shape_1.gif)
+<img src="img/shape_1.gif" width=600 alt="first">
+
 
 <!-- TODO example with cool poly shapes. e.g. a dump truck -->
