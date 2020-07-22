@@ -1,181 +1,60 @@
-[![npm](https://img.shields.io/npm/v/mec2.svg)](https://www.npmjs.com/package/mec2)
 
 # mec2
 
-*mec2* is a javascript library for simulating and analysing planar mechanisms or linkages. The concept is based on *nodes* constrained by one of four different vectors. Solving the kinematic equations is done by using Erin Catto's principle of [sequential impulses](http://box2d.org/downloads/), often used by gaming physics engines.
+mec2 is a 2D physics simulation engine written in JavaScript.
+It is designed to easily create 2D mechanisms for rapid sketching and rendering
+the resulting models in a 2D canvas using [g2](github.com/goessner/g2).
 
-Its API is minimal and easy to understand. The library is tiny and fast. Mechanisms are described using an easy to read JSON format.
+## Main features
 
-## Example
+- Fast and lightweight physics simulation.
+- Addressing HTML canvas 2D using g2.
+- Highly modifiable environment.
+- High level definitions.
+- Easy extensibility.
+- No dependencies (beside g2 for rendering).
+- Models may be easily exported, as they are provided as JSON.
 
-![first](./img/4bar.gif)
-
-## JSON
-
-```json
-{
-    "id":"4bar",
-    "nodes": [
-        { "id":"A0","x":100,"y":100,"base":true },
-        { "id":"A", "x":100,"y":150 },
-        { "id":"B", "x":350,"y":220 },
-        { "id":"B0","x":300,"y":100,"base":true }
-    ],
-    "constraints": [
-        { "id":"a","p1":"A0","p2":"A","len":{ "type":"const" } },
-        { "id":"b","p1":"A", "p2":"B","len":{ "type":"const" } },
-        { "id":"c","p1":"B0","p2":"B","len":{ "type":"const" } }
-    ]
-}
-```
-
-## Documentation
-
-- todo -
-
-## How do I use it?
-
-You can build an environment yourself.
-
-Here's a minimal example:
-
+## Minimal Example
 
 ```html
-<html>
-<head>
-    <title>minimal mec2 example</title>
-    <meta charset='utf-8'>
-</head>
-<body>
-    <canvas id="c" width="601" height="401"></canvas>
-
-    <script src="https://gitcdn.xyz/repo/goessner/g2/master/src/g2.js"></script>
-    <script src="https://gitcdn.xyz/repo/goessner/mec2/master/mec2.min.js"></script>
-
-    <script>
-        const ctx = document.getElementById('c').getContext('2d');  // the canvas-context
-        let   g = g2().clr().view({cartesian:true}).grid(),         // a g2 graphics-object
-              model = {                                             // your model
-                id: 'pendulum',
-                gravity:true,
-                nodes: [
-                    {id:'A0',x:300,y:240,base:true},
-                    {id:'A1',x:380,y:300}
-                ],
-                constraints: [
-                    { id:'a',p1:'A0',p2:'A1',len:{type:'const'} }
-                ]
-              };
-
-        // simulation
-        const simulate = () => {
-                  model.tick(1/60);                 // solve model with fixed stepping
-                  g.exe(ctx);                       // render its pose on the canvas
-                  requestAnimationFrame(simulate);  // keep calling back
-              };
-
-        mec.model.extend(model);                    // extend the model
-        model.init();                               // initialize it
-        model.draw(g);                              // append model-graphics to graphics-obj
-
-        simulate();                                 // kick-off the simulation
-    </script>
-</body>
-</html>
+{
+  "nodes": [
+    { "id": "A0", "x": 75, "y": 50, "base": true },
+    { "id": "A", "x": 75, "y": 100 },
+    { "id": "B", "x": 275, "y": 170 },
+    { "id": "B0", "x": 275, "y": 50, "base": true },
+    { "id": "C", "x": 125, "y": 175 }
+  ],
+  "constraints": [
+    {
+      "id": "a", "p1": "A0", "p2": "A", "len": { "type":"const" },
+      "ori": { "type": "drive", "Dt": 2, "Dw": 6.28 }
+    }, {
+      "id": "b", "p1": "A", "p2": "B", "len": { "type":"const" }
+    }, {
+      "id": "c", "p1": "B0", "p2": "B", "len": { "type":"const" }
+    }, {
+      "id": "d", "p1": "B", "p2": "C", "len": { "type":"const" },
+      "ori": { "ref": "b", "type": "const" }
+    }
+  ],
+  "views": [
+    {
+      "show": "pos", "of": "C", "as": "trace", "Dt":2.1,
+      "mode":"preview", "fill":"orange"
+    }, {
+      "show": "vel", "of": "C", "as": "vector"
+    }, {
+      "as": "chart", "x": 340, "y": 75, "Dt": 1.9,
+      "show": "wt", "of": "b"
+    }
+  ]
+}
 ```
+![mech](img/view_1.gif)
 
-If you don't want to do that, check out the project [_mecEdit_](https://github.com/jauhl/mecEdit "mecEdit on GitHub"). _mecEdit_ is a standalone, installable editor for planar mechanisms, that uses `mec2` as a physics engine and focuses on user experience. It's hosted [here](https://jauhl.github.io/mecEdit/mecEdit.html "mecEdit").
+## License
 
-# License
+mec2 is licensed under the terms of the MIT License.
 
-*mec2* is licensed under the terms of the MIT License.
-
-# Change Log
-
-### 0.9.4 - 2019-05-17
-
-* If the controlling app has a member `fps`, it should be of type `Number`. This property will now be used to feed the current app-performance back into `model.preview()` and adjust the timestep and thus the accuracy accordingly.
-* Trailing points of chart-views with referenced constraints are now prevented from being calculated if the controlling app has a member `editing` which evaluates to `true`.
-* Internal changes to constraint drive function to make editing more convenient.
-
-### 0.9.3 - 2019-05-08
-
-* Updated `shape.img` to support reworked g2.img() API. See [changes.md -> shape.img](./changes.md#shapeimg) or inline documentation.
-* Made some properties of `shape.poly` optional. See [changes.md -> shape.poly](./changes.md#shapepoly) or inline documentation.
-
-### 0.9.2 - 2019-04-13
-
-* chart-views that have a property `canvas` are now excluded from `model.draw()` and have to be handled by the app.
-
-### 0.9.1 - 2019-02-28
-
-* added a flag `mec.show.nodeScaling`. Setting this to `true` enables a visual representation of the nodes masses by their radius as well as magnifying them while being hovered by the mousepointer. Constraint graphics scale accordingly.
-
-### 0.9.0 - 2019-02-08
-
-* some more analyses added.
-* chart views integrated.
-* some bugs fixed.
-
-### 0.8.6 - 2019-01-06 (changes are non-breaking)
-
-* `mec.model.tick(dt)` is now strictly using a fixed time step of `dt=1/60` seconds regardless of the `dt` argument.
-* `mec.model.preview()` supports *preview*ing capabilities of some `mec.view` elements.
-* `mec.model.energy` getter added (total sum of kinetic + potential energy).
-* `mec.model.pre` model pre-processing reimplemented with respect to use a *semi-implicite Euler* integrator now with `mec.node.pre`.
-* `mec.core` some additions due to `mec.model.energy` and minor bug removals.
-* `mec.node.pre` now implements the *semi-implicite Euler* integrator. So pure node-spring models are working now nearly as expected.
-* `mec.constraint` now supports previewing of drives with *input*s.
-* `mec.load` ... some minor modifications and additions.
-* `mec.load.trace` ... add preview capability.
-* `mec.load.trace` ... add optional reference node and orientation (temporarily).
-* `mec.drive.ramp` ... removed (not used afaik).
-* `mec.drive.seq` ... added. A composite sequence of drive segments ('ramps' can be build with that).
-* `mec.drive['const']` ... added. Frequently used as drive segment.
-
-### 0.8.5 - 2018-12-20
-
-* reworked constraints and added support for bidirectional references.
-* moved everything graphics related (flags, colors) to `mec.core.show`.
-
-### 0.8.5 - 2018-12-20
-
-* reworked constraints and added support for bidirectional references.
-* moved everything graphics related (flags, colors) to `mec.core.show`.
-
-### 0.8.0 - 2018-08-13
-
-* `*.toJSON` removed.
-
-### 0.7.9 - 2018-08-11
-
-* info view implemented.
-
-### 0.7.8 - 2018-08-10
-
-* trace view implemented.
-
-### 0.7.7 - 2018-08-09
-
-* vector view implemented.
-* view elements added.
-
-### 0.7.6 - 2018-08-08
-
-* spring load element added.
-
-### 0.7.5 - 2018-08-07
-
-* spring load element added.
-* added a toJSON method to model and to all element types. model.toJSON() invokes .toJSON() on each element in the model returns a canonical JSON-representation of the model
-* implemented a global darkmode flag (default false) for darker canvas backgrounds
-* added a different shading for elements when they are selected and not just hovered over
-* some minor bug fixes.
-
-### 0.7.3 - 2018-08-06
-
-* some minor bug fixes.
-
-### 0.7.0 - 2018-08-05
-
-* first commit.
