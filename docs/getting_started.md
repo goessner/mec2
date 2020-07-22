@@ -16,7 +16,7 @@ It has a new concept of treating elements as particles whose movements follow co
 
 `mec2` has no dependencies for the simulation and implements all necessary infrastructure on its own.
 For rendering the model the graphics library `g2` is used.
-To read more about `g2` have a look [here](github.com/goessner/g2).
+To read more about `g2` have a look [here](https://goessner.github.io/g2).
 Models are described using the human and machine readable `JSON` format.
 
 A `mec2` model can consist of up to 9 different modules.
@@ -270,4 +270,4 @@ model.draw(g);
 Inside the `render` queue the `model.timer` is advanced one sixtieth of a second each iteration by calling `model.tick(1/60)`.
 Assuming a 60hz Monitor is used (or at least requestAnimationFrame operates in 60hz) this results in a convenient mapping to real time.
 
-If you want to know more about `g2` feel free to check out [g2's GitHub page](github.com/goessner/g2).
+If you want to know more about `g2` feel free to check out [g2's documentation](https://goessner.github.io/g2).
