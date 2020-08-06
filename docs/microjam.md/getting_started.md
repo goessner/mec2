@@ -43,7 +43,7 @@ Therefore it is advised to import it as well.
 
 ### Example
 
-<img src="img/view_1.gif" width=600 alt="mech">
+<img src="../img/view_1.gif" width=600 alt="mech">
 
 This mechanism can be generated using two types of syntax.
 

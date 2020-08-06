@@ -93,7 +93,7 @@ To get an idea of the implementation of nodes the following code suffices to dra
 }
 ```
 
-<img src="img/nodes.gif" width=600 alt="first">
+<img src="../img/nodes.gif" width=600 alt="first">
 
 ## Constraints
 
@@ -110,7 +110,7 @@ Without extra modules, the `type` can be set as `const` or `free`, limiting the 
 
 | &nbsp; | &nbsp; | &nbsp; | &nbsp; | &nbsp; |
 |:------ |:------:|:------:|:------:|:------:|
-| &nbsp; | ![fix](img/vec-fix.png) | ![trn](img/vec-trn.png) | ![fix](img/vec-rot.png) | ![fix](img/vec-free.png) |
+| &nbsp; | ![fix](../img/vec-fix.png) | ![trn](../img/vec-trn.png) | ![fix](../img/vec-rot.png) | ![fix](../img/vec-free.png) |
 | **length** &nbsp; &nbsp; | const | free | const | free |
 | **orientation** | const | const | free | free |
 | **DOF*** | 0 | 1 | 1 | 2 |
@@ -136,5 +136,5 @@ Constraints are made available by importing the `mec2.constraints` module.
     ]
 }
 ```
-<img src="img/constraints.gif" width=600 alt="first">
+<img src="../img/constraints.gif" width=600 alt="first">
 

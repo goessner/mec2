@@ -2,21 +2,20 @@
   <html class="theme-light">
   <head>
   <meta charset="utf-8">
-  <base href="./">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=no">
   <meta name="description" content="mec2-Element">
   <meta name="date" content="Mon Jun 22 2020 02:00:00 GMT+0200 (Central European Summer Time)">
   <meta name="keywords" content="">
   <title>mec2-Element</title>
-  <link rel="shortcut icon" type="image/png" href="./img/favicon.png">
+  <link rel="shortcut icon" type="image/png" href="../img/favicon.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.18.1/styles/vs2015.min.css">
   
-  <link rel="stylesheet" href="./theme/styles.css">
+  <link rel="stylesheet" href="../theme/styles.css">
   </head>
   <body id="top">
   <header>
-  <a href="./index.html" class="right">mec2</a>
-  <a href="./mec2.element.html" class="left">Custom HTML Element</a>
+  <a href="../index.html" class="right">mec2</a>
+  <a href="../microjam.md/mec2.element.html" class="left">Custom HTML Element</a>
   <a href="https://github.com/goessner/mec2"">
     <svg height="32" viewBox="0 0 16 16" width="32"><path fill-rule="evenodd" clip-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z"></path></svg>
   </a>
@@ -24,18 +23,18 @@
   <main>
     <nav>
       <ul>
-<li><a href="getting_started.html" data-href="getting_started.html">Getting started</a></li>
-<li><a href="basic_modules.html" data-href="basic_modules.html">Basic modules</a></li>
-<li><a href="loads.html" data-href="loads.html">Loads</a></li>
-<li><a href="drive.html" data-href="drive.html">Drive</a></li>
-<li><a href="views.html" data-href="views.html">Views</a></li>
-<li><a href="shapes.html" data-href="shapes.html">Shapes</a></li>
-<li><a href="mec2.element.html" data-href="mec2.element.html">Element</a></li>
+<li><a href="../microjam.md/getting_started.html">Getting started</a></li>
+<li><a href="../microjam.md/basic_modules.html">Basic modules</a></li>
+<li><a href="../microjam.md/loads.html">Loads</a></li>
+<li><a href="../microjam.md/drive.html">Drive</a></li>
+<li><a href="../microjam.md/views.html">Views</a></li>
+<li><a href="../microjam.md/shapes.html">Shapes</a></li>
+<li><a href="../microjam.md/mec2.element.html">Element</a></li>
 </ul>
 
     </nav>
     <article>
-  <p><em>mec2</em> comes with a <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements" data-href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements">custom HTML element</a>
+  <p><em>mec2</em> comes with a <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements">custom HTML element</a>
 which allows to implement models directly into the page without the necessity of running extra boilerplate code.</p>
 <p>The aim of this HTML element is to minimize the implementation overhead of the user,
 while maintaining all features <em>mec2</em> has.</p>
@@ -83,7 +82,7 @@ while maintaining all features <em>mec2</em> has.</p>
 <li><code>height</code>: Height of the element in <code>px</code>.</li>
 <li><code>x0</code>: x-origin of the model.</li>
 <li><code>y0</code>: y-origin of the model.</li>
-<li><code>cartesian:</code>: Whether <code>cartesian</code> is true or not (see <a href="https://goessner.github.io/g2/View.html" data-href="https://goessner.github.io/g2/View.html">View</a>).</li>
+<li><code>cartesian:</code>: Whether <code>cartesian</code> is true or not (see <a href="https://goessner.github.io/g2/View.html">View</a>).</li>
 <li><code>grid</code>: Show <code>grid</code> in background.</li>
 <li><code>darkmode</code>: Whether dark mode is set or not.</li>
 <li><code>gravity</code>: Activate gravity.</li>
@@ -99,7 +98,7 @@ defined in the default way, but as <code>JSON</code>.</p>
 <blockquote>
 <p><strong>Note</strong>: Don't forget to use quotations (e.g. <code>&quot;x&quot;</code>) for the properties,
 since the <code>g2-element</code> interprets the <code>innerHTML</code> using the
-<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON" data-href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON"><strong>JSON</strong></a>
+<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON"><strong>JSON</strong></a>
 format.</p>
 </blockquote>
 <p>You can issue <code>asJSON</code> on any model designed in the &quot;normal&quot; way to get the JSON
@@ -109,11 +108,11 @@ description of said model.</p>
 <p>The interface of the <code>mec2-element</code> aims to be simple and intuitive.
 The top bar includes:</p>
 <ul>
-<li>play/pause button, which is used to start/pause a provided drive on a constraint. More info can be found <a href="drive.html" data-href="drive.html">here</a>.</li>
+<li>play/pause button, which is used to start/pause a provided drive on a constraint. More info can be found <a href="drive.html">here</a>.</li>
 <li>the reset button brings the mechanism in its default position, so there is no need to reload the page everytime the mechanism is to be reset.</li>
 <li>the toggle gravity button is used to toggle the <code>&quot;gravity&quot;</code> flag of the model. This is useful to review different behaviour whether gravity is existent, or not.</li>
 <li>coordinates of the mouse for x and y in respect to the origin of the model.</li>
-<li>The frames per second (fps) are a useful indicator whether perfomance issues are existent. Because the animation uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame" data-href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame"><code>requestAnimationFrame</code></a>, this value should be around 60 at all times.</li>
+<li>The frames per second (fps) are a useful indicator whether perfomance issues are existent. Because the animation uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame"><code>requestAnimationFrame</code></a>, this value should be around 60 at all times.</li>
 <li>The degree of freedom (dof) of the mechanism is calculated by the summed degrees of freedom of the nodes, which are constrained by the <code>constraints</code>.</li>
 <li>The last indicator shows the required iterations to reach the termination condition (in respect to position/velocity).</li>
 </ul>

@@ -212,9 +212,9 @@ Each of these views is defined by the following properties:
     }]
 }
 </mec-2>
-<script src="bin/g2.js"></script>
-<script src="bin/g2.selector.js"></script>
-<script src="bin/canvasInteractor.js"></script>
-<script src="bin/mec2.min.js"></script>
-<script src="bin/mec.htmlelement.js"></script>
+<script src="../bin/g2.js"></script>
+<script src="../bin/g2.selector.js"></script>
+<script src="../bin/canvasInteractor.js"></script>
+<script src="../bin/mec2.min.js"></script>
+<script src="../bin/mec.htmlelement.js"></script>
 

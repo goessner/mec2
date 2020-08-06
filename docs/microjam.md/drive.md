@@ -50,7 +50,7 @@ Using combinations of these properties a variety of motions can be described.
 }  
 ```
 
-<img src="img/drive_1.gif" width=600 alt="first">
+<img src="../img/drive_1.gif" width=600 alt="first">
 
 
 `- Drive Sequence`
@@ -76,7 +76,7 @@ Drive functions can be composed as a sequence (`'func':'seq'`) of normalized fun
     }]
 }
 ```
-<img src="img/drive_2.gif" width=600 alt="first">
+<img src="../img/drive_2.gif" width=600 alt="first">
 
 
 ```json
@@ -100,5 +100,5 @@ Drive functions can be composed as a sequence (`'func':'seq'`) of normalized fun
 }
 ```
 
-<img src="img/drive_3.gif" width=600 alt="first">
+<img src="../img/drive_3.gif" width=600 alt="first">
 
