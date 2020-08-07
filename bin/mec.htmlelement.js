@@ -93,7 +93,7 @@ class Mec2Element extends HTMLElement {
         // find input-drives
         this._inputs = this._model.inputControlledDrives;
         // find charts
-        this._charts = this._model.views.filter(v => v.as === 'chart')
+        this._charts = this._model.views.filter(v => v.as === 'chart');
         // add shadow dom
         this._root.innerHTML = Mec2Element.template({
             width: this.width,
@@ -129,6 +129,7 @@ class Mec2Element extends HTMLElement {
         this._g = g2().clr().view(this._interactor.view);
         this._gusr = g2();
         if (this.grid) this._g.grid({color:this._show.darkmode?'#999':'#ccc'});
+        
         this._selector = g2.selector(this._interactor.evt);
         // treat valid initial model
         if (this._model.valid) {
@@ -371,7 +372,6 @@ return `
 <canvas id="cnv" width="${width}" height="${height}" touch-action="none"></canvas><br>
 <span id="info" style="position:absolute;display:none;color:#222;background-color:#ffb;border:1px solid black;font:0.9em monospace;padding:0.1em;font-family:Courier;font-size:9pt;">tooltip</span>
 ${inputs.length ? inputs.map((input,i) => Mec2Element.slider({input,i,width})).join('') : ''}
-${charts.length ? charts.map((chart, i) => Mec2Element.chart({chart, i})).join('') : ''}
 <pre id="logview"></pre>
 </div>
 `
@@ -390,9 +390,6 @@ ${charts.length ? charts.map((chart, i) => Mec2Element.chart({chart, i})).join('
             input.r0 = r0;
             return `<mec-slider id="${input.id}" title="${input.constraint.id+'.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
-    }
-    static chart({chart, i}) {
-        return `<mec-2-chart index=${i}></mec-2-chart>`
     }
 }
 customElements.define('mec-2', Mec2Element);
