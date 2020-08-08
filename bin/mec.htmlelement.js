@@ -92,8 +92,10 @@ class Mec2Element extends HTMLElement {
         this._model.init();
         // find input-drives
         this._inputs = this._model.inputControlledDrives;
-        // find charts
-        this._charts = this._model.views.filter(v => v.as === 'chart');
+        // find chart elements which are refered to by the model
+        this._charts = this._model.views.filter(v => v.as === 'chart' && v.canvas);
+        this._chartRefs = this._charts.map(c => document.getElementById(c.canvas));
+
         // add shadow dom
         this._root.innerHTML = Mec2Element.template({
             width: this.width,
@@ -101,7 +103,6 @@ class Mec2Element extends HTMLElement {
             dof: this._model.dof,
             gravity: this._model.gravity.active,
             inputs: this._inputs,
-            charts: this._charts,
             darkmode: this._show.darkmode
         });
         // cache elements of shadow dom
@@ -147,7 +148,7 @@ class Mec2Element extends HTMLElement {
             this._model.pose();
             this._model.draw(this._g);
             this._g.ins(this._gusr);
-            this._g.exe(this._ctx);
+            this.render();
             this._interactor.on('drag', e => this.ondrag(e))
                             .on('tick', e => this.ontick(e))
                             .on(['pointermove','pointerup'], e => this.showInfo(e))
@@ -157,7 +158,7 @@ class Mec2Element extends HTMLElement {
             this.dispatchEvent(new CustomEvent('init'));
         }
         else if (this._model.msg) {
-            this._g.exe(this._ctx);
+            this.render();
             this.log(mec.messageString(this._model.msg));
         }
         this.pausing = true;  // initially ...
@@ -172,7 +173,7 @@ class Mec2Element extends HTMLElement {
         for (const input of this._inputs)
             this._root.getElementById(input.id).removeEventListener("input", input.hdl, false);
         delete this._inputs;
-        delete this._charts;
+        delete this._chartRefs;
         // remove event listeners
         this._runbtn  .removeEventListener("click", this._runbtnHdl, false);
         this._resetbtn.removeEventListener("click", this._resetbtnHdl, false);
@@ -193,6 +194,20 @@ class Mec2Element extends HTMLElement {
         delete this._logview;
     }
 
+    render() {
+
+        for (const idx in this._chartRefs) {
+            try {
+                this._chartRefs[idx]._chart.funcs = this._charts[0].graph.funcs;
+                this._chartRefs[idx].render();
+                // console.log(this._charts[0].graph.funcs);
+                // console.log(element._chart);
+            }
+            catch {}
+        }
+        this._g.exe(this._ctx);
+    }
+
     parseModel() {
         try { this._model = JSON.parse(this.innerHTML); return true; }
         catch(e) { this._root.innerHTML = e.message; }
@@ -202,7 +217,7 @@ class Mec2Element extends HTMLElement {
     reset() {
         this._model.reset();
         this._model.pose();
-        this._g.exe(this._ctx);
+        this.render();
         this.pausing = true;  // initially ...
     }
     showInfo(e) {
@@ -235,7 +250,7 @@ class Mec2Element extends HTMLElement {
             this._model.preview();
             this._model.pose();
             this.dispatchEvent(new CustomEvent('drag'));
-            this._g.exe(this._ctx);
+            this.render();
             // this._state.edit ? this._model.reset() : this._model.pose();
         }
     }
@@ -250,7 +265,7 @@ class Mec2Element extends HTMLElement {
         }
         if (this._model.isActive || this.editing || e.dirty) { // simulation is running ... or pointer is moving ...
             this._g.exe(this._selector);
-            this._g.exe(this._ctx);
+            this.render();
         }
         // avoid unnecessary model.tick's with mechanims fully controlled by inputs .. !  
         if (this.pausing === false &&
@@ -283,7 +298,7 @@ class Mec2Element extends HTMLElement {
         }
     }
 
-    static template({width,height,darkmode,dof,gravity,inputs,charts}) {
+    static template({width,height,darkmode,dof,gravity,inputs}) {
 return `
 <style>
     nav {
