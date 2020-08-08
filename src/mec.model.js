@@ -834,8 +834,7 @@ mec.model = {
             for (const shape of this.shapes)
                 shape.draw(g);
             for (const view of this.views)
-                if (!view.canvas)
-                    view.draw(g);
+                view.draw(g);
             for (const constraint of this.constraints)
                 constraint.draw(g);
             for (const load of this.loads)

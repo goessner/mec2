@@ -4753,8 +4753,10 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         this._model.init();
         // find input-drives
         this._inputs = this._model.inputControlledDrives;
-        // find charts
-        this._charts = this._model.views.filter(v => v.as === 'chart');
+        // find chart elements which are refered to by the model
+        this._charts = this._model.views.filter(v => v.as === 'chart' && v.canvas);
+        this._chartRefs = this._charts.map(c => document.getElementById(c.canvas));
+
         // add shadow dom
         this._root.innerHTML = Mec2Element.template({
             width: this.width,
@@ -4832,7 +4834,7 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         for (const input of this._inputs)
             this._root.getElementById(input.id).removeEventListener("input", input.hdl, false);
         delete this._inputs;
-        delete this._charts;
+        delete this._chartRefs;
         // remove event listeners
         this._runbtn  .removeEventListener("click", this._runbtnHdl, false);
         this._resetbtn.removeEventListener("click", this._resetbtnHdl, false);
@@ -4854,9 +4856,14 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
     }
 
     render() {
-        const c = document.getElementById('canvas1')._ctx;
-        for (const chart in this._charts) {
-            console.log(chart);
+
+        for (const idx in this._chartRefs) {
+            // try catch to eliminate the cases before all modules are loaded.
+            try {
+                this._chartRefs[idx]._chart.funcs = this._charts[0].graph.funcs;
+                this._chartRefs[idx].render();
+            }
+            catch {}
         }
         this._g.exe(this._ctx);
     }
@@ -4951,7 +4958,7 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         }
     }
 
-    static template({width,height,darkmode,dof,gravity,inputs,charts}) {
+    static template({width,height,darkmode,dof,gravity,inputs}) {
 return `
 <style>
     nav {
