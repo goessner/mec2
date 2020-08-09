@@ -1,30 +1,30 @@
 class Mec2Element extends HTMLElement {
     static get observedAttributes() {
-        return ['width', 'height','cartesian','grid', 'x0', 'y0', 
-                'darkmode', 'gravity', 'hidenodes', 'hideconstraints', 
-                'nodelabels', 'constraintlabels', 'loadlabels',
-                'nodeinfo', 'constraintinfo'];
+        return ['width', 'height', 'cartesian', 'grid', 'x0', 'y0',
+            'darkmode', 'gravity', 'hidenodes', 'hideconstraints',
+            'nodelabels', 'constraintlabels', 'loadlabels',
+            'nodeinfo', 'constraintinfo'];
     }
 
     constructor() {
         super();
-        this._root = this.attachShadow({ mode:'open' });
-        this._state = { edit:false, pause:true };
+        this._root = this.attachShadow({ mode: 'open' });
+        this._state = { edit: false, pause: true };
         this._inputs = [];
     }
 
     get width() { return +this.getAttribute('width') || 301; }
-    set width(q) { if (q) this.setAttribute('width',q); }
+    set width(q) { if (q) this.setAttribute('width', q); }
     get height() { return +this.getAttribute('height') || 201; }
-    set height(q) { if (q) this.setAttribute('height',q); }
+    set height(q) { if (q) this.setAttribute('height', q); }
     get x0() { return (+this.getAttribute('x0')) || 0; }
-    set x0(q) { if (q) this.setAttribute('x0',q); }
+    set x0(q) { if (q) this.setAttribute('x0', q); }
     get y0() { return (+this.getAttribute('y0')) || 0; }
-    set y0(q) { if (q) this.setAttribute('y0',q); }
+    set y0(q) { if (q) this.setAttribute('y0', q); }
     get cartesian() { return this.hasAttribute('cartesian'); }
-    set cartesian(q) { q ? this.setAttribute('cartesian','') : this.removeAttribute('cartesian'); }
+    set cartesian(q) { q ? this.setAttribute('cartesian', '') : this.removeAttribute('cartesian'); }
     get grid() { return this.hasAttribute('grid') || false; }
-    set grid(q) { q ? this.setAttribute('grid','') : this.removeAttribute('grid'); }
+    set grid(q) { q ? this.setAttribute('grid', '') : this.removeAttribute('grid'); }
 
     get show() { return this._show; }
 
@@ -38,7 +38,7 @@ class Mec2Element extends HTMLElement {
     }
 
     get pausing() { return this._state.pause; }
-    set pausing(q) { 
+    set pausing(q) {
         if (this._state.pause && !q) {  // start / continue running
             if (!this._model.isActive)
                 this._model.reset();
@@ -52,30 +52,30 @@ class Mec2Element extends HTMLElement {
             this._state.pause = true;
             this._runbtn.innerHTML = '&#9654;';
         }
-    //  else  ... nothing to do
+        //  else  ... nothing to do
     }
-/*
-    get editing() { return this._state.edit; }
-    set editing(q) { 
-        if (!this._state.edit && q) {  // edit in initial pose only
-            if (this.hasInputs)
-                for (const input of this._inputs) {
-                    const val0 = input.sub === 'ori' ? input.w0 : input.r0;
-                    this._root.getElementById(input.id).value = val0;
-//                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
-                }
-            this._model.reset();
-            this._editbtn.innerHTML = 'drag';
-            this._state.edit = true;
+    /*
+        get editing() { return this._state.edit; }
+        set editing(q) { 
+            if (!this._state.edit && q) {  // edit in initial pose only
+                if (this.hasInputs)
+                    for (const input of this._inputs) {
+                        const val0 = input.sub === 'ori' ? input.w0 : input.r0;
+                        this._root.getElementById(input.id).value = val0;
+    //                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
+                    }
+                this._model.reset();
+                this._editbtn.innerHTML = 'drag';
+                this._state.edit = true;
+            }
+            else if (this._state.edit && !q) {
+                this._editbtn.innerHTML = 'edit';
+                this._state.edit = false;
+            }
+        //  else  ... nothing to do
+    //        this.log(`editing=${this._state.edit}`)
         }
-        else if (this._state.edit && !q) {
-            this._editbtn.innerHTML = 'edit';
-            this._state.edit = false;
-        }
-    //  else  ... nothing to do
-//        this.log(`editing=${this._state.edit}`)
-    }
-*/
+    */
     init() {
         // create model
         if (!this.parseModel(this.innerHTML)) return;
@@ -97,7 +97,23 @@ class Mec2Element extends HTMLElement {
         this._chartRefs = this._charts.map(c => document.getElementById(c.canvas));
         // Apply functions to html elements.
         for (const idx in this._chartRefs) {
-            this._chartRefs[idx].funcs = this._charts[0].graph.funcs;
+            const elm = this._chartRefs[idx];
+            const chart = this._charts[idx];
+            Object.assign(elm, chart.graph);
+            elm.nod = () => {
+                // this._charts[idx].previewNod;
+                const data = chart.graph.funcs[0].data;
+                const pt = data.findIndex(data => data.t > chart.local_t);
+                return pt === -1
+                    ? { scl: 0 } // If point is out of bounds
+                    : {
+                        x: data[pt].x * (elm._chart.b / 
+                            (elm._chart.xmax - elm._chart.xmin)) + elm._chart.x,
+                        y: data[pt].y * (elm._chart.h /
+                            (elm._chart.ymax - elm._chart.ymin)) + elm._chart.h - 8,
+                        scl: 1
+                    };
+            }
         }
 
         // add shadow dom
@@ -110,40 +126,40 @@ class Mec2Element extends HTMLElement {
             darkmode: this._show.darkmode
         });
         // cache elements of shadow dom
-        this._ctx      = this._root.getElementById('cnv').getContext('2d');
-        this._runbtn   = this._root.getElementById('runbtn');
+        this._ctx = this._root.getElementById('cnv').getContext('2d');
+        this._runbtn = this._root.getElementById('runbtn');
         this._resetbtn = this._root.getElementById('resetbtn');
-//        this._editbtn  = this._root.getElementById('editbtn');
-        this._gravbtn  = this._root.getElementById('gravbtn');
-        this._corview  = this._root.getElementById('corview');
-        this._dofview  = this._root.getElementById('dofview');
-//        this._egyview  = this._root.getElementById('egyview');
-        this._fpsview  = this._root.getElementById('fpsview');
-        this._itrview  = this._root.getElementById('itrview');
-        this._info     = this._root.getElementById('info');
-        this._logview  = this._root.getElementById('logview');
+        //        this._editbtn  = this._root.getElementById('editbtn');
+        this._gravbtn = this._root.getElementById('gravbtn');
+        this._corview = this._root.getElementById('corview');
+        this._dofview = this._root.getElementById('dofview');
+        //        this._egyview  = this._root.getElementById('egyview');
+        this._fpsview = this._root.getElementById('fpsview');
+        this._itrview = this._root.getElementById('itrview');
+        this._info = this._root.getElementById('info');
+        this._logview = this._root.getElementById('logview');
         // check gravity attribute
         this.gravity = this.getAttribute('gravity') === "" ? true : false;
         // add event listeners
-        this._runbtnHdl   = e => this.pausing = !this.pausing; this._runbtn  .addEventListener("click", this._runbtnHdl, false);
-        this._resetbtnHdl = e => this.reset();                 this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
-  //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
-        this._gravbtnHdl  = e => this.gravity = !this.gravity; this._gravbtn .addEventListener("click", this._gravbtnHdl, false);
+        this._runbtnHdl = e => this.pausing = !this.pausing; this._runbtn.addEventListener("click", this._runbtnHdl, false);
+        this._resetbtnHdl = e => this.reset(); this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
+        this._gravbtnHdl = e => this.gravity = !this.gravity; this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
         // some more members
-        this._interactor = canvasInteractor.create(this._ctx,{x:this.x0,y:this.y0,cartesian:this.cartesian});
+        this._interactor = canvasInteractor.create(this._ctx, { x: this.x0, y: this.y0, cartesian: this.cartesian });
         this._g = g2().clr().view(this._interactor.view);
         this._gusr = g2();
-        if (this.grid) this._g.grid({color:this._show.darkmode?'#999':'#ccc'});
-        
+        if (this.grid) this._g.grid({ color: this._show.darkmode ? '#999' : '#ccc' });
+
         this._selector = g2.selector(this._interactor.evt);
         // treat valid initial model
         if (this._model.valid) {
             // add input event listeners
             for (const input of this._inputs) {
                 const z0 = input.sub === 'ori' ? input.w0 : input.r0;
-                input.hdl = e => { 
-                    if (this.editing) this.editing = false; 
-                    input.constraint[input.sub].inputCallbk((+e.target.value-z0),false);
+                input.hdl = e => {
+                    if (this.editing) this.editing = false;
+                    input.constraint[input.sub].inputCallbk((+e.target.value - z0), false);
                     this.pausing = false;
                 };
                 this._root.getElementById(input.id).addEventListener("input", input.hdl, false);
@@ -154,11 +170,11 @@ class Mec2Element extends HTMLElement {
             this._g.ins(this._gusr);
             this.render();
             this._interactor.on('drag', e => this.ondrag(e))
-                            .on('tick', e => this.ontick(e))
-                            .on(['pointermove','pointerup'], e => this.showInfo(e))
-                            .on('pointerdown', e => this.hideInfo(e))
-//                            .on('pointerup', e => this.showInfo(e))
-                            .startTimer();
+                .on('tick', e => this.ontick(e))
+                .on(['pointermove', 'pointerup'], e => this.showInfo(e))
+                .on('pointerdown', e => this.hideInfo(e))
+                //                            .on('pointerup', e => this.showInfo(e))
+                .startTimer();
             this.dispatchEvent(new CustomEvent('init'));
         }
         else if (this._model.msg) {
@@ -179,19 +195,19 @@ class Mec2Element extends HTMLElement {
         delete this._inputs;
         delete this._chartRefs;
         // remove event listeners
-        this._runbtn  .removeEventListener("click", this._runbtnHdl, false);
+        this._runbtn.removeEventListener("click", this._runbtnHdl, false);
         this._resetbtn.removeEventListener("click", this._resetbtnHdl, false);
-//        this._editbtn .removeEventListener("click", this._resetbtnHdl, false);
-        this._gravbtn .removeEventListener("click", this._gravbtnHdl, false);
+        //        this._editbtn .removeEventListener("click", this._resetbtnHdl, false);
+        this._gravbtn.removeEventListener("click", this._gravbtnHdl, false);
         // delete cached data
         delete this._ctx;
         delete this._runbtn;
         delete this._resetbtn;
-//        delete this._editbtn;
+        //        delete this._editbtn;
         delete this._gravbtn;
         delete this._corview;
         delete this._dofview;
-//        delete this._egyview;
+        //        delete this._egyview;
         delete this._fpsview;
         delete this._itrview;
         delete this._info;
@@ -207,8 +223,8 @@ class Mec2Element extends HTMLElement {
 
     parseModel() {
         try { this._model = JSON.parse(this.innerHTML); return true; }
-        catch(e) { this._root.innerHTML = e.message; }
-        return false; 
+        catch (e) { this._root.innerHTML = e.message; }
+        return false;
     }
 
     reset() {
@@ -221,10 +237,10 @@ class Mec2Element extends HTMLElement {
         const info = this._model.info;
         if (info) {
             const bbox = this._ctx.canvas.getBoundingClientRect();
-            this._info.style.left = (bbox.left + e.x + 8).toFixed(0)+'px'; 
-            this._info.style.top = this.cartesian 
-                                 ? (bbox.top + this._ctx.canvas.height - e.y - 20).toFixed(0)+'px'
-                                 : (bbox.top + e.y - 20).toFixed(0)+'px';
+            this._info.style.left = (bbox.left + e.x + 8).toFixed(0) + 'px';
+            this._info.style.top = this.cartesian
+                ? (bbox.top + this._ctx.canvas.height - e.y - 20).toFixed(0) + 'px'
+                : (bbox.top + e.y - 20).toFixed(0) + 'px';
             this._info.innerHTML = info;
             this._info.style.display = 'inline';
         }
@@ -237,13 +253,13 @@ class Mec2Element extends HTMLElement {
         }
     }
 
-    log(str) { 
-        this._logview.innerHTML = str; 
+    log(str) {
+        this._logview.innerHTML = str;
     }
 
     ondrag(e) {
         if (this._selector.selection && this._selector.selection.drag) {
-            this._selector.selection.drag({x:e.xusr,y:e.yusr,dx:e.dxusr,dy:e.dyusr,mode:this.editing?'edit':'drag'});
+            this._selector.selection.drag({ x: e.xusr, y: e.yusr, dx: e.dxusr, dy: e.dyusr, mode: this.editing ? 'edit' : 'drag' });
             this._model.preview();
             this._model.pose();
             this.dispatchEvent(new CustomEvent('drag'));
@@ -256,7 +272,7 @@ class Mec2Element extends HTMLElement {
             if (this._selector.selection && !this.hasInputs)
                 this.pausing = true;
             else {
-                this._model.tick(1/60);
+                this._model.tick(1 / 60);
                 this.dispatchEvent(new CustomEvent('tick'));
             }
         }
@@ -269,11 +285,11 @@ class Mec2Element extends HTMLElement {
             this._model.activeDriveCount - this.inputDriveCount === 0 &&
             (this._model.dof === 0 || this._model.isSleeping))
             this.pausing = true;
-//        this.log(`activeDrives=${this._model.activeDriveCount}, inputDrives=${this.inputDriveCount}, isSleeping=${this._model.isSleeping}, pausing=${this.pausing}, t=${this._model.timer.t}`)
-        this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0)+', '+this._interactor.evt.yusr.toFixed(0);
-        this._fpsview.innerHTML = 'fps: '+canvasInteractor.fps;
-//        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
-        this._itrview.innerHTML = this._model.state.itrpos+'/'+this._model.state.itrvel;
+        //        this.log(`activeDrives=${this._model.activeDriveCount}, inputDrives=${this.inputDriveCount}, isSleeping=${this._model.isSleeping}, pausing=${this.pausing}, t=${this._model.timer.t}`)
+        this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
+        this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
+        //        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
+        this._itrview.innerHTML = this._model.state.itrpos + '/' + this._model.state.itrvel;
     }
 
     // standard lifecycle callbacks
@@ -287,19 +303,19 @@ class Mec2Element extends HTMLElement {
     attributeChangedCallback(name, oldval, val) {
         if (this._root && this._root.getElementById('cnv')) {
             if (name === 'width') {  // todo: preserve minimum width
-                this._root.getElementById('cnv').setAttribute('width',val);
-                this._root.querySelector('.status').style.width = val+'px';
+                this._root.getElementById('cnv').setAttribute('width', val);
+                this._root.querySelector('.status').style.width = val + 'px';
             }
             if (name === 'height')   // todo: preserve minimum height
-                this._root.getElementById('cnv').setAttribute('height',val);
+                this._root.getElementById('cnv').setAttribute('height', val);
         }
     }
 
-    static template({width,height,darkmode,dof,gravity,inputs}) {
-return `
+    static template({ width, height, darkmode, dof, gravity, inputs }) {
+        return `
 <style>
     nav {
-        width: ${width-2}px;
+        width: ${width - 2}px;
         background-color:#555;
         color:#ddd;
         font-family:Arial;
@@ -320,8 +336,8 @@ return `
     nav > span > span:hover { color:#fff; }
     nav > span > output { display:inline-block; padding:0px 1px; margin:0px 0px; }
     #cnv {
-        border:solid 1px ${darkmode?'#777':'#eee'}; 
-        background-color:${darkmode?'#777':'#eee'};
+        border:solid 1px ${darkmode ? '#777' : '#eee'}; 
+        background-color:${darkmode ? '#777' : '#eee'};
         touch-action: none;
     }
 </style>
@@ -383,24 +399,24 @@ return `
 </nav>
 <canvas id="cnv" width="${width}" height="${height}" touch-action="none"></canvas><br>
 <span id="info" style="position:absolute;display:none;color:#222;background-color:#ffb;border:1px solid black;font:0.9em monospace;padding:0.1em;font-family:Courier;font-size:9pt;">tooltip</span>
-${inputs.length ? inputs.map((input,i) => Mec2Element.slider({input,i,width})).join('') : ''}
+${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width })).join('') : ''}
 <pre id="logview"></pre>
 </div>
 `
     }
-    static slider({input,i,width,darkmode}) {
+    static slider({ input, i, width, darkmode }) {
         const sub = input.sub, cstr = input.constraint;
-        input.id = 'slider_'+i;
+        input.id = 'slider_' + i;
         if (sub === 'ori') {
-            const w0 = Math.round(mec.toDeg(cstr.w0)), 
-                  w1 = w0 + Math.round(mec.toDeg(cstr.ori.Dw || 2*Math.PI));
+            const w0 = Math.round(mec.toDeg(cstr.w0)),
+                w1 = w0 + Math.round(mec.toDeg(cstr.ori.Dw || 2 * Math.PI));
             input.w0 = w0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id+'.ori'}" width="${width}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.ori'}" width="${width}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
         }
         else { // if (sub === 'len')
             const r0 = cstr.r0, r1 = r0 + cstr.len.Dr;
             input.r0 = r0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id+'.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
     }
 }
