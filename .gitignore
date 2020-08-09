@@ -3,3 +3,4 @@ samples
 papers
 test*
 package-lock.json
+.vscode
