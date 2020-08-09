@@ -95,6 +95,10 @@ class Mec2Element extends HTMLElement {
         // find chart elements which are refered to by the model
         this._charts = this._model.views.filter(v => v.as === 'chart' && v.canvas);
         this._chartRefs = this._charts.map(c => document.getElementById(c.canvas));
+        // Apply functions to html elements.
+        for (const idx in this._chartRefs) {
+            this._chartRefs[idx].funcs = this._charts[0].graph.funcs;
+        }
 
         // add shadow dom
         this._root.innerHTML = Mec2Element.template({
@@ -195,15 +199,8 @@ class Mec2Element extends HTMLElement {
     }
 
     render() {
-
         for (const idx in this._chartRefs) {
-            try {
-                this._chartRefs[idx]._chart.funcs = this._charts[0].graph.funcs;
-                this._chartRefs[idx].render();
-                // console.log(this._charts[0].graph.funcs);
-                // console.log(element._chart);
-            }
-            catch {}
+            this._chartRefs[idx].render();
         }
         this._g.exe(this._ctx);
     }
