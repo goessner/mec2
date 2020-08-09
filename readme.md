@@ -5,8 +5,6 @@ mec2 is a 2D physics simulation engine written in JavaScript.
 It is designed to easily create 2D mechanisms for rapid sketching and rendering
 the resulting models in a 2D canvas using [g2](github.com/goessner/g2).
 
-Please have a loot at the documentation [here](https://goessner.github.io/mec2).
-
 ## Main features
 
 - Fast and lightweight physics simulation.
