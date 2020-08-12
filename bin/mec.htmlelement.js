@@ -107,10 +107,11 @@ class Mec2Element extends HTMLElement {
                 return pt === -1
                     ? { scl: 0 } // If point is out of bounds
                     : {
-                        x: data[pt].x * (elm._chart.b / 
+                        x: (data[pt].x - elm._chart.xmin) * (elm._chart.b / 
                             (elm._chart.xmax - elm._chart.xmin)) + elm._chart.x,
-                        y: data[pt].y * (elm._chart.h /
-                            (elm._chart.ymax - elm._chart.ymin)) + elm._chart.h - 8,
+                        y: (data[pt].y - elm._chart.ymin) * (elm._chart.h /
+                            (elm._chart.ymax - elm._chart.ymin)) + elm._chart.y,
+                        // y: elm._chart.y + elm._chart.h,
                         scl: 1
                     };
             }
