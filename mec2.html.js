@@ -88,7 +88,8 @@
  * @property {float} [xmax] - maximal x-axis value. If not given it is calculated from chart data values.
  * @property {float} [ymin] - minimal y-axis value. If not given it is calculated from chart data values.
  * @property {float} [ymax] - maximal y-axis value. If not given it is calculated from chart data values.
- */g2.prototype.chart=function chart({x:x,y:y,b:b,h:h,style:style,title:title,funcs:funcs,xaxis:xaxis,xmin:xmin,xmax:xmax,yaxis:yaxis,ymin:ymin,ymax:ymax}){return this.addCommand({c:"chart",a:arguments[0]})};g2.prototype.chart.prototype={g2(){const g=g2(),funcs=this.get("funcs"),title=this.title&&this.get("title");if(!this.b)this.b=this.defaults.b;if(!this.h)this.h=this.defaults.h;if(funcs&&funcs.length){const tmp=[this.xmin===undefined,this.xmax===undefined,this.ymin===undefined,this.ymax===undefined];funcs.forEach(f=>this.initFunc(f,...tmp))}this.xAxis=this.autoAxis(this.get("xmin"),this.get("xmax"),0,this.b);this.yAxis=this.autoAxis(this.get("ymin"),this.get("ymax"),0,this.h);g.rec({x:this.x,y:this.y,b:this.b,h:this.h,fs:this.get("fs"),ls:this.get("ls")});g.beg(Object.assign({x:this.x,y:this.y,lw:1},this.defaults.style,this.style));if(title)g.txt(Object.assign({str:this.title&&this.title.text||this.title,x:this.get("b")/2,y:this.get("h")+this.get("title","offset"),w:0},this.defaults.title.style,this.title&&this.title.style||{}));if(this.xaxis)this.drawXAxis(g);if(this.yaxis)this.drawYAxis(g);g.end();if(funcs)funcs.forEach((fnc,i)=>{this.drawFunc(g,fnc,this.defaults.colors[i%this.defaults.colors.length])});return g},initFunc(fn,setXmin,setXmax,setYmin,setYmax){let itr;if(fn.data&&fn.data.length){itr=fn.itr=g2.pntItrOf(fn.data)}else if(fn.fn&&fn.dx){const xmin=+this.xmin||this.defaults.xmin;const xmax=+this.xmax||this.defaults.xmax;itr=fn.itr=(i=>{let x=xmin+i*fn.dx;return{x:x,y:fn.fn(x)}});itr.len=(xmax-xmin)/fn.dx+1}if(itr&&(setXmin||setXmax||setYmin||setYmax)){const xarr=[];const yarr=[];for(let i=0;i<itr.len;++i){xarr.push(itr(i).x);yarr.push(itr(i).y)}if(setXmin){const xmin=Math.min(...xarr);if(!this.xmin||xmin<this.xmin)this.xmin=xmin}if(setXmax){const xmax=Math.max(...xarr);if(!this.xmax||xmax>this.xmax)this.xmax=xmax}if(setYmin){const ymin=Math.min(...yarr);if(!this.ymin||ymin<this.ymin)this.ymin=ymin}if(setYmax){const ymax=Math.max(...yarr);if(!this.ymax||ymax>this.ymax)this.ymax=ymax}if(fn.color&&typeof fn.color==="number")fn.color=this.defaults.colors[fn.color%this.defaults.colors.length]}},autoAxis(zmin,zmax,tmin,tmax){let base=2,exp=1,eps=Math.sqrt(Number.EPSILON),Dz=zmax-zmin||1,Dt=tmax-tmin||1,scl=Dz>eps?Dt/Dz:1,dz=base*Math.pow(10,exp),dt=Math.floor(scl*dz),N,dt01,i0,j0,jth,t0,res;while(dt<14||dt>35){if(dt<14){if(base==1)base=2;else if(base==2)base=5;else if(base==5){base=1;exp++}}else{if(base==1){base=5;exp--}else if(base==2)base=1;else if(base==5)base=2}dz=base*Math.pow(10,exp);dt=scl*dz}i0=(scl*Math.abs(zmin)+eps/2)%dt<eps?Math.floor(zmin/dz):Math.floor(zmin/dz)+1;let z0=i0*dz;t0=Math.round(scl*(z0-zmin));N=Math.floor((Dt-t0)/dt)+1;j0=base%2&&i0%2?i0+1:i0;jth=exp===0&&N<11?1:base===2&&N>9?5:2;return{zmin:zmin,zmax:zmax,base:base,exp:exp,scl:scl,dt:dt,dz:dz,N:N,t0:t0,z0:z0,i0:i0,j0:j0,jth:jth,itr(i){return{t:this.t0+i*this.dt,z:parseFloat((this.z0+i*this.dz).toFixed(Math.abs(this.exp))),maj:(this.j0-this.i0+i)%this.jth===0}}}},drawXAxis(g){let tick,showgrid=this.xaxis&&this.xaxis.grid,gridstyle=showgrid&&Object.assign({},this.defaults.xaxis.grid,this.xaxis.grid),showaxis=this.xaxis||this.xAxis,axisstyle=showaxis&&Object.assign({},this.defaults.xaxis.style,this.defaults.xaxis.labels.style,this.xaxis&&this.xaxis.style||{}),showline=showaxis&&this.get("xaxis","line"),showlabels=this.xAxis&&showaxis&&this.get("xaxis","labels"),showticks=this.xAxis&&showaxis&&this.get("xaxis","ticks"),ticklen=showticks?this.get("xaxis","ticks","len"):0,showorigin=showaxis&&this.get("xaxis","origin"),title=this.xaxis&&(this.get("xaxis","title","text")||this.xaxis.title)||"";g.beg(axisstyle);for(let i=0;i<this.xAxis.N;i++){tick=this.xAxis.itr(i);if(showgrid)g.lin(Object.assign({x1:tick.t,y1:0,x2:tick.t,y2:this.h},gridstyle));if(showticks)g.lin({x1:tick.t,y1:tick.maj?ticklen:2/3*ticklen,x2:tick.t,y2:tick.maj?-ticklen:-2/3*ticklen});if(showlabels&&tick.maj)g.txt(Object.assign({str:parseFloat(tick.z),x:tick.t,y:-(this.get("xaxis","ticks","len")+this.get("xaxis","labels","offset")),w:0},this.get("xaxis","labels","style")||{}))}if(showline)g.lin({y1:0,y2:0,x1:0,x2:this.b});if(showorigin&&this.xmin<=0&&this.xmax>=0)g.lin({x1:-this.xAxis.zmin*this.xAxis.scl,y1:0,x2:-this.xAxis.zmin*this.xAxis.scl,y2:this.h});if(title)g.txt(Object.assign({str:title.text||title,x:this.b/2,y:-(this.get("xaxis","title","offset")+(showticks&&this.get("xaxis","ticks","len")||0)+(showlabels&&this.get("xaxis","labels","offset")||0)+(showlabels&&parseFloat(this.get("xaxis","labels","style","font"))||0)),w:0},this.get("xaxis","title","style")));g.end()},drawYAxis(g){let tick,showgrid=this.yaxis&&this.yaxis.grid,gridstyle=showgrid&&Object.assign({},this.defaults.yaxis.grid,this.yaxis.grid),showaxis=this.yaxis||this.yAxis,axisstyle=showaxis&&Object.assign({},this.defaults.yaxis.style,this.defaults.yaxis.labels.style,this.yaxis&&this.yaxis.style||{}),showline=showaxis&&this.get("yaxis","line"),showlabels=this.yAxis&&showaxis&&this.get("yaxis","labels"),showticks=this.yAxis&&showaxis&&this.get("yaxis","ticks"),ticklen=showticks?this.get("yaxis","ticks","len"):0,showorigin=showaxis&&this.get("yaxis","origin"),title=this.yaxis&&(this.get("yaxis","title","text")||this.yaxis.title)||"";g.beg(axisstyle);for(let i=0;i<this.yAxis.N;i++){tick=this.yAxis.itr(i);if(i&&showgrid)g.lin(Object.assign({y1:tick.t,x2:this.b,x1:0,y2:tick.t},gridstyle));if(showticks)g.lin({y1:tick.t,x2:tick.maj?-ticklen:-2/3*ticklen,y2:tick.t,y2:tick.t,x1:tick.maj?ticklen:2/3*ticklen});if(showlabels&&tick.maj)g.txt(Object.assign({str:parseFloat(tick.z),x:-(this.get("yaxis","ticks","len")+this.get("yaxis","labels","offset")),y:tick.t,w:Math.PI/2},this.get("yaxis","labels","style")))}if(showline)g.lin({y1:0,x1:0,x2:0,y2:this.h});if(showorigin&&this.ymin<=0&&this.ymax>=0)g.lin({x1:0,y1:-this.yAxis.zmin*this.yAxis.scl,x2:this.b,y2:-this.yAxis.zmin*this.yAxis.scl});if(title)g.txt(Object.assign({str:title.text||title,x:-(this.get("yaxis","title","offset")+(showticks&&this.get("yaxis","ticks","len")||0)+(showlabels&&this.get("yaxis","labels","offset")||0)+(showlabels&&parseFloat(this.get("yaxis","labels","style","font"))||0)),y:this.h/2,w:Math.PI/2},this.get("yaxis","title","style")));g.end()},drawFunc(g,fn,defaultcolor){let itr=fn.itr;if(itr){let fill=fn.fill||fn.style&&fn.style.fs&&fn.style.fs!=="transparent",color=fn.color=fn.color||fn.style&&fn.style.ls||defaultcolor,plydata=[],args=Object.assign({pts:plydata,closed:false,ls:color,fs:fill?g2.color.rgbaStr(color,.125):"transparent",lw:1},fn.style);if(fill)plydata.push(this.pntOf({x:itr(0).x,y:0}));for(let i=0,n=itr.len;i<n;i++)plydata.push(this.pntOf(itr(i)));if(fill)plydata.push(this.pntOf({x:itr(itr.len-1).x,y:0}));if(fn.spline&&g.spline)g.spline(args);else g.ply(args);if(fn.dots){g.beg({fs:"snow"});for(var i=0;i<plydata.length;i++)g.cir(Object.assign({},plydata[i],{r:2,lw:1}));g.end()}}},pntOf:function(xy){return{x:this.x+Math.max(Math.min((xy.x-this.xAxis.zmin)*this.xAxis.scl,this.b),0),y:this.y+Math.max(Math.min((xy.y-this.yAxis.zmin)*this.yAxis.scl,this.h),0)}},get(n1,n2,n3,n4){const loc=n4?this[n1]&&this[n1][n2]&&this[n1][n2][n3]&&this[n1][n2][n3][n4]:n3?this[n1]&&this[n1][n2]&&this[n1][n2][n3]:n2?this[n1]&&this[n1][n2]:n1?this[n1]:undefined,dflts=this.defaults;return loc!==undefined?loc:n4?dflts[n1]&&dflts[n1][n2]&&dflts[n1][n2][n3]&&dflts[n1][n2][n3][n4]:n3?dflts[n1]&&dflts[n1][n2]&&dflts[n1][n2][n3]:n2?dflts[n1]&&dflts[n1][n2]:n1?dflts[n1]:undefined},defaults:{x:0,y:0,xmin:0,xmax:1,ymin:0,ymax:1,b:150,h:100,ls:"transparent",fs:"#efefef",color:false,colors:["#426F42","#8B2500","#23238E","#5D478B"],title:{text:"",offset:3,style:{font:"16px serif",fs:"black",thal:"center",tval:"bottom"}},funcs:[],xaxis:{fill:false,line:true,style:{ls:"#888",thal:"center",tval:"top",fs:"black"},origin:false,title:{text:null,offset:1,style:{font:"12px serif",fs:"black"}},ticks:{len:6},grid:{ls:"#ddd",ld:[]},labels:{loc:"auto",offset:1,style:{font:"11px serif",fs:"black"}}},yaxis:{line:true,style:{ls:"#888",thal:"center",tval:"bottom",fs:"black"},origin:false,title:{text:null,offset:2,style:{font:"12px serif",fs:"black"}},ticks:{len:6},grid:{ls:"#ddd",ld:[]},labels:{loc:"auto",offset:1,style:{font:"11px serif",fs:"black"}}}}};g2.color={rgba(color,alpha){let res;alpha=alpha!==undefined?alpha:1;if(color==="transparent")return{r:0,g:0,b:0,a:0};if(color in g2.color.names)color="#"+g2.color.names[color];if(res=/#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(color))return{r:parseInt(res[1],16),g:parseInt(res[2],16),b:parseInt(res[3],16),a:alpha};if(res=/#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(color))return{r:parseInt(res[1]+res[1],16),g:parseInt(res[2]+res[2],16),b:parseInt(res[3]+res[3],16),a:alpha};if(res=/rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(color))return{r:parseInt(res[1]),g:parseInt(res[2]),b:parseInt(res[3]),a:alpha};if(res=/rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(color))return{r:parseInt(res[1]),g:parseInt(res[2]),b:parseInt(res[3]),a:alpha!==undefined?alpha:parseFloat(res[4])};if(res=/rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(color))return{r:parseFloat(res[1])*2.55,g:parseFloat(res[2])*2.55,b:parseFloat(result[3])*2.55,a:alpha}},rgbaStr(color,alpha){const c=g2.color.rgba(color,alpha);return"rgba("+c.r+","+c.g+","+c.b+","+c.a+")"},names:{aliceblue:"f0f8ff",antiquewhite:"faebd7",aqua:"00ffff",aquamarine:"7fffd4",azure:"f0ffff",beige:"f5f5dc",bisque:"ffe4c4",black:"000000",blanchedalmond:"ffebcd",blue:"0000ff",blueviolet:"8a2be2",brown:"a52a2a",burlywood:"deb887",cadetblue:"5f9ea0",chartreuse:"7fff00",chocolate:"d2691e",coral:"ff7f50",cornflowerblue:"6495ed",cornsilk:"fff8dc",crimson:"dc143c",cyan:"00ffff",darkblue:"00008b",darkcyan:"008b8b",darkgoldenrod:"b8860b",darkgray:"a9a9a9",darkgreen:"006400",darkkhaki:"bdb76b",darkmagenta:"8b008b",darkolivegreen:"556b2f",darkorange:"ff8c00",darkorchid:"9932cc",darkred:"8b0000",darksalmon:"e9967a",darkseagreen:"8fbc8f",darkslateblue:"483d8b",darkslategray:"2f4f4f",darkturquoise:"00ced1",darkviolet:"9400d3",deeppink:"ff1493",deepskyblue:"00bfff",dimgray:"696969",dodgerblue:"1e90ff",feldspar:"d19275",firebrick:"b22222",floralwhite:"fffaf0",forestgreen:"228b22",fuchsia:"ff00ff",gainsboro:"dcdcdc",ghostwhite:"f8f8ff",gold:"ffd700",goldenrod:"daa520",gray:"808080",green:"008000",greenyellow:"adff2f",honeydew:"f0fff0",hotpink:"ff69b4",indianred:"cd5c5c",indigo:"4b0082",ivory:"fffff0",khaki:"f0e68c",lavender:"e6e6fa",lavenderblush:"fff0f5",lawngreen:"7cfc00",lemonchiffon:"fffacd",lightblue:"add8e6",lightcoral:"f08080",lightcyan:"e0ffff",lightgoldenrodyellow:"fafad2",lightgrey:"d3d3d3",lightgreen:"90ee90",lightpink:"ffb6c1",lightsalmon:"ffa07a",lightseagreen:"20b2aa",lightskyblue:"87cefa",lightslateblue:"8470ff",lightslategray:"778899",lightsteelblue:"b0c4de",lightyellow:"ffffe0",lime:"00ff00",limegreen:"32cd32",linen:"faf0e6",magenta:"ff00ff",maroon:"800000",mediumaquamarine:"66cdaa",mediumblue:"0000cd",mediumorchid:"ba55d3",mediumpurple:"9370d8",mediumseagreen:"3cb371",mediumslateblue:"7b68ee",mediumspringgreen:"00fa9a",mediumturquoise:"48d1cc",mediumvioletred:"c71585",midnightblue:"191970",mintcream:"f5fffa",mistyrose:"ffe4e1",moccasin:"ffe4b5",navajowhite:"ffdead",navy:"000080",oldlace:"fdf5e6",olive:"808000",olivedrab:"6b8e23",orange:"ffa500",orangered:"ff4500",orchid:"da70d6",palegoldenrod:"eee8aa",palegreen:"98fb98",paleturquoise:"afeeee",palevioletred:"d87093",papayawhip:"ffefd5",peachpuff:"ffdab9",peru:"cd853f",pink:"ffc0cb",plum:"dda0dd",powderblue:"b0e0e6",purple:"800080",rebeccapurple:"663399",red:"ff0000",rosybrown:"bc8f8f",royalblue:"4169e1",saddlebrown:"8b4513",salmon:"fa8072",sandybrown:"f4a460",seagreen:"2e8b57",seashell:"fff5ee",sienna:"a0522d",silver:"c0c0c0",skyblue:"87ceeb",slateblue:"6a5acd",slategray:"708090",snow:"fffafa",springgreen:"00ff7f",steelblue:"4682b4",tan:"d2b48c",teal:"008080",thistle:"d8bfd8",tomato:"ff6347",turquoise:"40e0d0",violet:"ee82ee",violetred:"d02090",wheat:"f5deb3",white:"ffffff",whitesmoke:"f5f5f5",yellow:"ffff00",yellowgreen:"9acd32"}};/**
+ */g2.prototype.chart=function chart({x:x,y:y,b:b,h:h,style:style,title:title,funcs:funcs,xaxis:xaxis,xmin:xmin,xmax:xmax,yaxis:yaxis,ymin:ymin,ymax:ymax}){return this.addCommand({c:"chart",a:arguments[0]})};g2.prototype.chart.prototype={g2(){const g=g2(),funcs=this.get("funcs"),title=this.title&&this.get("title");if(!this.b)this.b=this.defaults.b;if(!this.h)this.h=this.defaults.h;if(funcs&&funcs.length){const tmp=[this.xmin===undefined,this.xmax===undefined,this.ymin===undefined,this.ymax===undefined];funcs.forEach(f=>this.initFunc(f,...tmp))}this.xAxis=this.autoAxis(this.get("xmin"),this.get("xmax"),0,this.b);this.yAxis=this.autoAxis(this.get("ymin"),this.get("ymax"),0,this.h);g.rec({x:this.x,y:this.y,b:this.b,h:this.h,fs:this.get("fs"),ls:this.get("ls")});g.beg(Object.assign({x:this.x,y:this.y,lw:1},this.defaults.style,this.style));if(title)g.txt(Object.assign({str:this.title&&this.title.text||this.title,x:this.get("b")/2,y:this.get("h")+this.get("title","offset"),w:0},this.defaults.title.style,this.title&&this.title.style||{}));if(this.xaxis)this.drawXAxis(g);if(this.yaxis)this.drawYAxis(g);g.end();if(funcs)funcs.forEach((fnc,i)=>{this.drawFunc(g,fnc,this.defaults.colors[i%this.defaults.colors.length])});return g},initFunc(fn,setXmin,setXmax,setYmin,setYmax){let itr;if(fn.data&&fn.data.length){itr=fn.itr=g2.pntItrOf(fn.data)}else if(fn.fn&&fn.dx){const xmin=+this.xmin||this.defaults.xmin;const xmax=+this.xmax||this.defaults.xmax;itr=fn.itr=(i=>{let x=xmin+i*fn.dx;return{x:x,y:fn.fn(x)}});itr.len=(xmax-xmin)/fn.dx+1}if(itr&&(setXmin||setXmax||setYmin||setYmax)){const xarr=[];const yarr=[];for(let i=0;i<itr.len;++i){xarr.push(itr(i).x);yarr.push(itr(i).y)}if(setXmin){const xmin=Math.min(...xarr);if(!this.xmin||xmin<this.xmin)this.xmin=xmin}if(setXmax){const xmax=Math.max(...xarr);if(!this.xmax||xmax>this.xmax)this.xmax=xmax}if(setYmin){const ymin=Math.min(...yarr);if(!this.ymin||ymin<this.ymin)this.ymin=ymin}if(setYmax){const ymax=Math.max(...yarr);if(!this.ymax||ymax>this.ymax)this.ymax=ymax}if(fn.color&&typeof fn.color==="number")fn.color=this.defaults.colors[fn.color%this.defaults.colors.length]}},autoAxis(zmin,zmax,tmin,tmax){let base=2,exp=1,eps=Math.sqrt(Number.EPSILON),Dz=zmax-zmin||1,Dt=tmax-tmin||1,scl=Dz>eps?Dt/Dz:1,dz=base*Math.pow(10,exp),dt=Math.floor(scl*dz),N,dt01,i0,j0,jth,t0,res;while(dt<14||dt>35){if(dt<14){if(base==1)base=2;else if(base==2)base=5;else if(base==5){base=1;exp++}}else{if(base==1){base=5;exp--}else if(base==2)base=1;else if(base==5)base=2}dz=base*Math.pow(10,exp);dt=scl*dz}i0=(scl*Math.abs(zmin)+eps/2)%dt<eps?Math.floor(zmin/dz):Math.floor(zmin/dz)+1;let z0=i0*dz;t0=Math.round(scl*(z0-zmin));N=Math.floor((Dt-t0)/dt)+1;j0=base%2&&i0%2?i0+1:i0;jth=exp===0&&N<11?1:base===2&&N>9?5:2;return{zmin:zmin,zmax:zmax,base:base,exp:exp,scl:scl,dt:dt,dz:dz,N:N,t0:t0,z0:z0,i0:i0,j0:j0,jth:jth,itr(i){return{t:this.t0+i*this.dt,z:parseFloat((this.z0+i*this.dz).toFixed(Math.abs(this.exp))),maj:(this.j0-this.i0+i)%this.jth===0}}}},drawXAxis(g){let tick,showgrid=this.xaxis&&this.xaxis.grid,gridstyle=showgrid&&Object.assign({},this.defaults.xaxis.grid,this.xaxis.grid),showaxis=this.xaxis||this.xAxis,axisstyle=showaxis&&Object.assign({},this.defaults.xaxis.style,this.defaults.xaxis.labels.style,this.xaxis&&this.xaxis.style||{}),showline=showaxis&&this.get("xaxis","line"),showlabels=this.xAxis&&showaxis&&this.get("xaxis","labels"),showticks=this.xAxis&&showaxis&&this.get("xaxis","ticks"),ticklen=showticks?this.get("xaxis","ticks","len"):0,showorigin=showaxis&&this.get("xaxis","origin"),title=this.xaxis&&(this.get("xaxis","title","text")||this.xaxis.title)||"";g.beg(axisstyle);for(let i=0;i<this.xAxis.N;i++){tick=this.xAxis.itr(i);if(showgrid)g.lin(Object.assign({x1:tick.t,y1:0,x2:tick.t,y2:this.h},gridstyle));if(showticks)g.lin({x1:tick.t,y1:tick.maj?ticklen:2/3*ticklen,x2:tick.t,y2:tick.maj?-ticklen:-2/3*ticklen});if(showlabels&&tick.maj)g.txt(Object.assign({str:parseFloat(tick.z),x:tick.t,y:-(this.get("xaxis","ticks","len")+this.get("xaxis","labels","offset")),w:0},this.get("xaxis","labels","style")||{}))}if(showline)g.lin({y1:0,y2:0,x1:0,x2:this.b});if(showorigin&&this.xmin<=0&&this.xmax>=0)g.lin({x1:-this.xAxis.zmin*this.xAxis.scl,y1:0,x2:-this.xAxis.zmin*this.xAxis.scl,y2:this.h});if(title)g.txt(Object.assign({str:title.text||title,x:this.b/2,y:-(this.get("xaxis","title","offset")+(showticks&&this.get("xaxis","ticks","len")||0)+(showlabels&&this.get("xaxis","labels","offset")||0)+(showlabels&&parseFloat(this.get("xaxis","labels","style","font"))||0)),w:0},this.get("xaxis","title","style")));g.end()},drawYAxis(g){let tick,showgrid=this.yaxis&&this.yaxis.grid,gridstyle=showgrid&&Object.assign({},this.defaults.yaxis.grid,this.yaxis.grid),showaxis=this.yaxis||this.yAxis,axisstyle=showaxis&&Object.assign({},this.defaults.yaxis.style,this.defaults.yaxis.labels.style,this.yaxis&&this.yaxis.style||{}),showline=showaxis&&this.get("yaxis","line"),showlabels=this.yAxis&&showaxis&&this.get("yaxis","labels"),showticks=this.yAxis&&showaxis&&this.get("yaxis","ticks"),ticklen=showticks?this.get("yaxis","ticks","len"):0,showorigin=showaxis&&this.get("yaxis","origin"),title=this.yaxis&&(this.get("yaxis","title","text")||this.yaxis.title)||"";g.beg(axisstyle);for(let i=0;i<this.yAxis.N;i++){tick=this.yAxis.itr(i);if(i&&showgrid)g.lin(Object.assign({y1:tick.t,x2:this.b,x1:0,y2:tick.t},gridstyle));if(showticks)g.lin({y1:tick.t,x2:tick.maj?-ticklen:-2/3*ticklen,y2:tick.t,y2:tick.t,x1:tick.maj?ticklen:2/3*ticklen});if(showlabels&&tick.maj)g.txt(Object.assign({str:parseFloat(tick.z),x:-(this.get("yaxis","ticks","len")+this.get("yaxis","labels","offset")),y:tick.t,w:Math.PI/2},this.get("yaxis","labels","style")))}if(showline)g.lin({y1:0,x1:0,x2:0,y2:this.h});if(showorigin&&this.ymin<=0&&this.ymax>=0)g.lin({x1:0,y1:-this.yAxis.zmin*this.yAxis.scl,x2:this.b,y2:-this.yAxis.zmin*this.yAxis.scl});if(title)g.txt(Object.assign({str:title.text||title,x:-(this.get("yaxis","title","offset")+(showticks&&this.get("yaxis","ticks","len")||0)+(showlabels&&this.get("yaxis","labels","offset")||0)+(showlabels&&parseFloat(this.get("yaxis","labels","style","font"))||0)),y:this.h/2,w:Math.PI/2},this.get("yaxis","title","style")));g.end()},drawFunc(g,fn,defaultcolor){let itr=fn.itr;if(itr){let fill=fn.fill||fn.style&&fn.style.fs&&fn.style.fs!=="transparent",color=fn.color=fn.color||fn.style&&fn.style.ls||defaultcolor,plydata=[],args=Object.assign({pts:plydata,closed:false,ls:color,fs:fill?g2.color.rgbaStr(color,.125):"transparent",lw:1},fn.style);if(fill)plydata.push(this.pntOf({x:itr(0).x,y:0}));for(let i=0,n=itr.len;i<n;i++)plydata.push(this.pntOf(itr(i)));if(fill)plydata.push(this.pntOf({x:itr(itr.len-1).x,y:0}));if(fn.spline&&g.spline)g.spline(args);else g.ply(args);if(fn.dots){g.beg({fs:"snow"});for(var i=0;i<plydata.length;i++)g.cir(Object.assign({},plydata[i],{r:2,lw:1}));g.end()}}},pntOf:function(xy){return{x:this.x+Math.max(Math.min((xy.x-this.xAxis.zmin)*this.xAxis.scl,this.b),0),y:this.y+Math.max(Math.min((xy.y-this.yAxis.zmin)*this.yAxis.scl,this.h),0)}},get(n1,n2,n3,n4){const loc=n4?this[n1]&&this[n1][n2]&&this[n1][n2][n3]&&this[n1][n2][n3][n4]:n3?this[n1]&&this[n1][n2]&&this[n1][n2][n3]:n2?this[n1]&&this[n1][n2]:n1?this[n1]:undefined,dflts=this.defaults;return loc!==undefined?loc:n4?dflts[n1]&&dflts[n1][n2]&&dflts[n1][n2][n3]&&dflts[n1][n2][n3][n4]:n3?dflts[n1]&&dflts[n1][n2]&&dflts[n1][n2][n3]:n2?dflts[n1]&&dflts[n1][n2]:n1?dflts[n1]:undefined},defaults:{x:0,y:0,xmin:0,xmax:1,ymin:0,ymax:1,b:150,h:100,ls:"transparent",fs:"#efefef",color:false,colors:["#426F42","#8B2500","#23238E","#5D478B"],title:{text:"",offset:3,style:{font:"16px serif",fs:"black",thal:"center",tval:"bottom"}},funcs:[],xaxis:{fill:false,line:true,style:{ls:"#888",thal:"center",tval:"top",fs:"black"},origin:false,title:{text:null,offset:1,style:{font:"12px serif",fs:"black"}},ticks:{len:6},grid:{ls:"#ddd",ld:[]},labels:{loc:"auto",offset:1,style:{font:"11px serif",fs:"black"}}},yaxis:{line:true,style:{ls:"#888",thal:"center",tval:"bottom",fs:"black"},origin:false,title:{text:null,offset:2,style:{font:"12px serif",fs:"black"}},ticks:{len:6},grid:{ls:"#ddd",ld:[]},labels:{loc:"auto",offset:1,style:{font:"11px serif",fs:"black"}}}}};g2.color={rgba(color,alpha){let res;alpha=alpha!==undefined?alpha:1;if(color==="transparent")return{r:0,g:0,b:0,a:0};if(color in g2.color.names)color="#"+g2.color.names[color];if(res=/#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(color))return{r:parseInt(res[1],16),g:parseInt(res[2],16),b:parseInt(res[3],16),a:alpha};if(res=/#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(color))return{r:parseInt(res[1]+res[1],16),g:parseInt(res[2]+res[2],16),b:parseInt(res[3]+res[3],16),a:alpha};if(res=/rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(color))return{r:parseInt(res[1]),g:parseInt(res[2]),b:parseInt(res[3]),a:alpha};if(res=/rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(color))return{r:parseInt(res[1]),g:parseInt(res[2]),b:parseInt(res[3]),a:alpha!==undefined?alpha:parseFloat(res[4])};if(res=/rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(color))return{r:parseFloat(res[1])*2.55,g:parseFloat(res[2])*2.55,b:parseFloat(result[3])*2.55,a:alpha}},rgbaStr(color,alpha){const c=g2.color.rgba(color,alpha);return"rgba("+c.r+","+c.g+","+c.b+","+c.a+")"},names:{aliceblue:"f0f8ff",antiquewhite:"faebd7",aqua:"00ffff",aquamarine:"7fffd4",azure:"f0ffff",beige:"f5f5dc",bisque:"ffe4c4",black:"000000",blanchedalmond:"ffebcd",blue:"0000ff",blueviolet:"8a2be2",brown:"a52a2a",burlywood:"deb887",cadetblue:"5f9ea0",chartreuse:"7fff00",chocolate:"d2691e",coral:"ff7f50",cornflowerblue:"6495ed",cornsilk:"fff8dc",crimson:"dc143c",cyan:"00ffff",darkblue:"00008b",darkcyan:"008b8b",darkgoldenrod:"b8860b",darkgray:"a9a9a9",darkgreen:"006400",darkkhaki:"bdb76b",darkmagenta:"8b008b",darkolivegreen:"556b2f",darkorange:"ff8c00",darkorchid:"9932cc",darkred:"8b0000",darksalmon:"e9967a",darkseagreen:"8fbc8f",darkslateblue:"483d8b",darkslategray:"2f4f4f",darkturquoise:"00ced1",darkviolet:"9400d3",deeppink:"ff1493",deepskyblue:"00bfff",dimgray:"696969",dodgerblue:"1e90ff",feldspar:"d19275",firebrick:"b22222",floralwhite:"fffaf0",forestgreen:"228b22",fuchsia:"ff00ff",gainsboro:"dcdcdc",ghostwhite:"f8f8ff",gold:"ffd700",goldenrod:"daa520",gray:"808080",green:"008000",greenyellow:"adff2f",honeydew:"f0fff0",hotpink:"ff69b4",indianred:"cd5c5c",indigo:"4b0082",ivory:"fffff0",khaki:"f0e68c",lavender:"e6e6fa",lavenderblush:"fff0f5",lawngreen:"7cfc00",lemonchiffon:"fffacd",lightblue:"add8e6",lightcoral:"f08080",lightcyan:"e0ffff",lightgoldenrodyellow:"fafad2",lightgrey:"d3d3d3",lightgreen:"90ee90",lightpink:"ffb6c1",lightsalmon:"ffa07a",lightseagreen:"20b2aa",lightskyblue:"87cefa",lightslateblue:"8470ff",lightslategray:"778899",lightsteelblue:"b0c4de",lightyellow:"ffffe0",lime:"00ff00",limegreen:"32cd32",linen:"faf0e6",magenta:"ff00ff",maroon:"800000",mediumaquamarine:"66cdaa",mediumblue:"0000cd",mediumorchid:"ba55d3",mediumpurple:"9370d8",mediumseagreen:"3cb371",mediumslateblue:"7b68ee",mediumspringgreen:"00fa9a",mediumturquoise:"48d1cc",mediumvioletred:"c71585",midnightblue:"191970",mintcream:"f5fffa",mistyrose:"ffe4e1",moccasin:"ffe4b5",navajowhite:"ffdead",navy:"000080",oldlace:"fdf5e6",olive:"808000",olivedrab:"6b8e23",orange:"ffa500",orangered:"ff4500",orchid:"da70d6",palegoldenrod:"eee8aa",palegreen:"98fb98",paleturquoise:"afeeee",palevioletred:"d87093",papayawhip:"ffefd5",peachpuff:"ffdab9",peru:"cd853f",pink:"ffc0cb",plum:"dda0dd",powderblue:"b0e0e6",purple:"800080",rebeccapurple:"663399",red:"ff0000",rosybrown:"bc8f8f",royalblue:"4169e1",saddlebrown:"8b4513",salmon:"fa8072",sandybrown:"f4a460",seagreen:"2e8b57",seashell:"fff5ee",sienna:"a0522d",silver:"c0c0c0",skyblue:"87ceeb",slateblue:"6a5acd",slategray:"708090",snow:"fffafa",springgreen:"00ff7f",steelblue:"4682b4",tan:"d2b48c",teal:"008080",thistle:"d8bfd8",tomato:"ff6347",turquoise:"40e0d0",violet:"ee82ee",violetred:"d02090",wheat:"f5deb3",white:"ffffff",whitesmoke:"f5f5f5",yellow:"ffff00",yellowgreen:"9acd32"}};
+/**
  * g2.selector.js (c) 2018 Stefan Goessner
  * @file selector for `g2` elements.
  * @author Stefan Goessner
@@ -161,6 +162,7 @@ g2.selector.prototype = {
                            : elm.hitContour && elm.hitContour(hitpoint);
     }
 };
+
 /**
  * canvasInteractor.js (c) 2018 Stefan Goessner
  * @file interaction manager for html `canvas`.
@@ -384,6 +386,7 @@ const canvasInteractor = {
         }
     }
 };
+
 /**
  * mec (c) 2018-19 Stefan Goessner
  * @license MIT License
@@ -4386,6 +4389,7 @@ mec.msg.en = {
     E_ALY_REF_INVALID: ({id,idx}) => ({elemtype,id,idx,reftype,name}) => `${elemtype} ${id?("'"+id+"'"):("["+idx+"]")} has with '${name}' an invalid property name of a ${reftype} specified. One of ${keys} are supported.`,
 }
 
+
 class MecSlider extends HTMLElement {
     static get observedAttributes() {
         return ['width','min','max','step','value','bubble'];
@@ -4654,33 +4658,34 @@ MecSlider.fwdsym = '&#9655;'
 MecSlider.revsym = '&#9665;'
 MecSlider.stopsym = '&#9744;'
 
-customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLElement {
+customElements.define('mec-slider', MecSlider);
+class Mec2Element extends HTMLElement {
     static get observedAttributes() {
-        return ['width', 'height','cartesian','grid', 'x0', 'y0', 
-                'darkmode', 'gravity', 'hidenodes', 'hideconstraints', 
-                'nodelabels', 'constraintlabels', 'loadlabels',
-                'nodeinfo', 'constraintinfo'];
+        return ['width', 'height', 'cartesian', 'grid', 'x0', 'y0',
+            'darkmode', 'gravity', 'hidenodes', 'hideconstraints',
+            'nodelabels', 'constraintlabels', 'loadlabels',
+            'nodeinfo', 'constraintinfo'];
     }
 
     constructor() {
         super();
-        this._root = this.attachShadow({ mode:'open' });
-        this._state = { edit:false, pause:true };
+        this._root = this.attachShadow({ mode: 'open' });
+        this._state = { edit: false, pause: true };
         this._inputs = [];
     }
 
     get width() { return +this.getAttribute('width') || 301; }
-    set width(q) { if (q) this.setAttribute('width',q); }
+    set width(q) { if (q) this.setAttribute('width', q); }
     get height() { return +this.getAttribute('height') || 201; }
-    set height(q) { if (q) this.setAttribute('height',q); }
+    set height(q) { if (q) this.setAttribute('height', q); }
     get x0() { return (+this.getAttribute('x0')) || 0; }
-    set x0(q) { if (q) this.setAttribute('x0',q); }
+    set x0(q) { if (q) this.setAttribute('x0', q); }
     get y0() { return (+this.getAttribute('y0')) || 0; }
-    set y0(q) { if (q) this.setAttribute('y0',q); }
+    set y0(q) { if (q) this.setAttribute('y0', q); }
     get cartesian() { return this.hasAttribute('cartesian'); }
-    set cartesian(q) { q ? this.setAttribute('cartesian','') : this.removeAttribute('cartesian'); }
+    set cartesian(q) { q ? this.setAttribute('cartesian', '') : this.removeAttribute('cartesian'); }
     get grid() { return this.hasAttribute('grid') || false; }
-    set grid(q) { q ? this.setAttribute('grid','') : this.removeAttribute('grid'); }
+    set grid(q) { q ? this.setAttribute('grid', '') : this.removeAttribute('grid'); }
 
     get show() { return this._show; }
 
@@ -4694,7 +4699,7 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
     }
 
     get pausing() { return this._state.pause; }
-    set pausing(q) { 
+    set pausing(q) {
         if (this._state.pause && !q) {  // start / continue running
             if (!this._model.isActive)
                 this._model.reset();
@@ -4708,30 +4713,30 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
             this._state.pause = true;
             this._runbtn.innerHTML = '&#9654;';
         }
-    //  else  ... nothing to do
+        //  else  ... nothing to do
     }
-/*
-    get editing() { return this._state.edit; }
-    set editing(q) { 
-        if (!this._state.edit && q) {  // edit in initial pose only
-            if (this.hasInputs)
-                for (const input of this._inputs) {
-                    const val0 = input.sub === 'ori' ? input.w0 : input.r0;
-                    this._root.getElementById(input.id).value = val0;
-//                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
-                }
-            this._model.reset();
-            this._editbtn.innerHTML = 'drag';
-            this._state.edit = true;
+    /*
+        get editing() { return this._state.edit; }
+        set editing(q) { 
+            if (!this._state.edit && q) {  // edit in initial pose only
+                if (this.hasInputs)
+                    for (const input of this._inputs) {
+                        const val0 = input.sub === 'ori' ? input.w0 : input.r0;
+                        this._root.getElementById(input.id).value = val0;
+    //                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
+                    }
+                this._model.reset();
+                this._editbtn.innerHTML = 'drag';
+                this._state.edit = true;
+            }
+            else if (this._state.edit && !q) {
+                this._editbtn.innerHTML = 'edit';
+                this._state.edit = false;
+            }
+        //  else  ... nothing to do
+    //        this.log(`editing=${this._state.edit}`)
         }
-        else if (this._state.edit && !q) {
-            this._editbtn.innerHTML = 'edit';
-            this._state.edit = false;
-        }
-    //  else  ... nothing to do
-//        this.log(`editing=${this._state.edit}`)
-    }
-*/
+    */
     init() {
         // create model
         if (!this.parseModel(this.innerHTML)) return;
@@ -4751,9 +4756,26 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         // find chart elements which are refered to by the model
         this._charts = this._model.views.filter(v => v.as === 'chart' && v.canvas);
         this._chartRefs = this._charts.map(c => document.getElementById(c.canvas));
-
+        // Apply functions to html elements.
         for (const idx in this._chartRefs) {
-            this._chartRefs[idx].funcs = this._charts[0].graph.funcs;
+            const elm = this._chartRefs[idx];
+            const chart = this._charts[idx];
+            Object.assign(elm, chart.graph);
+            elm.nod = () => {
+                // this._charts[idx].previewNod;
+                const data = chart.graph.funcs[0].data;
+                const pt = data.findIndex(data => data.t > chart.local_t);
+                return pt === -1
+                    ? { scl: 0 } // If point is out of bounds
+                    : {
+                        x: (data[pt].x - elm._chart.xmin) * (elm._chart.b / 
+                            (elm._chart.xmax - elm._chart.xmin)) + elm._chart.x,
+                        y: (data[pt].y - elm._chart.ymin) * (elm._chart.h /
+                            (elm._chart.ymax - elm._chart.ymin)) + elm._chart.y,
+                        // y: elm._chart.y + elm._chart.h,
+                        scl: 1
+                    };
+            }
         }
 
         // add shadow dom
@@ -4766,40 +4788,40 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
             darkmode: this._show.darkmode
         });
         // cache elements of shadow dom
-        this._ctx      = this._root.getElementById('cnv').getContext('2d');
-        this._runbtn   = this._root.getElementById('runbtn');
+        this._ctx = this._root.getElementById('cnv').getContext('2d');
+        this._runbtn = this._root.getElementById('runbtn');
         this._resetbtn = this._root.getElementById('resetbtn');
-//        this._editbtn  = this._root.getElementById('editbtn');
-        this._gravbtn  = this._root.getElementById('gravbtn');
-        this._corview  = this._root.getElementById('corview');
-        this._dofview  = this._root.getElementById('dofview');
-//        this._egyview  = this._root.getElementById('egyview');
-        this._fpsview  = this._root.getElementById('fpsview');
-        this._itrview  = this._root.getElementById('itrview');
-        this._info     = this._root.getElementById('info');
-        this._logview  = this._root.getElementById('logview');
+        //        this._editbtn  = this._root.getElementById('editbtn');
+        this._gravbtn = this._root.getElementById('gravbtn');
+        this._corview = this._root.getElementById('corview');
+        this._dofview = this._root.getElementById('dofview');
+        //        this._egyview  = this._root.getElementById('egyview');
+        this._fpsview = this._root.getElementById('fpsview');
+        this._itrview = this._root.getElementById('itrview');
+        this._info = this._root.getElementById('info');
+        this._logview = this._root.getElementById('logview');
         // check gravity attribute
         this.gravity = this.getAttribute('gravity') === "" ? true : false;
         // add event listeners
-        this._runbtnHdl   = e => this.pausing = !this.pausing; this._runbtn  .addEventListener("click", this._runbtnHdl, false);
-        this._resetbtnHdl = e => this.reset();                 this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
-  //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
-        this._gravbtnHdl  = e => this.gravity = !this.gravity; this._gravbtn .addEventListener("click", this._gravbtnHdl, false);
+        this._runbtnHdl = e => this.pausing = !this.pausing; this._runbtn.addEventListener("click", this._runbtnHdl, false);
+        this._resetbtnHdl = e => this.reset(); this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
+        this._gravbtnHdl = e => this.gravity = !this.gravity; this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
         // some more members
-        this._interactor = canvasInteractor.create(this._ctx,{x:this.x0,y:this.y0,cartesian:this.cartesian});
+        this._interactor = canvasInteractor.create(this._ctx, { x: this.x0, y: this.y0, cartesian: this.cartesian });
         this._g = g2().clr().view(this._interactor.view);
         this._gusr = g2();
-        if (this.grid) this._g.grid({color:this._show.darkmode?'#999':'#ccc'});
-        
+        if (this.grid) this._g.grid({ color: this._show.darkmode ? '#999' : '#ccc' });
+
         this._selector = g2.selector(this._interactor.evt);
         // treat valid initial model
         if (this._model.valid) {
             // add input event listeners
             for (const input of this._inputs) {
                 const z0 = input.sub === 'ori' ? input.w0 : input.r0;
-                input.hdl = e => { 
-                    if (this.editing) this.editing = false; 
-                    input.constraint[input.sub].inputCallbk((+e.target.value-z0),false);
+                input.hdl = e => {
+                    if (this.editing) this.editing = false;
+                    input.constraint[input.sub].inputCallbk((+e.target.value - z0), false);
                     this.pausing = false;
                 };
                 this._root.getElementById(input.id).addEventListener("input", input.hdl, false);
@@ -4810,11 +4832,11 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
             this._g.ins(this._gusr);
             this.render();
             this._interactor.on('drag', e => this.ondrag(e))
-                            .on('tick', e => this.ontick(e))
-                            .on(['pointermove','pointerup'], e => this.showInfo(e))
-                            .on('pointerdown', e => this.hideInfo(e))
-//                            .on('pointerup', e => this.showInfo(e))
-                            .startTimer();
+                .on('tick', e => this.ontick(e))
+                .on(['pointermove', 'pointerup'], e => this.showInfo(e))
+                .on('pointerdown', e => this.hideInfo(e))
+                //                            .on('pointerup', e => this.showInfo(e))
+                .startTimer();
             this.dispatchEvent(new CustomEvent('init'));
         }
         else if (this._model.msg) {
@@ -4835,19 +4857,19 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         delete this._inputs;
         delete this._chartRefs;
         // remove event listeners
-        this._runbtn  .removeEventListener("click", this._runbtnHdl, false);
+        this._runbtn.removeEventListener("click", this._runbtnHdl, false);
         this._resetbtn.removeEventListener("click", this._resetbtnHdl, false);
-//        this._editbtn .removeEventListener("click", this._resetbtnHdl, false);
-        this._gravbtn .removeEventListener("click", this._gravbtnHdl, false);
+        //        this._editbtn .removeEventListener("click", this._resetbtnHdl, false);
+        this._gravbtn.removeEventListener("click", this._gravbtnHdl, false);
         // delete cached data
         delete this._ctx;
         delete this._runbtn;
         delete this._resetbtn;
-//        delete this._editbtn;
+        //        delete this._editbtn;
         delete this._gravbtn;
         delete this._corview;
         delete this._dofview;
-//        delete this._egyview;
+        //        delete this._egyview;
         delete this._fpsview;
         delete this._itrview;
         delete this._info;
@@ -4863,8 +4885,8 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
 
     parseModel() {
         try { this._model = JSON.parse(this.innerHTML); return true; }
-        catch(e) { this._root.innerHTML = e.message; }
-        return false; 
+        catch (e) { this._root.innerHTML = e.message; }
+        return false;
     }
 
     reset() {
@@ -4877,10 +4899,10 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         const info = this._model.info;
         if (info) {
             const bbox = this._ctx.canvas.getBoundingClientRect();
-            this._info.style.left = (bbox.left + e.x + 8).toFixed(0)+'px'; 
-            this._info.style.top = this.cartesian 
-                                 ? (bbox.top + this._ctx.canvas.height - e.y - 20).toFixed(0)+'px'
-                                 : (bbox.top + e.y - 20).toFixed(0)+'px';
+            this._info.style.left = (bbox.left + e.x + 8).toFixed(0) + 'px';
+            this._info.style.top = this.cartesian
+                ? (bbox.top + this._ctx.canvas.height - e.y - 20).toFixed(0) + 'px'
+                : (bbox.top + e.y - 20).toFixed(0) + 'px';
             this._info.innerHTML = info;
             this._info.style.display = 'inline';
         }
@@ -4893,13 +4915,13 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
         }
     }
 
-    log(str) { 
-        this._logview.innerHTML = str; 
+    log(str) {
+        this._logview.innerHTML = str;
     }
 
     ondrag(e) {
         if (this._selector.selection && this._selector.selection.drag) {
-            this._selector.selection.drag({x:e.xusr,y:e.yusr,dx:e.dxusr,dy:e.dyusr,mode:this.editing?'edit':'drag'});
+            this._selector.selection.drag({ x: e.xusr, y: e.yusr, dx: e.dxusr, dy: e.dyusr, mode: this.editing ? 'edit' : 'drag' });
             this._model.preview();
             this._model.pose();
             this.dispatchEvent(new CustomEvent('drag'));
@@ -4912,7 +4934,7 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
             if (this._selector.selection && !this.hasInputs)
                 this.pausing = true;
             else {
-                this._model.tick(1/60);
+                this._model.tick(1 / 60);
                 this.dispatchEvent(new CustomEvent('tick'));
             }
         }
@@ -4925,11 +4947,11 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
             this._model.activeDriveCount - this.inputDriveCount === 0 &&
             (this._model.dof === 0 || this._model.isSleeping))
             this.pausing = true;
-//        this.log(`activeDrives=${this._model.activeDriveCount}, inputDrives=${this.inputDriveCount}, isSleeping=${this._model.isSleeping}, pausing=${this.pausing}, t=${this._model.timer.t}`)
-        this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0)+', '+this._interactor.evt.yusr.toFixed(0);
-        this._fpsview.innerHTML = 'fps: '+canvasInteractor.fps;
-//        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
-        this._itrview.innerHTML = this._model.state.itrpos+'/'+this._model.state.itrvel;
+        //        this.log(`activeDrives=${this._model.activeDriveCount}, inputDrives=${this.inputDriveCount}, isSleeping=${this._model.isSleeping}, pausing=${this.pausing}, t=${this._model.timer.t}`)
+        this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
+        this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
+        //        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
+        this._itrview.innerHTML = this._model.state.itrpos + '/' + this._model.state.itrvel;
     }
 
     // standard lifecycle callbacks
@@ -4943,19 +4965,19 @@ customElements.define('mec-slider', MecSlider);class Mec2Element extends HTMLEle
     attributeChangedCallback(name, oldval, val) {
         if (this._root && this._root.getElementById('cnv')) {
             if (name === 'width') {  // todo: preserve minimum width
-                this._root.getElementById('cnv').setAttribute('width',val);
-                this._root.querySelector('.status').style.width = val+'px';
+                this._root.getElementById('cnv').setAttribute('width', val);
+                this._root.querySelector('.status').style.width = val + 'px';
             }
             if (name === 'height')   // todo: preserve minimum height
-                this._root.getElementById('cnv').setAttribute('height',val);
+                this._root.getElementById('cnv').setAttribute('height', val);
         }
     }
 
-    static template({width,height,darkmode,dof,gravity,inputs}) {
-return `
+    static template({ width, height, darkmode, dof, gravity, inputs }) {
+        return `
 <style>
     nav {
-        width: ${width-2}px;
+        width: ${width - 2}px;
         background-color:#555;
         color:#ddd;
         font-family:Arial;
@@ -4976,8 +4998,8 @@ return `
     nav > span > span:hover { color:#fff; }
     nav > span > output { display:inline-block; padding:0px 1px; margin:0px 0px; }
     #cnv {
-        border:solid 1px ${darkmode?'#777':'#eee'}; 
-        background-color:${darkmode?'#777':'#eee'};
+        border:solid 1px ${darkmode ? '#777' : '#eee'}; 
+        background-color:${darkmode ? '#777' : '#eee'};
         touch-action: none;
     }
 </style>
@@ -5039,25 +5061,26 @@ return `
 </nav>
 <canvas id="cnv" width="${width}" height="${height}" touch-action="none"></canvas><br>
 <span id="info" style="position:absolute;display:none;color:#222;background-color:#ffb;border:1px solid black;font:0.9em monospace;padding:0.1em;font-family:Courier;font-size:9pt;">tooltip</span>
-${inputs.length ? inputs.map((input,i) => Mec2Element.slider({input,i,width})).join('') : ''}
+${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width })).join('') : ''}
 <pre id="logview"></pre>
 </div>
 `
     }
-    static slider({input,i,width,darkmode}) {
+    static slider({ input, i, width, darkmode }) {
         const sub = input.sub, cstr = input.constraint;
-        input.id = 'slider_'+i;
+        input.id = 'slider_' + i;
         if (sub === 'ori') {
-            const w0 = Math.round(mec.toDeg(cstr.w0)), 
-                  w1 = w0 + Math.round(mec.toDeg(cstr.ori.Dw || 2*Math.PI));
+            const w0 = Math.round(mec.toDeg(cstr.w0)),
+                w1 = w0 + Math.round(mec.toDeg(cstr.ori.Dw || 2 * Math.PI));
             input.w0 = w0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id+'.ori'}" width="${width}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.ori'}" width="${width}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
         }
         else { // if (sub === 'len')
             const r0 = cstr.r0, r1 = r0 + cstr.len.Dr;
             input.r0 = r0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id+'.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
     }
 }
 customElements.define('mec-2', Mec2Element);
+
