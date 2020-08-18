@@ -28,18 +28,16 @@ mec.model = {
             if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
-            this.showInfo = { nodes:this.env.show.nodeInfo, constraints:this.env.show.constraintInfo, loads:false };
-            this.state = { valid:true,itrpos:0,itrvel:0,preview:false };
-            this.timer = { t:0,dt:1/60,sleepMin:1 };
+            this.showInfo = { nodes: this.env.show.nodeInfo, constraints: this.env.show.constraintInfo, loads: false };
+            this.state = { valid: true, itrpos: 0, itrvel: 0, preview: false };
+            this.timer = { t: 0, dt: 1 / 60, sleepMin: 1 };
             // create empty containers for all elements
             for (const key of Object.keys(this.modules)) {
                 if (!this[key]) {
                     this[key] = [];
                 }
             }
-            this.forAllModules((elm, module) => {
-                module.extend(elm); }
-            );
+            this.forAllModules((elm, module) => { module.extend(elm); });
         },
         /**
          * Init model
@@ -48,10 +46,10 @@ mec.model = {
          */
         init() {
             if (this.gravity === true)
-                this.gravity = Object.assign({},mec.gravity,{active:true});
+                this.gravity = Object.assign({}, mec.gravity, { active: true });
             else if (!this.gravity)
-                this.gravity = Object.assign({},mec.gravity,{active:false});
-         // else ... gravity might be given by user as vector !
+                this.gravity = Object.assign({}, mec.gravity, { active: false });
+            // else ... gravity might be given by user as vector !
 
             if (!this.tolerance) this.tolerance = 'medium';
 
@@ -111,7 +109,7 @@ mec.model = {
         reset() {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
-            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
+            Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
             this.forAllModules((elm) => elm.reset && elm.reset());
             return this;
         },
@@ -133,7 +131,7 @@ mec.model = {
             if (previewMode) {
                 this.reset();
                 this.state.preview = true;
-                this.timer.dt = 1/30;
+                this.timer.dt = 1 / 30;
 
                 for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
                     this.pre().itr().post();
@@ -142,7 +140,7 @@ mec.model = {
                             view.preview();
                 }
 
-                this.timer.dt = 1/60;
+                this.timer.dt = 1 / 60;
                 this.state.preview = false;
                 this.reset();
             }
@@ -179,7 +177,7 @@ mec.model = {
          */
         tick(dt) {
             // fix: ignore dt for now, take it as a constant (study variable time step theoretically) !!
-            this.timer.t += (this.timer.dt = 1/60);
+            this.timer.t += (this.timer.dt = 1 / 60);
             this.pre().itr().post();
             return this;
         },
@@ -234,15 +232,15 @@ mec.model = {
                     if (constraint.showInfo)
                         return constraint.info(this.showInfo.constraints);
         },
-/*
-        get info() {
-            let str = '';
-            for (const view of this.views)
-                if (view.hasInfo)
-                    str += view.infoString()+'<br>';
-            return str.length === 0 ? false : str;
-        },
-*/
+        /*
+                get info() {
+                    let str = '';
+                    for (const view of this.views)
+                        if (view.hasInfo)
+                            str += view.infoString()+'<br>';
+                    return str.length === 0 ? false : str;
+                },
+        */
         /**
          * Number of positional iterations.
          * @type {number}
@@ -303,9 +301,9 @@ mec.model = {
             const inputs = [];
             for (const constraint of this.constraints) {
                 if (constraint.ori.type === 'drive' && constraint.ori.input)
-                    inputs.push({constraint:constraint,sub:'ori'})
+                    inputs.push({ constraint: constraint, sub: 'ori' })
                 if (constraint.len.type === 'drive' && constraint.len.input)
-                    inputs.push({constraint:constraint,sub:'len'})
+                    inputs.push({ constraint: constraint, sub: 'len' })
             }
             return inputs;
         },
@@ -334,11 +332,11 @@ mec.model = {
          * center of gravity 
          */
         get cog() {
-            var center = {x:0,y:0}, m = 0;
+            var center = { x: 0, y: 0 }, m = 0;
             for (const node of this.nodes) {
                 if (!node.base) {
-                    center.x += node.x*node.m;
-                    center.y += node.y*node.m;
+                    center.x += node.x * node.m;
+                    center.y += node.y * node.m;
                     m += node.m;
                 }
             }
@@ -461,7 +459,7 @@ mec.model = {
         removeNode(node) {
             const dependency = this.hasDependents(node);
             if (!dependency)
-                this.nodes.splice(this.nodes.indexOf(node),1);  // finally remove node from array.
+                this.nodes.splice(this.nodes.indexOf(node), 1);  // finally remove node from array.
 
             return !dependency;
         },
@@ -474,7 +472,7 @@ mec.model = {
          */
         purgeNode(node) {
             this.purgeElements(this.dependentsOf(node));
-            this.nodes.splice(this.nodes.indexOf(node),1);
+            this.nodes.splice(this.nodes.indexOf(node), 1);
         },
         /**
          * Add constraint to model.
@@ -507,7 +505,7 @@ mec.model = {
         removeConstraint(constraint) {
             const dependency = this.hasDependents(constraint);
             if (!dependency)
-                this.constraints.splice(this.constraints.indexOf(constraint),1);  // finally remove node from array.
+                this.constraints.splice(this.constraints.indexOf(constraint), 1);  // finally remove node from array.
 
             return !dependency;
         },
@@ -520,7 +518,7 @@ mec.model = {
          */
         purgeConstraint(constraint) {
             this.purgeElements(this.dependentsOf(constraint));
-            this.constraints.splice(this.constraints.indexOf(constraint),1);
+            this.constraints.splice(this.constraints.indexOf(constraint), 1);
         },
         /**
          * Add load to model.
@@ -553,7 +551,7 @@ mec.model = {
         removeLoad(load) {
             const dependency = this.hasDependents(load);
             if (!dependency)
-                this.loads.splice(this.loads.indexOf(load),1);
+                this.loads.splice(this.loads.indexOf(load), 1);
             return !dependency;
         },
         /**
@@ -565,7 +563,7 @@ mec.model = {
          */
         purgeLoad(load) {
             this.purgeElements(this.dependentsOf(load));
-            this.loads.splice(this.loads.indexOf(load),1);
+            this.loads.splice(this.loads.indexOf(load), 1);
         },
         /**
          * Add shape to model.
@@ -585,7 +583,7 @@ mec.model = {
         removeShape(shape) {
             const idx = this.shapes.indexOf(shape);
             if (idx >= 0)
-                this.shapes.splice(idx,1);
+                this.shapes.splice(idx, 1);
         },
         /**
          * Delete shape and all dependent elements from model.
@@ -596,7 +594,7 @@ mec.model = {
          */
         purgeShape(shape) {
             this.purgeElements(this.dependentsOf(shape));
-            this.shapes.splice(this.shapes.indexOf(shape),1);
+            this.shapes.splice(this.shapes.indexOf(shape), 1);
         },
         /**
          * Add view to model.
@@ -628,7 +626,7 @@ mec.model = {
         removeView(view) {
             const idx = this.views.indexOf(view);
             if (idx >= 0)
-                this.views.splice(idx,1);
+                this.views.splice(idx, 1);
         },
         /**
          * Delete view and all dependent elements from model.
@@ -639,7 +637,7 @@ mec.model = {
          */
         purgeView(view) {
             this.purgeElements(this.dependentsOf(view));
-            this.views.splice(this.views.indexOf(view),1);
+            this.views.splice(this.views.indexOf(view), 1);
         },
         /**
          * Return a JSON-string of the model
@@ -653,27 +651,27 @@ mec.model = {
             const loadCnt = this.loads.length;
             const shapeCnt = this.shapes.length;
             const viewCnt = this.views.length;
-            const comma = (i,n) => i < n-1 ? ',' : '';
+            const comma = (i, n) => i < n - 1 ? ',' : '';
             const str = '{'
-                      + '\n  "id":"'+this.id+'"'
-                      + (this.title ? (',\n  "title":"'+this.title+'"') : '')
-                      + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
-                      + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
-                      + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
-                      + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                      + (contraintCnt ? '  "constraints": [\n' : '')
-                      + (contraintCnt ? this.constraints.map((n,i) => '    '+n.asJSON()+comma(i,contraintCnt)+'\n').join('') : '')
-                      + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                      + (loadCnt ? '  "loads": [\n' : '')
-                      + (loadCnt ? this.loads.map((n,i) => '    '+n.asJSON()+comma(i,loadCnt)+'\n').join('') : '')
-                      + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                      + (shapeCnt ? '  "shapes": [\n' : '')
-                      + (shapeCnt ? this.shapes.map((n,i) => '    '+n.asJSON()+comma(i,shapeCnt)+'\n').join('') : '')
-                      + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
-                      + (viewCnt ? '  "views": [\n' : '')
-                      + (viewCnt ? this.views.map((n,i) => '    '+n.asJSON()+comma(i,viewCnt)+'\n').join('') : '')
-                      + (viewCnt ? '  ]\n' : '')
-                      + '}';
+                + '\n  "id":"' + this.id + '"'
+                + (this.title ? (',\n  "title":"' + this.title + '"') : '')
+                + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
+                + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
+                + (nodeCnt ? this.nodes.map((n, i) => '    ' + n.asJSON() + comma(i, nodeCnt) + '\n').join('') : '')
+                + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (contraintCnt ? '  "constraints": [\n' : '')
+                + (contraintCnt ? this.constraints.map((n, i) => '    ' + n.asJSON() + comma(i, contraintCnt) + '\n').join('') : '')
+                + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (loadCnt ? '  "loads": [\n' : '')
+                + (loadCnt ? this.loads.map((n, i) => '    ' + n.asJSON() + comma(i, loadCnt) + '\n').join('') : '')
+                + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (shapeCnt ? '  "shapes": [\n' : '')
+                + (shapeCnt ? this.shapes.map((n, i) => '    ' + n.asJSON() + comma(i, shapeCnt) + '\n').join('') : '')
+                + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
+                + (viewCnt ? '  "views": [\n' : '')
+                + (viewCnt ? this.views.map((n, i) => '    ' + n.asJSON() + comma(i, viewCnt) + '\n').join('') : '')
+                + (viewCnt ? '  ]\n' : '')
+                + '}';
 
             return str;
         },
@@ -688,8 +686,8 @@ mec.model = {
             for (const node of this.nodes) {
                 node.Qx = node.Qy = 0;
                 if (!node.base && this.hasGravity) {
-                    node.Qx = node.m*mec.from_m(this.gravity.x);
-                    node.Qy = node.m*mec.from_m(this.gravity.y);
+                    node.Qx = node.m * mec.from_m(this.gravity.x);
+                    node.Qy = node.m * mec.from_m(this.gravity.y);
                 }
             }
             // Apply external loads.
@@ -806,7 +804,7 @@ mec.model = {
                 if (view.post)
                     view.post(this.timer.dt);
 
-//    console.log('E:'+mec.to_J(this.energy))
+            //    console.log('E:'+mec.to_J(this.energy))
             return this;
         },
         /**
@@ -816,7 +814,20 @@ mec.model = {
          * @returns {object} model
          */
         draw(g) {
-            this.forAllModules((elm) => elm.draw(g));
+            // Make sure constraints and nodes are rendered last.
+            this.forAllModules((elm, module) => {
+                if (module === this.modules['constraints'] ||
+                    module === this.modules['nodes']) {
+                    return;
+                }
+                elm.draw(g);
+            });
+            for (const elm of this.constraints) {
+                elm.draw(g);
+            }
+            for (const elm of this.nodes) {
+                elm.draw(g);
+            }
             return this;
         }
     }
