@@ -4,10 +4,6 @@
  * @requires mec.core.js
  * @requires mec.node.js
  * @requires mec.constraint.js
- * @requires mec.drive.js
- * @requires mec.load.js
- * @requires mec.view.js
- * @requires mec.shape.js
  */
 "use strict";
 
@@ -19,9 +15,6 @@
  * @property {string} id - model id.
  * @property {boolean|object} [gravity] - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
  * @property {object} [labels] - user specification of labels to show `default={nodes:false,constraints:true,loads:true}`.
- * @property {array} nodes - Array of node objects.
- * @property {array} constraints - Array of constraint objects.
- * @property {array} shapes - Array of shape objects.
  */
 mec.model = {
     extend(model, env = mec) {
@@ -39,22 +32,14 @@ mec.model = {
             this.state = { valid:true,itrpos:0,itrvel:0,preview:false };
             this.timer = { t:0,dt:1/60,sleepMin:1 };
             // create empty containers for all elements
-            if (!this.nodes) this.nodes = [];
-            if (!this.constraints) this.constraints = [];
-            if (!this.loads) this.loads = [];
-            if (!this.views) this.views = [];
-            if (!this.shapes) this.shapes = [];
-            // extending elements by their prototypes
-            for (const node of this.nodes)
-                mec.node.extend(node);
-            for (const constraint of this.constraints)
-                mec.constraint.extend(constraint);
-            for (const load of this.loads)
-                mec.load.extend(load)
-            for (const view of this.views)
-                mec.view.extend(view)
-            for (const shape of this.shapes)
-                mec.shape.extend(shape)
+            for (const key of Object.keys(this.modules)) {
+                if (!this[key]) {
+                    this[key] = [];
+                }
+            }
+            this.forAllModules((elm, module) => {
+                module.extend(elm); }
+            );
         },
         /**
          * Init model
@@ -71,18 +56,37 @@ mec.model = {
             if (!this.tolerance) this.tolerance = 'medium';
 
             this.state.valid = true;  // clear previous logical error result ...
-            for (let i=0; i < this.nodes.length && this.valid; i++)
-                this.nodes[i].init(this,i);
-            for (let i=0; i < this.constraints.length && this.valid; i++) // just in time initialization with 'ref' possible .. !
-                if (!this.constraints[i].initialized) this.constraints[i].init(this,i);
-            for (let i=0; i < this.loads.length && this.valid; i++)
-                this.loads[i].init(this,i);
-            for (let i=0; i < this.views.length && this.valid; i++)
-                this.views[i].init(this,i);
-            for (let i=0; i < this.shapes.length && this.valid; i++)
-                this.shapes[i].init(this,i);
+
+            for (const key of Object.keys(this.modules)) {
+                for (let idx = 0; idx < this[key].length; ++idx) {
+                    this[key][idx].init(this, idx);
+                }
+            }
 
             return this;
+        },
+        modules: {},
+        addModule(name, module) {
+            // TODO define interface
+            // if (!module ||
+            //     !module.extend ||
+            //     !module.init ||
+            //     !module.reset
+            //     // !module.byId
+            //     // !module.dependsOn not sure if this is a hard requirement...
+            //     ) {
+            //     console.warn('TODO');
+            //     return;
+            // }
+            this.modules[name] = module;
+        },
+
+        forAllModules(fn) {
+            for (const [key, module] of Object.entries(this.modules)) {
+                for (const elm of this[key]) {
+                    fn(elm, module);
+                }
+            }
         },
         /**
          * Notification of validity by child. Error message aborts init procedure.
@@ -108,14 +112,7 @@ mec.model = {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
             Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
-            for (const node of this.nodes)
-                node.reset();
-            for (const constraint of this.constraints)
-                constraint.reset();
-            for (const load of this.loads)
-                load.reset();
-            for (const view of this.views)
-                view.reset();
+            this.forAllModules((elm) => elm.reset && elm.reset());
             return this;
         },
         /**
@@ -203,10 +200,15 @@ mec.model = {
          */
         get dof() {
             let dof = 0;
-            for (const node of this.nodes)
+            if (!this.nodes || !this.constraints) {
+                console.warn('TODO');
+            }
+            for (const node of this.nodes) {
                 dof += node.dof;
-            for (const constraint of this.constraints)
+            }
+            for (const constraint of this.constraints) {
                 dof -= (2 - constraint.dof);
+            }
             return dof;
         },
         /**
@@ -352,15 +354,9 @@ mec.model = {
          * @returns {boolean} true in case of existing dependents.
          */
         hasDependents(elem) {
+            // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            for (const constraint of this.constraints)
-                dependency = constraint.dependsOn(elem) || dependency;
-            for (const load of this.loads)
-                dependency = load.dependsOn(elem) || dependency;
-            for (const view of this.views)
-                dependency = view.dependsOn(elem) || dependency;
-            for (const shape of this.shapes)
-                dependency = shape.dependsOn(elem) || dependency;
+            this.forAllModules(() => dependency = elm.dependency.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
@@ -372,21 +368,14 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem, deps) {
-            deps = deps || {constraints:[],loads:[],views:[],shapes:[]};
-            for (const constraint of this.constraints)
-                if (constraint.dependsOn(elem)) {
-                    this.dependentsOf(constraint,deps);
-                    deps.constraints.push(constraint);
+            deps = deps || {}
+
+            this.forAllModules((elm, module) => {
+                if (elm.dependsOn(elem)) {
+                    this.dependentsOf(elm, deps);
+                    deps[module].push(elm);
                 }
-            for (const load of this.loads)
-                if (load.dependsOn(elem))
-                    deps.loads.push(load);
-            for (const view of this.views)
-                if (view.dependsOn(elem))
-                    deps.views.push(view);
-            for (const shape of this.shapes)
-                if (shape.dependsOn(elem))
-                    deps.shapes.push(shape);
+            });
             return deps;
         },
         /**
@@ -425,14 +414,9 @@ mec.model = {
          * @param {object} elems - element dictionary.
          */
         purgeElements(elems) {
-            for (const constraint of elems.constraints)
-                this.constraints.splice(this.constraints.indexOf(constraint),1);
-            for (const load of elems.loads)
-                this.loads.splice(this.loads.indexOf(load),1);
-            for (const view of elems.views)
-                this.views.splice(this.views.indexOf(view),1);
-            for (const shape of elems.shapes)
-                this.shapes.splice(this.shapes.indexOf(shape),1);
+            this.forAllModules((elm, module) => {
+                module.splice(module.indexOf(elm), 1);
+            });
         },
         /**
          * Get element by id.
@@ -440,6 +424,7 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
+            // TODO These functions should be in their respective module.
             return this.nodeById(id)
                 || this.constraintById(id)
                 || this.loadById(id)
@@ -831,16 +816,7 @@ mec.model = {
          * @returns {object} model
          */
         draw(g) {
-            for (const shape of this.shapes)
-                shape.draw(g);
-            for (const view of this.views)
-                view.draw(g);
-            for (const constraint of this.constraints)
-                constraint.draw(g);
-            for (const load of this.loads)
-                load.draw(g);
-            for (const node of this.nodes)
-                node.draw(g);
+            this.forAllModules((elm) => elm.draw(g));
             return this;
         }
     }

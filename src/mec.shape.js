@@ -514,3 +514,5 @@ mec.shape.img = {
         g.img({uri:this.uri,x:()=>this.p.x,y:()=>this.p.y,w,scl:this.scl,xoff:this.xoff,yoff:this.yoff})
     }
 }
+
+mec.model.prototype.addModule('shapes', mec.shape);

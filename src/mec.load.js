@@ -296,3 +296,5 @@ mec.load.spring = {
         g.ins(this); 
     }
 }
+
+mec.model.prototype.addModule('loads', mec.load);
