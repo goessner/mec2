@@ -367,9 +367,9 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
             <span class="left">
                 ${this.logo}
                 <span>&nbsp;</span>
-                <span id="runbtn" title="run/pause" ${inputs.length ? ' disabled' : ''}>&#9654;</span>
-                <span id="resetbtn" title="reset">&#8617;</span>
-                <span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>
+                ${this.runbtn({inputs})}
+                ${this.resetbtn()}
+                ${this.gravbtn()}
             </span>
             <span class="right">
                 <output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>
@@ -394,6 +394,18 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
             input.r0 = r0;
             return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
+    }
+
+    static runbtn({inputs}) {
+        return `<span id="runbtn" title="run/pause" ${inputs.length ? ' disabled' : ''}>&#9654;</span>`;
+    }
+
+    static resetbtn() {
+        return `<span id="resetbtn" title="reset">&#8617;</span>`;
+    }
+
+    static gravbtn() {
+        return `<span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>`
     }
 
     static logo = `<svg style="margin-bottom:-5pt; padding-left: 5pt;" class="flex-shrink-0 mr-2" version="1.0" xmlns="http://www.w3.org/2000/svg" width="16pt" height="16pt" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
