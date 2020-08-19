@@ -33,7 +33,9 @@ class Mec2Element extends HTMLElement {
 
     get gravity() { return this._model.gravity.active; }
     set gravity(q) {
-        this._gravbtn.innerHTML = q ? '&checkmark;g' : '&nbsp;&nbsp;g';
+        if (this.gravbtn) {
+            this._gravbtn.innerHTML = q ? '&checkmark;g' : '&nbsp;&nbsp;g';
+        }
         this._model.gravity.active = q;
     }
 
@@ -46,11 +48,15 @@ class Mec2Element extends HTMLElement {
             this._model.sleepMinDelta = 1;
             if (this.editing)  // do not run in edit mode ... so toggle !
                 this.editing = false;
+            if (this._runbtn) {
                 this._runbtn.innerHTML = this.updateRunBtn();
+            }
         }
         else if (!this._state.pause && q) {
             this._state.pause = true;
-            this._runbtn.innerHTML = this.updateRunBtn();
+            if (this._runbtn) {
+                this._runbtn.innerHTML = this.updateRunBtn();
+            }
 
         }
         //  else  ... nothing to do
@@ -149,12 +155,16 @@ class Mec2Element extends HTMLElement {
         this.gravity = this.getAttribute('gravity') === "" ? true : false;
         // add event listeners
         this._runbtnHdl = this.run;
-        this._runbtn.addEventListener("click", this._runbtnHdl, false);
-        this._resetbtnHdl = e => this.reset();
-        this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        if (this._runbtn) {
+            this._runbtn.addEventListener("click", this._runbtnHdl, false);
+            this._resetbtnHdl = e => this.reset();
+            this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        }
         //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
-        this._gravbtnHdl = e => this.toggleGravity();
-        this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
+        if (this._gravbtn) {
+            this._gravbtnHdl = e => this.toggleGravity();
+            this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
+        }
         // some more members
         this._interactor = canvasInteractor.create(this._ctx, { x: this.x0, y: this.y0, cartesian: this.cartesian });
         this._g = g2().clr().view(this._interactor.view);
@@ -239,7 +249,9 @@ class Mec2Element extends HTMLElement {
 
     run = () => {
         this.pausing = !this.pausing;
-        this._runbtn.innerHTML = this.updateRunBtn();
+        if (this._runbtn) {
+            this._runbtn.innerHTML = this.updateRunBtn();
+        }
     }
 
     updateRunBtn = () => this._inputs.length ? '' :
@@ -305,10 +317,16 @@ class Mec2Element extends HTMLElement {
             (this._model.dof === 0 || this._model.isSleeping))
             this.pausing = true;
         //        this.log(`activeDrives=${this._model.activeDriveCount}, inputDrives=${this.inputDriveCount}, isSleeping=${this._model.isSleeping}, pausing=${this.pausing}, t=${this._model.timer.t}`)
-        this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
-        this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
+        if (this._corview) {
+            this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
+        }
+        if (this.fpsview) {
+            this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
+        }
         //        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
-        this._itrview.innerHTML = this._model.state.itrpos + '/' + this._model.state.itrvel;
+        if (this._itrview) {
+            this._itrview.innerHTML = this._model.state.itrpos + '/' + this._model.state.itrvel;
+        }
     }
 
     // standard lifecycle callbacks
@@ -380,14 +398,14 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
             <span class="left">
                 ${this.logo}
                 <span>&nbsp;</span>
-                ${this.runbtn({inputs})}
+                ${this.runbtn({ inputs })}
                 ${this.resetbtn()}
                 ${this.gravbtn()}
             </span>
             <span class="right">
                 ${this.corview()}
                 ${this.fpsview()}
-                ${this.dofview({dof})}
+                ${this.dofview({ dof })}
                 ${this.itrview()}
             </span>
         </nav>`
@@ -408,7 +426,7 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
     static fpsview() {
         return `<output id="fpsview" title="frames per second" style="min-width:3em;"></output>`;
     }
-    static dofview({dof}) {
+    static dofview({ dof }) {
         return `<output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>`;
     }
     static itrview() {
