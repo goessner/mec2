@@ -341,6 +341,12 @@ class Mec2Element extends HTMLElement {
         user-select: none;
         cursor:default;
     }
+
+    mec-slider {
+        display: inline-block;
+        width: ${width - 2}px;
+    }
+
     .right {
         text-align: right;
         vertical-align: bottom;
@@ -409,12 +415,12 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
             const w0 = Math.round(mec.toDeg(cstr.w0)),
                 w1 = w0 + Math.round(mec.toDeg(cstr.ori.Dw || 2 * Math.PI));
             input.w0 = w0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.ori'}" width="${width}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.ori'}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
         }
         else { // if (sub === 'len')
             const r0 = cstr.r0, r1 = r0 + cstr.len.Dr;
             input.r0 = r0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
     }
 
