@@ -3,7 +3,7 @@ class Mec2Element extends HTMLElement {
         return ['width', 'height', 'cartesian', 'grid', 'x0', 'y0',
             'darkmode', 'gravity', 'hidenodes', 'hideconstraints',
             'nodelabels', 'constraintlabels', 'loadlabels',
-            'nodeinfo', 'constraintinfo'];
+            'nodeinfo', 'constraintinfo', 'nav'];
     }
 
     constructor() {
@@ -25,6 +25,8 @@ class Mec2Element extends HTMLElement {
     set cartesian(q) { q ? this.setAttribute('cartesian', '') : this.removeAttribute('cartesian'); }
     get grid() { return this.hasAttribute('grid') || false; }
     set grid(q) { q ? this.setAttribute('grid', '') : this.removeAttribute('grid'); }
+    get nav() { return this.hasAttribute('nav') || false; }
+    set nav(q) { q ? this.setAttribute('nav', '') : this.removeAttribute('nav'); }
 
     get show() { return this._show; }
 
@@ -136,7 +138,8 @@ class Mec2Element extends HTMLElement {
             dof: this._model.dof,
             gravity: this._model.gravity.active,
             inputs: this._inputs,
-            darkmode: this._show.darkmode
+            darkmode: this._show.darkmode,
+            nav: this.nav,
         });
         // cache elements of shadow dom
         this._ctx = this._root.getElementById('cnv').getContext('2d');
@@ -348,7 +351,7 @@ class Mec2Element extends HTMLElement {
         }
     }
 
-    static template({ width, height, darkmode, dof, gravity, inputs }) {
+    static template({ width, height, darkmode, dof, gravity, inputs, nav }) {
         return `
 <style>
     nav {
@@ -385,7 +388,7 @@ class Mec2Element extends HTMLElement {
     }
 </style>
 <div style="width:${width};">
-${true ? Mec2Element.nav({ dof, inputs }) : ""}
+${nav ? Mec2Element.nav({ dof, inputs }) : ""}
 <canvas id="cnv" width="${width}" height="${height}" touch-action="none"></canvas><br>
 <span id="info" style="position:absolute;display:none;color:#222;background-color:#ffb;border:1px solid black;font:0.9em monospace;padding:0.1em;font-family:Courier;font-size:9pt;">tooltip</span>
 ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width })).join('') : ''}
@@ -411,7 +414,7 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
         </nav>`
     }
 
-    static runbtn({inputs}) {
+    static runbtn({ inputs }) {
         return `<span id="runbtn" title="run/pause">${inputs.length ? '' : '&#9654;'}</span>`;
     }
     static resetbtn() {
