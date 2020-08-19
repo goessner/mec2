@@ -147,10 +147,13 @@ class Mec2Element extends HTMLElement {
         // check gravity attribute
         this.gravity = this.getAttribute('gravity') === "" ? true : false;
         // add event listeners
-        this._runbtnHdl = e => this.pausing = !this.pausing; this._runbtn.addEventListener("click", this._runbtnHdl, false);
-        this._resetbtnHdl = e => this.reset(); this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        this._runbtnHdl = this.run;
+        this._runbtn.addEventListener("click", this._runbtnHdl, false);
+        this._resetbtnHdl = e => this.reset();
+        this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
         //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
-        this._gravbtnHdl = e => this.gravity = !this.gravity; this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
+        this._gravbtnHdl = e => this.toggleGravity();
+        this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
         // some more members
         this._interactor = canvasInteractor.create(this._ctx, { x: this.x0, y: this.y0, cartesian: this.cartesian });
         this._g = g2().clr().view(this._interactor.view);
@@ -220,6 +223,12 @@ class Mec2Element extends HTMLElement {
         delete this._logview;
     }
 
+    parseModel() {
+        try { this._model = JSON.parse(this.innerHTML); return true; }
+        catch (e) { this._root.innerHTML = e.message; }
+        return false;
+    }
+
     render() {
         for (const idx in this._chartRefs) {
             this._chartRefs[idx].render();
@@ -227,11 +236,8 @@ class Mec2Element extends HTMLElement {
         this._g.exe(this._ctx);
     }
 
-    parseModel() {
-        try { this._model = JSON.parse(this.innerHTML); return true; }
-        catch (e) { this._root.innerHTML = e.message; }
-        return false;
-    }
+    run = () => { this.pausing = !this.pausing; }
+    toggleGravity = () => { this.gravity = !this.gravity; }
 
     reset() {
         this._model.reset();
