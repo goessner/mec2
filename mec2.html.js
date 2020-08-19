@@ -89,6 +89,116 @@
  * @property {float} [ymin] - minimal y-axis value. If not given it is calculated from chart data values.
  * @property {float} [ymax] - maximal y-axis value. If not given it is calculated from chart data values.
  */g2.prototype.chart=function chart({x:x,y:y,b:b,h:h,style:style,title:title,funcs:funcs,xaxis:xaxis,xmin:xmin,xmax:xmax,yaxis:yaxis,ymin:ymin,ymax:ymax}){return this.addCommand({c:"chart",a:arguments[0]})};g2.prototype.chart.prototype={g2(){const g=g2(),funcs=this.get("funcs"),title=this.title&&this.get("title");if(!this.b)this.b=this.defaults.b;if(!this.h)this.h=this.defaults.h;if(funcs&&funcs.length){const tmp=[this.xmin===undefined,this.xmax===undefined,this.ymin===undefined,this.ymax===undefined];funcs.forEach(f=>this.initFunc(f,...tmp))}this.xAxis=this.autoAxis(this.get("xmin"),this.get("xmax"),0,this.b);this.yAxis=this.autoAxis(this.get("ymin"),this.get("ymax"),0,this.h);g.rec({x:this.x,y:this.y,b:this.b,h:this.h,fs:this.get("fs"),ls:this.get("ls")});g.beg(Object.assign({x:this.x,y:this.y,lw:1},this.defaults.style,this.style));if(title)g.txt(Object.assign({str:this.title&&this.title.text||this.title,x:this.get("b")/2,y:this.get("h")+this.get("title","offset"),w:0},this.defaults.title.style,this.title&&this.title.style||{}));if(this.xaxis)this.drawXAxis(g);if(this.yaxis)this.drawYAxis(g);g.end();if(funcs)funcs.forEach((fnc,i)=>{this.drawFunc(g,fnc,this.defaults.colors[i%this.defaults.colors.length])});return g},initFunc(fn,setXmin,setXmax,setYmin,setYmax){let itr;if(fn.data&&fn.data.length){itr=fn.itr=g2.pntItrOf(fn.data)}else if(fn.fn&&fn.dx){const xmin=+this.xmin||this.defaults.xmin;const xmax=+this.xmax||this.defaults.xmax;itr=fn.itr=(i=>{let x=xmin+i*fn.dx;return{x:x,y:fn.fn(x)}});itr.len=(xmax-xmin)/fn.dx+1}if(itr&&(setXmin||setXmax||setYmin||setYmax)){const xarr=[];const yarr=[];for(let i=0;i<itr.len;++i){xarr.push(itr(i).x);yarr.push(itr(i).y)}if(setXmin){const xmin=Math.min(...xarr);if(!this.xmin||xmin<this.xmin)this.xmin=xmin}if(setXmax){const xmax=Math.max(...xarr);if(!this.xmax||xmax>this.xmax)this.xmax=xmax}if(setYmin){const ymin=Math.min(...yarr);if(!this.ymin||ymin<this.ymin)this.ymin=ymin}if(setYmax){const ymax=Math.max(...yarr);if(!this.ymax||ymax>this.ymax)this.ymax=ymax}if(fn.color&&typeof fn.color==="number")fn.color=this.defaults.colors[fn.color%this.defaults.colors.length]}},autoAxis(zmin,zmax,tmin,tmax){let base=2,exp=1,eps=Math.sqrt(Number.EPSILON),Dz=zmax-zmin||1,Dt=tmax-tmin||1,scl=Dz>eps?Dt/Dz:1,dz=base*Math.pow(10,exp),dt=Math.floor(scl*dz),N,dt01,i0,j0,jth,t0,res;while(dt<14||dt>35){if(dt<14){if(base==1)base=2;else if(base==2)base=5;else if(base==5){base=1;exp++}}else{if(base==1){base=5;exp--}else if(base==2)base=1;else if(base==5)base=2}dz=base*Math.pow(10,exp);dt=scl*dz}i0=(scl*Math.abs(zmin)+eps/2)%dt<eps?Math.floor(zmin/dz):Math.floor(zmin/dz)+1;let z0=i0*dz;t0=Math.round(scl*(z0-zmin));N=Math.floor((Dt-t0)/dt)+1;j0=base%2&&i0%2?i0+1:i0;jth=exp===0&&N<11?1:base===2&&N>9?5:2;return{zmin:zmin,zmax:zmax,base:base,exp:exp,scl:scl,dt:dt,dz:dz,N:N,t0:t0,z0:z0,i0:i0,j0:j0,jth:jth,itr(i){return{t:this.t0+i*this.dt,z:parseFloat((this.z0+i*this.dz).toFixed(Math.abs(this.exp))),maj:(this.j0-this.i0+i)%this.jth===0}}}},drawXAxis(g){let tick,showgrid=this.xaxis&&this.xaxis.grid,gridstyle=showgrid&&Object.assign({},this.defaults.xaxis.grid,this.xaxis.grid),showaxis=this.xaxis||this.xAxis,axisstyle=showaxis&&Object.assign({},this.defaults.xaxis.style,this.defaults.xaxis.labels.style,this.xaxis&&this.xaxis.style||{}),showline=showaxis&&this.get("xaxis","line"),showlabels=this.xAxis&&showaxis&&this.get("xaxis","labels"),showticks=this.xAxis&&showaxis&&this.get("xaxis","ticks"),ticklen=showticks?this.get("xaxis","ticks","len"):0,showorigin=showaxis&&this.get("xaxis","origin"),title=this.xaxis&&(this.get("xaxis","title","text")||this.xaxis.title)||"";g.beg(axisstyle);for(let i=0;i<this.xAxis.N;i++){tick=this.xAxis.itr(i);if(showgrid)g.lin(Object.assign({x1:tick.t,y1:0,x2:tick.t,y2:this.h},gridstyle));if(showticks)g.lin({x1:tick.t,y1:tick.maj?ticklen:2/3*ticklen,x2:tick.t,y2:tick.maj?-ticklen:-2/3*ticklen});if(showlabels&&tick.maj)g.txt(Object.assign({str:parseFloat(tick.z),x:tick.t,y:-(this.get("xaxis","ticks","len")+this.get("xaxis","labels","offset")),w:0},this.get("xaxis","labels","style")||{}))}if(showline)g.lin({y1:0,y2:0,x1:0,x2:this.b});if(showorigin&&this.xmin<=0&&this.xmax>=0)g.lin({x1:-this.xAxis.zmin*this.xAxis.scl,y1:0,x2:-this.xAxis.zmin*this.xAxis.scl,y2:this.h});if(title)g.txt(Object.assign({str:title.text||title,x:this.b/2,y:-(this.get("xaxis","title","offset")+(showticks&&this.get("xaxis","ticks","len")||0)+(showlabels&&this.get("xaxis","labels","offset")||0)+(showlabels&&parseFloat(this.get("xaxis","labels","style","font"))||0)),w:0},this.get("xaxis","title","style")));g.end()},drawYAxis(g){let tick,showgrid=this.yaxis&&this.yaxis.grid,gridstyle=showgrid&&Object.assign({},this.defaults.yaxis.grid,this.yaxis.grid),showaxis=this.yaxis||this.yAxis,axisstyle=showaxis&&Object.assign({},this.defaults.yaxis.style,this.defaults.yaxis.labels.style,this.yaxis&&this.yaxis.style||{}),showline=showaxis&&this.get("yaxis","line"),showlabels=this.yAxis&&showaxis&&this.get("yaxis","labels"),showticks=this.yAxis&&showaxis&&this.get("yaxis","ticks"),ticklen=showticks?this.get("yaxis","ticks","len"):0,showorigin=showaxis&&this.get("yaxis","origin"),title=this.yaxis&&(this.get("yaxis","title","text")||this.yaxis.title)||"";g.beg(axisstyle);for(let i=0;i<this.yAxis.N;i++){tick=this.yAxis.itr(i);if(i&&showgrid)g.lin(Object.assign({y1:tick.t,x2:this.b,x1:0,y2:tick.t},gridstyle));if(showticks)g.lin({y1:tick.t,x2:tick.maj?-ticklen:-2/3*ticklen,y2:tick.t,y2:tick.t,x1:tick.maj?ticklen:2/3*ticklen});if(showlabels&&tick.maj)g.txt(Object.assign({str:parseFloat(tick.z),x:-(this.get("yaxis","ticks","len")+this.get("yaxis","labels","offset")),y:tick.t,w:Math.PI/2},this.get("yaxis","labels","style")))}if(showline)g.lin({y1:0,x1:0,x2:0,y2:this.h});if(showorigin&&this.ymin<=0&&this.ymax>=0)g.lin({x1:0,y1:-this.yAxis.zmin*this.yAxis.scl,x2:this.b,y2:-this.yAxis.zmin*this.yAxis.scl});if(title)g.txt(Object.assign({str:title.text||title,x:-(this.get("yaxis","title","offset")+(showticks&&this.get("yaxis","ticks","len")||0)+(showlabels&&this.get("yaxis","labels","offset")||0)+(showlabels&&parseFloat(this.get("yaxis","labels","style","font"))||0)),y:this.h/2,w:Math.PI/2},this.get("yaxis","title","style")));g.end()},drawFunc(g,fn,defaultcolor){let itr=fn.itr;if(itr){let fill=fn.fill||fn.style&&fn.style.fs&&fn.style.fs!=="transparent",color=fn.color=fn.color||fn.style&&fn.style.ls||defaultcolor,plydata=[],args=Object.assign({pts:plydata,closed:false,ls:color,fs:fill?g2.color.rgbaStr(color,.125):"transparent",lw:1},fn.style);if(fill)plydata.push(this.pntOf({x:itr(0).x,y:0}));for(let i=0,n=itr.len;i<n;i++)plydata.push(this.pntOf(itr(i)));if(fill)plydata.push(this.pntOf({x:itr(itr.len-1).x,y:0}));if(fn.spline&&g.spline)g.spline(args);else g.ply(args);if(fn.dots){g.beg({fs:"snow"});for(var i=0;i<plydata.length;i++)g.cir(Object.assign({},plydata[i],{r:2,lw:1}));g.end()}}},pntOf:function(xy){return{x:this.x+Math.max(Math.min((xy.x-this.xAxis.zmin)*this.xAxis.scl,this.b),0),y:this.y+Math.max(Math.min((xy.y-this.yAxis.zmin)*this.yAxis.scl,this.h),0)}},get(n1,n2,n3,n4){const loc=n4?this[n1]&&this[n1][n2]&&this[n1][n2][n3]&&this[n1][n2][n3][n4]:n3?this[n1]&&this[n1][n2]&&this[n1][n2][n3]:n2?this[n1]&&this[n1][n2]:n1?this[n1]:undefined,dflts=this.defaults;return loc!==undefined?loc:n4?dflts[n1]&&dflts[n1][n2]&&dflts[n1][n2][n3]&&dflts[n1][n2][n3][n4]:n3?dflts[n1]&&dflts[n1][n2]&&dflts[n1][n2][n3]:n2?dflts[n1]&&dflts[n1][n2]:n1?dflts[n1]:undefined},defaults:{x:0,y:0,xmin:0,xmax:1,ymin:0,ymax:1,b:150,h:100,ls:"transparent",fs:"#efefef",color:false,colors:["#426F42","#8B2500","#23238E","#5D478B"],title:{text:"",offset:3,style:{font:"16px serif",fs:"black",thal:"center",tval:"bottom"}},funcs:[],xaxis:{fill:false,line:true,style:{ls:"#888",thal:"center",tval:"top",fs:"black"},origin:false,title:{text:null,offset:1,style:{font:"12px serif",fs:"black"}},ticks:{len:6},grid:{ls:"#ddd",ld:[]},labels:{loc:"auto",offset:1,style:{font:"11px serif",fs:"black"}}},yaxis:{line:true,style:{ls:"#888",thal:"center",tval:"bottom",fs:"black"},origin:false,title:{text:null,offset:2,style:{font:"12px serif",fs:"black"}},ticks:{len:6},grid:{ls:"#ddd",ld:[]},labels:{loc:"auto",offset:1,style:{font:"11px serif",fs:"black"}}}}};g2.color={rgba(color,alpha){let res;alpha=alpha!==undefined?alpha:1;if(color==="transparent")return{r:0,g:0,b:0,a:0};if(color in g2.color.names)color="#"+g2.color.names[color];if(res=/#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(color))return{r:parseInt(res[1],16),g:parseInt(res[2],16),b:parseInt(res[3],16),a:alpha};if(res=/#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(color))return{r:parseInt(res[1]+res[1],16),g:parseInt(res[2]+res[2],16),b:parseInt(res[3]+res[3],16),a:alpha};if(res=/rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(color))return{r:parseInt(res[1]),g:parseInt(res[2]),b:parseInt(res[3]),a:alpha};if(res=/rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(color))return{r:parseInt(res[1]),g:parseInt(res[2]),b:parseInt(res[3]),a:alpha!==undefined?alpha:parseFloat(res[4])};if(res=/rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(color))return{r:parseFloat(res[1])*2.55,g:parseFloat(res[2])*2.55,b:parseFloat(result[3])*2.55,a:alpha}},rgbaStr(color,alpha){const c=g2.color.rgba(color,alpha);return"rgba("+c.r+","+c.g+","+c.b+","+c.a+")"},names:{aliceblue:"f0f8ff",antiquewhite:"faebd7",aqua:"00ffff",aquamarine:"7fffd4",azure:"f0ffff",beige:"f5f5dc",bisque:"ffe4c4",black:"000000",blanchedalmond:"ffebcd",blue:"0000ff",blueviolet:"8a2be2",brown:"a52a2a",burlywood:"deb887",cadetblue:"5f9ea0",chartreuse:"7fff00",chocolate:"d2691e",coral:"ff7f50",cornflowerblue:"6495ed",cornsilk:"fff8dc",crimson:"dc143c",cyan:"00ffff",darkblue:"00008b",darkcyan:"008b8b",darkgoldenrod:"b8860b",darkgray:"a9a9a9",darkgreen:"006400",darkkhaki:"bdb76b",darkmagenta:"8b008b",darkolivegreen:"556b2f",darkorange:"ff8c00",darkorchid:"9932cc",darkred:"8b0000",darksalmon:"e9967a",darkseagreen:"8fbc8f",darkslateblue:"483d8b",darkslategray:"2f4f4f",darkturquoise:"00ced1",darkviolet:"9400d3",deeppink:"ff1493",deepskyblue:"00bfff",dimgray:"696969",dodgerblue:"1e90ff",feldspar:"d19275",firebrick:"b22222",floralwhite:"fffaf0",forestgreen:"228b22",fuchsia:"ff00ff",gainsboro:"dcdcdc",ghostwhite:"f8f8ff",gold:"ffd700",goldenrod:"daa520",gray:"808080",green:"008000",greenyellow:"adff2f",honeydew:"f0fff0",hotpink:"ff69b4",indianred:"cd5c5c",indigo:"4b0082",ivory:"fffff0",khaki:"f0e68c",lavender:"e6e6fa",lavenderblush:"fff0f5",lawngreen:"7cfc00",lemonchiffon:"fffacd",lightblue:"add8e6",lightcoral:"f08080",lightcyan:"e0ffff",lightgoldenrodyellow:"fafad2",lightgrey:"d3d3d3",lightgreen:"90ee90",lightpink:"ffb6c1",lightsalmon:"ffa07a",lightseagreen:"20b2aa",lightskyblue:"87cefa",lightslateblue:"8470ff",lightslategray:"778899",lightsteelblue:"b0c4de",lightyellow:"ffffe0",lime:"00ff00",limegreen:"32cd32",linen:"faf0e6",magenta:"ff00ff",maroon:"800000",mediumaquamarine:"66cdaa",mediumblue:"0000cd",mediumorchid:"ba55d3",mediumpurple:"9370d8",mediumseagreen:"3cb371",mediumslateblue:"7b68ee",mediumspringgreen:"00fa9a",mediumturquoise:"48d1cc",mediumvioletred:"c71585",midnightblue:"191970",mintcream:"f5fffa",mistyrose:"ffe4e1",moccasin:"ffe4b5",navajowhite:"ffdead",navy:"000080",oldlace:"fdf5e6",olive:"808000",olivedrab:"6b8e23",orange:"ffa500",orangered:"ff4500",orchid:"da70d6",palegoldenrod:"eee8aa",palegreen:"98fb98",paleturquoise:"afeeee",palevioletred:"d87093",papayawhip:"ffefd5",peachpuff:"ffdab9",peru:"cd853f",pink:"ffc0cb",plum:"dda0dd",powderblue:"b0e0e6",purple:"800080",rebeccapurple:"663399",red:"ff0000",rosybrown:"bc8f8f",royalblue:"4169e1",saddlebrown:"8b4513",salmon:"fa8072",sandybrown:"f4a460",seagreen:"2e8b57",seashell:"fff5ee",sienna:"a0522d",silver:"c0c0c0",skyblue:"87ceeb",slateblue:"6a5acd",slategray:"708090",snow:"fffafa",springgreen:"00ff7f",steelblue:"4682b4",tan:"d2b48c",teal:"008080",thistle:"d8bfd8",tomato:"ff6347",turquoise:"40e0d0",violet:"ee82ee",violetred:"d02090",wheat:"f5deb3",white:"ffffff",whitesmoke:"f5f5f5",yellow:"ffff00",yellowgreen:"9acd32"}};
+"use strict";
+
+class G2ChartElement extends HTMLElement {
+    static get observedAttributes() {
+        return [
+            'width',
+            'height',
+            'xmin',
+            'xmax',
+            'ymin',
+            'ymax',
+            'title',
+        ];
+    }
+
+    constructor() {
+        super();
+        this._root = this.attachShadow({ mode: 'open' });
+    }
+
+    get width() { return +this.getAttribute('width') || 301; }
+    set width(q) { q && this.setAttribute('width', q) }
+    get height() { return +this.getAttribute('height') || 201; }
+    set height(q) { q && this.setAttribute('height', q) }
+    get xmin() { return +this.getAttribute('xmin') || undefined; }
+    set xmin(q) { return q && +this.setAttribute('xmin', q) }
+    get xmax() { return +this.getAttribute('xmax') || undefined; }
+    set xmax(q) { return q && +this.setAttribute('xmax', q) }
+    get ymin() { return +this.getAttribute('ymin') || undefined; }
+    set ymin(q) { return q && +this.setAttribute('ymin', q) }
+    get ymax() { return +this.getAttribute('ymax') || undefined; }
+    set ymax(q) { return q && +this.setAttribute('ymax', q) }
+    get title() { return this.getAttribute('title') || ''; }
+    set title(q) { return q && this.setAttribute('title', q) }
+
+    connectedCallback() {
+        this._root.innerHTML = G2ChartElement.template({
+            width: this.width, height: this.height
+        });
+
+        this._ctx = this._root.getElementById('cnv').getContext('2d');
+
+        this._g = g2().del().clr().view({ cartesian: true });
+
+        const t = 35;
+        this._chart = {
+            x: t,
+            y: t,
+            xmin: this.xmin,
+            xmax: this.xmax,
+            ymin: this.ymin,
+            ymax: this.ymax,
+            title: this.title,
+            b: this.width - t * 2,
+            h: this.height - t * 2,
+            xaxis: () => this.xaxis || {},
+            yaxis: () => this.yaxis || {},
+            title: () => this.title || "",
+            funcs: () => this.funcs
+        };
+
+        try {
+            // If not true, the element should be referenced by another module.
+            if (this.innerHTML !== '') {
+                // Remove all functions (declared by "fn": fn) and fetch them before parsing.
+                // Then bring them back in using Function: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#Never_use_eval
+
+                // Find all functions declared by "fn:" like here: https://goessner.github.io/g2/g2.chart.html#example-multiple-functions
+                const funcRegEx = /(("|')fn("|'):)([^(,|})]+)/g;
+                const funcs = JSON.parse(this.innerHTML.replace(funcRegEx, '"fn":"PLACEHOLDER"').trim());
+                let itr = 0;
+                for (const a of this.innerHTML.matchAll(funcRegEx)) {
+                    funcs[itr].fn = (() => Function('"use strict"; return (' + a[4] + ')')())();
+                    itr++;
+                }
+                this.funcs = [funcs];          
+            }
+        }
+        catch (e) {
+            console.warn(e);
+            this._g.txt({ str: e, y: 5 });
+        }
+        finally {
+            this._g.chart(this._chart).nod({
+                x: () => this.nod && this.nod().x,
+                y: () => this.nod && this.nod().y,
+                scl: () => this.nod && this.nod().scl || 0});
+            this.render();
+        }
+    }
+
+    render() {
+        this._g.exe(this._ctx);
+    }
+
+    setChart(chart) {
+        this._chart = chart;
+    }
+
+    disconnectedCallback() {
+        // TODO
+    }
+
+    static template({ width, height }) {
+        return `<canvas id='cnv' width=${width} height=${height}
+            style="border:solid 1px black;"></canvas>`
+    }
+}
+customElements.define('g2-chart', G2ChartElement);
+
 /**
  * g2.selector.js (c) 2018 Stefan Goessner
  * @file selector for `g2` elements.
@@ -780,6 +890,840 @@ messageString(msg) {
 }
 }
 
+/**
+ * mec.model (c) 2018-19 Stefan Goessner
+ * @license MIT License
+ * @requires mec.core.js
+ * @requires mec.node.js
+ * @requires mec.constraint.js
+ */
+"use strict";
+
+/**
+ * Wrapper class for extending plain model objects, usually generated from a JSON object.
+ * @method
+ * @returns {object} model object.
+ * @param {object} - plain javascript model object.
+ * @property {string} id - model id.
+ * @property {boolean|object} [gravity] - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
+ * @property {object} [labels] - user specification of labels to show `default={nodes:false,constraints:true,loads:true}`.
+ */
+mec.model = {
+    extend(model, env = mec) {
+        Object.setPrototypeOf(model, this.prototype);
+        model.constructor(env);
+        return model;
+    },
+    prototype: {
+        constructor(env) {
+            this.env = env; // reference environment of model
+            if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
+                this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
+
+            this.showInfo = { nodes: this.env.show.nodeInfo, constraints: this.env.show.constraintInfo, loads: false };
+            this.state = { valid: true, itrpos: 0, itrvel: 0, preview: false };
+            this.timer = { t: 0, dt: 1 / 60, sleepMin: 1 };
+            // create empty containers for all elements
+            for (const key of Object.keys(this.modules)) {
+                if (!this[key]) {
+                    this[key] = [];
+                }
+            }
+            this.forAllModules((elm, module) => { module.extend(elm); });
+        },
+        /**
+         * Init model
+         * @method
+         * @returns object} model.
+         */
+        init() {
+            if (this.gravity === true)
+                this.gravity = Object.assign({}, mec.gravity, { active: true });
+            else if (!this.gravity)
+                this.gravity = Object.assign({}, mec.gravity, { active: false });
+            // else ... gravity might be given by user as vector !
+
+            if (!this.tolerance) this.tolerance = 'medium';
+
+            this.state.valid = true;  // clear previous logical error result ...
+
+            for (const key of Object.keys(this.modules)) {
+                for (let idx = 0; idx < this[key].length; ++idx) {
+                    this[key][idx].init(this, idx);
+                }
+            }
+
+            return this;
+        },
+        modules: {},
+        addModule(name, module) {
+            // TODO define interface
+            // if (!module ||
+            //     !module.extend ||
+            //     !module.init ||
+            //     !module.reset
+            //     // !module.byId
+            //     // !module.dependsOn not sure if this is a hard requirement...
+            //     ) {
+            //     console.warn('TODO');
+            //     return;
+            // }
+            this.modules[name] = module;
+        },
+
+        forAllModules(fn) {
+            for (const [key, module] of Object.entries(this.modules)) {
+                for (const elm of this[key]) {
+                    fn(elm, module);
+                }
+            }
+        },
+        /**
+         * Notification of validity by child. Error message aborts init procedure.
+         * @method
+         * @param {boolean | object} msg - message object or false in case of no error / warning.
+         * @returns {boolean | object} message object in case of logical error / warning or `false`.
+         */
+        notifyValid(msg) {
+            if (msg) {
+                this.state.msg = msg;
+                return (this.state.valid = msg.mid[0] !== 'E');
+            }
+            return true;
+        },
+        /**
+         * Reset model
+         * All nodes are set to their initial position.
+         * Kinematic values are set to zero.
+         * @method
+         * @returns {object} model
+         */
+        reset() {
+            this.timer.t = 0;
+            this.timer.sleepMin = 1;
+            Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
+            this.forAllModules((elm) => elm.reset && elm.reset());
+            return this;
+        },
+        /**
+         * Preview model
+         * Some views need pre calculation for getting immediate results (i.e. traces)
+         * After `preview` was called, model is in `reset` state.
+         * @method
+         * @returns {object} model
+         */
+        preview() {
+            let previewMode = false, tmax = 0;
+            for (const view of this.views) {
+                if (view.mode === 'preview') {
+                    tmax = view.t0 + view.Dt;
+                    view.reset(previewMode = true);
+                }
+            }
+            if (previewMode) {
+                this.reset();
+                this.state.preview = true;
+                this.timer.dt = 1 / 30;
+
+                for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
+                    this.pre().itr().post();
+                    for (const view of this.views)
+                        if (view.preview)
+                            view.preview();
+                }
+
+                this.timer.dt = 1 / 60;
+                this.state.preview = false;
+                this.reset();
+            }
+            return this;
+        },
+        /**
+         * Assemble model (depricated ... use pose() instead)
+         * @method
+         * @returns {object} model
+         */
+        asm() {
+            let valid = this.asmPos();
+            valid = this.asmVel() && valid;
+            return this;
+        },
+        /**
+         * Bring mechanism to a valid pose.
+         * No velocities or forces are calculated.
+         * @method
+         * @returns {object} model
+         */
+        pose() {
+            return this.asmPos();
+        },
+        /**
+         * Perform timer tick.
+         * Model time is incremented by `dt`.
+         * Model time is independent of system time.
+         * Input elements may set simulation time and `dt` explicite. Depricated, they maintain their local time in parallel !
+         * `model.tick()` is then called with `dt = 0`.
+         * @method
+         * @param {number} [dt=0] - time increment.
+         * @returns {object} model
+         */
+        tick(dt) {
+            // fix: ignore dt for now, take it as a constant (study variable time step theoretically) !!
+            this.timer.t += (this.timer.dt = 1 / 60);
+            this.pre().itr().post();
+            return this;
+        },
+        /**
+         * Stop model motion.
+         * Zero out velocities and accelerations.
+         * @method
+         * @returns {object} model
+         */
+        stop() {
+            // post process nodes
+            for (const node of this.nodes)
+                node.xt = node.yt = node.xtt = node.ytt = 0;
+            return this;
+        },
+        /**
+         * Model degree of freedom (movability)
+         */
+        get dof() {
+            let dof = 0;
+            if (!this.nodes || !this.constraints) {
+                console.warn('TODO');
+            }
+            for (const node of this.nodes) {
+                dof += node.dof;
+            }
+            for (const constraint of this.constraints) {
+                dof -= (2 - constraint.dof);
+            }
+            return dof;
+        },
+        /**
+         * Gravity (vector) value.
+         * @type {boolean}
+         */
+        get hasGravity() { return this.gravity.active; },
+
+        get valid() { return this.state.valid; },
+        set valid(q) { this.state.valid = q; },
+        /**
+         * Message object resulting from initialization process.
+         * @type {object}
+         */
+        get msg() { return this.state.msg; },
+        get info() {
+            if (this.showInfo.nodes)
+                for (const node of this.nodes)
+                    if (node.showInfo)
+                        return node.info(this.showInfo.nodes);
+            if (this.showInfo.constraints)
+                for (const constraint of this.constraints)
+                    if (constraint.showInfo)
+                        return constraint.info(this.showInfo.constraints);
+        },
+        /*
+                get info() {
+                    let str = '';
+                    for (const view of this.views)
+                        if (view.hasInfo)
+                            str += view.infoString()+'<br>';
+                    return str.length === 0 ? false : str;
+                },
+        */
+        /**
+         * Number of positional iterations.
+         * @type {number}
+         */
+        get itrpos() { return this.state.itrpos; },
+        set itrpos(q) { this.state.itrpos = q; },
+        /**
+         * Number of velocity iterations.
+         * @type {number}
+         */
+        get itrvel() { return this.state.itrvel; },
+        set itrvel(q) { this.state.itrvel = q; },
+        /**
+         * Set offset to current time, when testing nodes for sleeping state shall begin.
+         * @type {number}
+         */
+        set sleepMinDelta(dt) { this.timer.sleepMin = this.timer.t + dt; },
+        /**
+         * Test, if none of the nodes are moving (velocity = 0).
+         * @type {boolean}
+         */
+        get isSleeping() {
+            let sleeping = this.timer.t > this.timer.sleepMin;  // chance for sleeping exists ...
+            if (sleeping)
+                for (const node of this.nodes)
+                    sleeping = sleeping && node.isSleeping;
+            return sleeping;
+        },
+        /**
+         * Number of active drives
+         * @const
+         * @type {int}
+         */
+        get activeDriveCount() {
+            let activeCnt = 0;
+            for (const constraint of this.constraints)
+                activeCnt += constraint.activeDriveCount(this.timer.t);
+            return activeCnt;
+        },
+        /**
+         * Some drives are active
+         * deprecated: Use `activeDriveCount` instead.
+         * @const
+         * @type {boolean}
+         */
+        get hasActiveDrives() { return this.activeDriveCount > 0; },
+        /**
+         * Array of objects referencing constraints owning at least one input controlled drive.
+         * The array objects are structured like so: 
+         * { constraint: <constraint reference>,
+         *   sub: <string of `['ori', 'len']`
+         * }
+         * If no input controlled drives exist, an empty array is returned.
+         * @const
+         * @type {array} Array holding objects of type {constraint, sub};
+         */
+        get inputControlledDrives() {
+            const inputs = [];
+            for (const constraint of this.constraints) {
+                if (constraint.ori.type === 'drive' && constraint.ori.input)
+                    inputs.push({ constraint: constraint, sub: 'ori' })
+                if (constraint.len.type === 'drive' && constraint.len.input)
+                    inputs.push({ constraint: constraint, sub: 'len' })
+            }
+            return inputs;
+        },
+        /**
+         * Test, if model is active.
+         * Nodes are moving (nonzero velocities) or active drives exist.
+         * @type {boolean}
+         */
+        get isActive() {
+            return this.activeDriveCount > 0   // active drives
+                || this.dof > 0           // or can move by itself
+                && !this.isSleeping;      // and does exactly that
+        },
+        /**
+         * Energy [kgu^2/s^2]
+         */
+        get energy() {
+            var e = 0;
+            for (const node of this.nodes)
+                e += node.energy;
+            for (const load of this.loads)
+                e += load.energy;
+            return e;
+        },
+        /**
+         * center of gravity 
+         */
+        get cog() {
+            var center = { x: 0, y: 0 }, m = 0;
+            for (const node of this.nodes) {
+                if (!node.base) {
+                    center.x += node.x * node.m;
+                    center.y += node.y * node.m;
+                    m += node.m;
+                }
+            }
+            center.x /= m;
+            center.y /= m;
+            return center;
+        },
+
+        /**
+         * Check, if other elements are dependent on specified element.
+         * @method
+         * @param {object} elem - element.
+         * @returns {boolean} true in case of existing dependents.
+         */
+        hasDependents(elem) {
+            // TODO why return the last occurence? Why not stop at the first? 
+            let dependency = false;
+            this.forAllModules(() => dependency = elm.dependency.dependsOn(elem) || dependency)
+            return dependency;
+        },
+        /**
+         * Get direct dependents of a specified element.
+         * As a result a dictionary object containing dependent elements is created:
+         * `{constraints:[], loads:[], shapes:[], views:[]}`
+         * @method
+         * @param {object} elem - element.
+         * @returns {object} dictionary object containing dependent elements.
+         */
+        dependentsOf(elem, deps) {
+            deps = deps || {}
+
+            this.forAllModules((elm, module) => {
+                if (elm.dependsOn(elem)) {
+                    this.dependentsOf(elm, deps);
+                    deps[module].push(elm);
+                }
+            });
+            return deps;
+        },
+        /**
+         * Verify an element indirect (deep) depending on another element.
+         * @method
+         * @param {object} elem - element.
+         * @returns {boolean} dependency exists.
+         */
+        /*
+        deepDependsOn(elem,target) {
+            if (elem === target)
+                return true;
+            else {
+                for (const node of this.nodes)
+                    if (elem.dependsOn(node))
+                        return true;
+                for (const constraint of this.constraints)
+                    if (elem.dependsOn(elem) || this.deepDependsOn(elem,constraint))
+                        return true;
+                for (const load of this.loads)
+                    if (load.dependsOn(elem))
+                        deps.loads.push(load);
+            for (const view of this.views)
+                if (view.dependsOn(elem))
+                    deps.views.push(view);
+            for (const shape of this.shapes)
+                if (shape.dependsOn(elem))
+                    deps.shapes.push(shape);
+                for 
+            }
+        },
+*/
+        /**
+         * Purge all elements in an element dictionary.
+         * @method
+         * @param {object} elems - element dictionary.
+         */
+        purgeElements(elems) {
+            this.forAllModules((elm, module) => {
+                module.splice(module.indexOf(elm), 1);
+            });
+        },
+        /**
+         * Get element by id.
+         * @method
+         * @param {string} id - element id.
+         */
+        elementById(id) {
+            // TODO These functions should be in their respective module.
+            return this.nodeById(id)
+                || this.constraintById(id)
+                || this.loadById(id)
+                || this.viewById(id)
+                || id === 'model' && this;
+        },
+        /**
+         * Add node to model.
+         * @method
+         * @param {object} node - node to add.
+         */
+        addNode(node) {
+            this.nodes.push(node);
+        },
+        /**
+         * Get node by id.
+         * @method
+         * @param {object} node - node to find.
+         */
+        nodeById(id) {
+            for (const node of this.nodes)
+                if (node.id === id)
+                    return node;
+            return false;
+        },
+        /**
+         * Remove node, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `node` is in fact an entry of
+         * the `model.nodes` array.
+         * @method
+         * @param {object} node - node to remove.
+         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
+         */
+        removeNode(node) {
+            const dependency = this.hasDependents(node);
+            if (!dependency)
+                this.nodes.splice(this.nodes.indexOf(node), 1);  // finally remove node from array.
+
+            return !dependency;
+        },
+        /**
+         * Delete node and all depending elements from model.
+         * The calling app has to ensure, that `node` is in fact an entry of
+         * the `model.nodes` array.
+         * @method
+         * @param {object} node - node to remove.
+         */
+        purgeNode(node) {
+            this.purgeElements(this.dependentsOf(node));
+            this.nodes.splice(this.nodes.indexOf(node), 1);
+        },
+        /**
+         * Add constraint to model.
+         * @method
+         * @param {object} constraint - constraint to add.
+         */
+        addConstraint(constraint) {
+            this.constraints.push(constraint);
+        },
+        /**
+         * Get constraint by id.
+         * @method
+         * @param {object} id - constraint id.
+         * @returns {object} constraint to find.
+         */
+        constraintById(id) {
+            for (const constraint of this.constraints)
+                if (constraint.id === id)
+                    return constraint;
+            return false;
+        },
+        /**
+         * Remove constraint, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `constraint` is in fact an entry of
+         * the `model.constraints` array.
+         * @method
+         * @param {object} constraint - constraint to remove.
+         * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
+         */
+        removeConstraint(constraint) {
+            const dependency = this.hasDependents(constraint);
+            if (!dependency)
+                this.constraints.splice(this.constraints.indexOf(constraint), 1);  // finally remove node from array.
+
+            return !dependency;
+        },
+        /**
+         * Delete constraint and all depending elements from model.
+         * The calling app has to ensure, that `constraint` is in fact an entry of
+         * the `model.constraints` array.
+         * @method
+         * @param {object} constraint - constraint to remove.
+         */
+        purgeConstraint(constraint) {
+            this.purgeElements(this.dependentsOf(constraint));
+            this.constraints.splice(this.constraints.indexOf(constraint), 1);
+        },
+        /**
+         * Add load to model.
+         * @method
+         * @param {object} load - load to add.
+         */
+        addLoad(load) {
+            this.loads.push(load);
+        },
+        /**
+         * Get load by id.
+         * @method
+         * @param {object} id - load id.
+         * @returns {object} load to find.
+         */
+        loadById(id) {
+            for (const load of this.loads)
+                if (load.id === id)
+                    return load;
+            return false;
+        },
+        /**
+         * Remove load, if there are no other objects depending on it.
+         * The calling app has to ensure, that `load` is in fact an entry of
+         * the `model.loads` array.
+         * @method
+         * @param {object} node - load to remove.
+         * @returns {boolean} true, the node was removed, otherwise other objects depend on it.
+         */
+        removeLoad(load) {
+            const dependency = this.hasDependents(load);
+            if (!dependency)
+                this.loads.splice(this.loads.indexOf(load), 1);
+            return !dependency;
+        },
+        /**
+         * Delete load and all depending elements from model.
+         * The calling app has to ensure, that `load` is in fact an entry of
+         * the `model.loads` array.
+         * @method
+         * @param {object} load - load to delete.
+         */
+        purgeLoad(load) {
+            this.purgeElements(this.dependentsOf(load));
+            this.loads.splice(this.loads.indexOf(load), 1);
+        },
+        /**
+         * Add shape to model.
+         * @method
+         * @param {object} shape - shape to add.
+         */
+        addShape(shape) {
+            this.shapes.push(shape);
+        },
+        /**
+         * Remove shape, if there are no other objects depending on it.
+         * The calling app has to ensure, that `shape` is in fact an entry of
+         * the `model.shapes` array.
+         * @method
+         * @param {object} shape - shape to remove.
+         */
+        removeShape(shape) {
+            const idx = this.shapes.indexOf(shape);
+            if (idx >= 0)
+                this.shapes.splice(idx, 1);
+        },
+        /**
+         * Delete shape and all dependent elements from model.
+         * The calling app has to ensure, that `shape` is in fact an entry of
+         * the `model.shapes` array.
+         * @method
+         * @param {object} shape - shape to delete.
+         */
+        purgeShape(shape) {
+            this.purgeElements(this.dependentsOf(shape));
+            this.shapes.splice(this.shapes.indexOf(shape), 1);
+        },
+        /**
+         * Add view to model.
+         * @method
+         * @param {object} view - view to add.
+         */
+        addView(view) {
+            this.views.push(view);
+        },
+        /**
+         * Get view by id.
+         * @method
+         * @param {object} id - view id.
+         * @returns {object} view to find.
+         */
+        viewById(id) {
+            for (const view of this.views)
+                if (view.id === id)
+                    return view;
+            return false;
+        },
+        /**
+         * Remove view, if there are no other objects depending on it.
+         * The calling app has to ensure, that `view` is in fact an entry of
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to remove.
+         */
+        removeView(view) {
+            const idx = this.views.indexOf(view);
+            if (idx >= 0)
+                this.views.splice(idx, 1);
+        },
+        /**
+         * Delete view and all dependent elements from model.
+         * The calling app has to ensure, that `view` is in fact an entry of
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to delete.
+         */
+        purgeView(view) {
+            this.purgeElements(this.dependentsOf(view));
+            this.views.splice(this.views.indexOf(view), 1);
+        },
+        /**
+         * Return a JSON-string of the model
+         * @method
+         * @returns {string} model as JSON-string.
+         */
+        asJSON() {
+            // dynamically create a JSON output string ...
+            const nodeCnt = this.nodes.length;
+            const contraintCnt = this.constraints.length;
+            const loadCnt = this.loads.length;
+            const shapeCnt = this.shapes.length;
+            const viewCnt = this.views.length;
+            const comma = (i, n) => i < n - 1 ? ',' : '';
+            const str = '{'
+                + '\n  "id":"' + this.id + '"'
+                + (this.title ? (',\n  "title":"' + this.title + '"') : '')
+                + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
+                + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
+                + (nodeCnt ? this.nodes.map((n, i) => '    ' + n.asJSON() + comma(i, nodeCnt) + '\n').join('') : '')
+                + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (contraintCnt ? '  "constraints": [\n' : '')
+                + (contraintCnt ? this.constraints.map((n, i) => '    ' + n.asJSON() + comma(i, contraintCnt) + '\n').join('') : '')
+                + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (loadCnt ? '  "loads": [\n' : '')
+                + (loadCnt ? this.loads.map((n, i) => '    ' + n.asJSON() + comma(i, loadCnt) + '\n').join('') : '')
+                + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (shapeCnt ? '  "shapes": [\n' : '')
+                + (shapeCnt ? this.shapes.map((n, i) => '    ' + n.asJSON() + comma(i, shapeCnt) + '\n').join('') : '')
+                + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
+                + (viewCnt ? '  "views": [\n' : '')
+                + (viewCnt ? this.views.map((n, i) => '    ' + n.asJSON() + comma(i, viewCnt) + '\n').join('') : '')
+                + (viewCnt ? '  ]\n' : '')
+                + '}';
+
+            return str;
+        },
+        /**
+         * Apply loads to their nodes.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        applyLoads() {
+            // Apply node weight in case of gravity.
+            for (const node of this.nodes) {
+                node.Qx = node.Qy = 0;
+                if (!node.base && this.hasGravity) {
+                    node.Qx = node.m * mec.from_m(this.gravity.x);
+                    node.Qy = node.m * mec.from_m(this.gravity.y);
+                }
+            }
+            // Apply external loads.
+            for (const load of this.loads)
+                load.apply();
+            return this;
+        },
+        /**
+         * Assemble positions of model.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        asmPos() {
+            let valid = false;
+            this.itrpos = 0;
+            while (!valid && this.itrpos++ < mec.asmItrMax) {
+                valid = this.posStep();
+            }
+            return this.valid = valid;
+        },
+        /**
+         * Position iteration step over all constraints.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        posStep() {
+            let valid = true;  // pre-assume valid constraints positions ...
+            for (const constraint of this.constraints)
+                valid = constraint.posStep() && valid;
+            return valid;
+        },
+        /**
+         * Assemble velocities of model.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        asmVel() {
+            let valid = false;
+            this.itrvel = 0;
+            while (!valid && this.itrvel++ < mec.asmItrMax)
+                valid = this.velStep();
+            return this.valid = valid;
+        },
+        /**
+         * Velocity iteration step over all constraints.
+         * @method
+         * @returns {object} model
+         */
+        velStep() {
+            let valid = true;  // pre-assume valid constraints velocities ...
+            for (const constraint of this.constraints) {
+                valid = constraint.velStep(this.timer.dt) && valid;
+            }
+            return valid;
+        },
+        /**
+         * Pre-process model.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        pre() {
+            // Clear node loads and velocity differences.
+            for (const node of this.nodes)
+                node.pre_0();
+            // Apply external loads.
+            for (const load of this.loads)
+                load.apply();
+            // pre process nodes
+            for (const node of this.nodes)
+                node.pre(this.timer.dt);
+            // pre process constraints
+            for (const constraint of this.constraints)
+                constraint.pre(this.timer.dt);
+            // eliminate drift ...
+            this.asmPos(this.timer.dt);
+            // pre process views
+            for (const view of this.views)
+                if (view.pre)
+                    view.pre(this.timer.dt);
+            return this;
+        },
+
+        /**
+         * Perform iteration steps until constraints are valid or max-iteration
+         * steps for assembly are reached.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        itr() {
+            if (this.valid)  // valid asmPos as prerequisite ...
+                this.asmVel();
+            return this;
+        },
+        /**
+         * Post-process model.
+         * @internal
+         * @method
+         * @returns {object} model
+         */
+        post() {
+            // post process nodes
+            for (const node of this.nodes)
+                node.post(this.timer.dt);
+            // post process constraints
+            for (const constraint of this.constraints)
+                constraint.post(this.timer.dt);
+            // post process views
+            for (const view of this.views)
+                if (view.post)
+                    view.post(this.timer.dt);
+
+            //    console.log('E:'+mec.to_J(this.energy))
+            return this;
+        },
+        /**
+         * Draw model.
+         * @method
+         * @param {object} g - g2 object.
+         * @returns {object} model
+         */
+        draw(g) {
+            // Make sure constraints and nodes are rendered last.
+            this.forAllModules((elm, module) => {
+                if (module === this.modules['constraints'] ||
+                    module === this.modules['nodes']) {
+                    return;
+                }
+                elm.draw(g);
+            });
+            for (const elm of this.constraints) {
+                elm.draw(g);
+            }
+            for (const elm of this.nodes) {
+                elm.draw(g);
+            }
+            return this;
+        }
+    }
+}
 /**
  * mec.node (c) 2018-19 Stefan Goessner
  * @license MIT License
@@ -3520,840 +4464,6 @@ mec.shape.img = {
 }
 
 mec.model.prototype.addModule('shapes', mec.shape);
-/**
- * mec.model (c) 2018-19 Stefan Goessner
- * @license MIT License
- * @requires mec.core.js
- * @requires mec.node.js
- * @requires mec.constraint.js
- */
-"use strict";
-
-/**
- * Wrapper class for extending plain model objects, usually generated from a JSON object.
- * @method
- * @returns {object} model object.
- * @param {object} - plain javascript model object.
- * @property {string} id - model id.
- * @property {boolean|object} [gravity] - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
- * @property {object} [labels] - user specification of labels to show `default={nodes:false,constraints:true,loads:true}`.
- */
-mec.model = {
-    extend(model, env = mec) {
-        Object.setPrototypeOf(model, this.prototype);
-        model.constructor(env);
-        return model;
-    },
-    prototype: {
-        constructor(env) {
-            this.env = env; // reference environment of model
-            if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
-                this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
-
-            this.showInfo = { nodes: this.env.show.nodeInfo, constraints: this.env.show.constraintInfo, loads: false };
-            this.state = { valid: true, itrpos: 0, itrvel: 0, preview: false };
-            this.timer = { t: 0, dt: 1 / 60, sleepMin: 1 };
-            // create empty containers for all elements
-            for (const key of Object.keys(this.modules)) {
-                if (!this[key]) {
-                    this[key] = [];
-                }
-            }
-            this.forAllModules((elm, module) => { module.extend(elm); });
-        },
-        /**
-         * Init model
-         * @method
-         * @returns object} model.
-         */
-        init() {
-            if (this.gravity === true)
-                this.gravity = Object.assign({}, mec.gravity, { active: true });
-            else if (!this.gravity)
-                this.gravity = Object.assign({}, mec.gravity, { active: false });
-            // else ... gravity might be given by user as vector !
-
-            if (!this.tolerance) this.tolerance = 'medium';
-
-            this.state.valid = true;  // clear previous logical error result ...
-
-            for (const key of Object.keys(this.modules)) {
-                for (let idx = 0; idx < this[key].length; ++idx) {
-                    this[key][idx].init(this, idx);
-                }
-            }
-
-            return this;
-        },
-        modules: {},
-        addModule(name, module) {
-            // TODO define interface
-            // if (!module ||
-            //     !module.extend ||
-            //     !module.init ||
-            //     !module.reset
-            //     // !module.byId
-            //     // !module.dependsOn not sure if this is a hard requirement...
-            //     ) {
-            //     console.warn('TODO');
-            //     return;
-            // }
-            this.modules[name] = module;
-        },
-
-        forAllModules(fn) {
-            for (const [key, module] of Object.entries(this.modules)) {
-                for (const elm of this[key]) {
-                    fn(elm, module);
-                }
-            }
-        },
-        /**
-         * Notification of validity by child. Error message aborts init procedure.
-         * @method
-         * @param {boolean | object} msg - message object or false in case of no error / warning.
-         * @returns {boolean | object} message object in case of logical error / warning or `false`.
-         */
-        notifyValid(msg) {
-            if (msg) {
-                this.state.msg = msg;
-                return (this.state.valid = msg.mid[0] !== 'E');
-            }
-            return true;
-        },
-        /**
-         * Reset model
-         * All nodes are set to their initial position.
-         * Kinematic values are set to zero.
-         * @method
-         * @returns {object} model
-         */
-        reset() {
-            this.timer.t = 0;
-            this.timer.sleepMin = 1;
-            Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
-            this.forAllModules((elm) => elm.reset && elm.reset());
-            return this;
-        },
-        /**
-         * Preview model
-         * Some views need pre calculation for getting immediate results (i.e. traces)
-         * After `preview` was called, model is in `reset` state.
-         * @method
-         * @returns {object} model
-         */
-        preview() {
-            let previewMode = false, tmax = 0;
-            for (const view of this.views) {
-                if (view.mode === 'preview') {
-                    tmax = view.t0 + view.Dt;
-                    view.reset(previewMode = true);
-                }
-            }
-            if (previewMode) {
-                this.reset();
-                this.state.preview = true;
-                this.timer.dt = 1 / 30;
-
-                for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
-                    this.pre().itr().post();
-                    for (const view of this.views)
-                        if (view.preview)
-                            view.preview();
-                }
-
-                this.timer.dt = 1 / 60;
-                this.state.preview = false;
-                this.reset();
-            }
-            return this;
-        },
-        /**
-         * Assemble model (depricated ... use pose() instead)
-         * @method
-         * @returns {object} model
-         */
-        asm() {
-            let valid = this.asmPos();
-            valid = this.asmVel() && valid;
-            return this;
-        },
-        /**
-         * Bring mechanism to a valid pose.
-         * No velocities or forces are calculated.
-         * @method
-         * @returns {object} model
-         */
-        pose() {
-            return this.asmPos();
-        },
-        /**
-         * Perform timer tick.
-         * Model time is incremented by `dt`.
-         * Model time is independent of system time.
-         * Input elements may set simulation time and `dt` explicite. Depricated, they maintain their local time in parallel !
-         * `model.tick()` is then called with `dt = 0`.
-         * @method
-         * @param {number} [dt=0] - time increment.
-         * @returns {object} model
-         */
-        tick(dt) {
-            // fix: ignore dt for now, take it as a constant (study variable time step theoretically) !!
-            this.timer.t += (this.timer.dt = 1 / 60);
-            this.pre().itr().post();
-            return this;
-        },
-        /**
-         * Stop model motion.
-         * Zero out velocities and accelerations.
-         * @method
-         * @returns {object} model
-         */
-        stop() {
-            // post process nodes
-            for (const node of this.nodes)
-                node.xt = node.yt = node.xtt = node.ytt = 0;
-            return this;
-        },
-        /**
-         * Model degree of freedom (movability)
-         */
-        get dof() {
-            let dof = 0;
-            if (!this.nodes || !this.constraints) {
-                console.warn('TODO');
-            }
-            for (const node of this.nodes) {
-                dof += node.dof;
-            }
-            for (const constraint of this.constraints) {
-                dof -= (2 - constraint.dof);
-            }
-            return dof;
-        },
-        /**
-         * Gravity (vector) value.
-         * @type {boolean}
-         */
-        get hasGravity() { return this.gravity.active; },
-
-        get valid() { return this.state.valid; },
-        set valid(q) { this.state.valid = q; },
-        /**
-         * Message object resulting from initialization process.
-         * @type {object}
-         */
-        get msg() { return this.state.msg; },
-        get info() {
-            if (this.showInfo.nodes)
-                for (const node of this.nodes)
-                    if (node.showInfo)
-                        return node.info(this.showInfo.nodes);
-            if (this.showInfo.constraints)
-                for (const constraint of this.constraints)
-                    if (constraint.showInfo)
-                        return constraint.info(this.showInfo.constraints);
-        },
-        /*
-                get info() {
-                    let str = '';
-                    for (const view of this.views)
-                        if (view.hasInfo)
-                            str += view.infoString()+'<br>';
-                    return str.length === 0 ? false : str;
-                },
-        */
-        /**
-         * Number of positional iterations.
-         * @type {number}
-         */
-        get itrpos() { return this.state.itrpos; },
-        set itrpos(q) { this.state.itrpos = q; },
-        /**
-         * Number of velocity iterations.
-         * @type {number}
-         */
-        get itrvel() { return this.state.itrvel; },
-        set itrvel(q) { this.state.itrvel = q; },
-        /**
-         * Set offset to current time, when testing nodes for sleeping state shall begin.
-         * @type {number}
-         */
-        set sleepMinDelta(dt) { this.timer.sleepMin = this.timer.t + dt; },
-        /**
-         * Test, if none of the nodes are moving (velocity = 0).
-         * @type {boolean}
-         */
-        get isSleeping() {
-            let sleeping = this.timer.t > this.timer.sleepMin;  // chance for sleeping exists ...
-            if (sleeping)
-                for (const node of this.nodes)
-                    sleeping = sleeping && node.isSleeping;
-            return sleeping;
-        },
-        /**
-         * Number of active drives
-         * @const
-         * @type {int}
-         */
-        get activeDriveCount() {
-            let activeCnt = 0;
-            for (const constraint of this.constraints)
-                activeCnt += constraint.activeDriveCount(this.timer.t);
-            return activeCnt;
-        },
-        /**
-         * Some drives are active
-         * deprecated: Use `activeDriveCount` instead.
-         * @const
-         * @type {boolean}
-         */
-        get hasActiveDrives() { return this.activeDriveCount > 0; },
-        /**
-         * Array of objects referencing constraints owning at least one input controlled drive.
-         * The array objects are structured like so: 
-         * { constraint: <constraint reference>,
-         *   sub: <string of `['ori', 'len']`
-         * }
-         * If no input controlled drives exist, an empty array is returned.
-         * @const
-         * @type {array} Array holding objects of type {constraint, sub};
-         */
-        get inputControlledDrives() {
-            const inputs = [];
-            for (const constraint of this.constraints) {
-                if (constraint.ori.type === 'drive' && constraint.ori.input)
-                    inputs.push({ constraint: constraint, sub: 'ori' })
-                if (constraint.len.type === 'drive' && constraint.len.input)
-                    inputs.push({ constraint: constraint, sub: 'len' })
-            }
-            return inputs;
-        },
-        /**
-         * Test, if model is active.
-         * Nodes are moving (nonzero velocities) or active drives exist.
-         * @type {boolean}
-         */
-        get isActive() {
-            return this.activeDriveCount > 0   // active drives
-                || this.dof > 0           // or can move by itself
-                && !this.isSleeping;      // and does exactly that
-        },
-        /**
-         * Energy [kgu^2/s^2]
-         */
-        get energy() {
-            var e = 0;
-            for (const node of this.nodes)
-                e += node.energy;
-            for (const load of this.loads)
-                e += load.energy;
-            return e;
-        },
-        /**
-         * center of gravity 
-         */
-        get cog() {
-            var center = { x: 0, y: 0 }, m = 0;
-            for (const node of this.nodes) {
-                if (!node.base) {
-                    center.x += node.x * node.m;
-                    center.y += node.y * node.m;
-                    m += node.m;
-                }
-            }
-            center.x /= m;
-            center.y /= m;
-            return center;
-        },
-
-        /**
-         * Check, if other elements are dependent on specified element.
-         * @method
-         * @param {object} elem - element.
-         * @returns {boolean} true in case of existing dependents.
-         */
-        hasDependents(elem) {
-            // TODO why return the last occurence? Why not stop at the first? 
-            let dependency = false;
-            this.forAllModules(() => dependency = elm.dependency.dependsOn(elem) || dependency)
-            return dependency;
-        },
-        /**
-         * Get direct dependents of a specified element.
-         * As a result a dictionary object containing dependent elements is created:
-         * `{constraints:[], loads:[], shapes:[], views:[]}`
-         * @method
-         * @param {object} elem - element.
-         * @returns {object} dictionary object containing dependent elements.
-         */
-        dependentsOf(elem, deps) {
-            deps = deps || {}
-
-            this.forAllModules((elm, module) => {
-                if (elm.dependsOn(elem)) {
-                    this.dependentsOf(elm, deps);
-                    deps[module].push(elm);
-                }
-            });
-            return deps;
-        },
-        /**
-         * Verify an element indirect (deep) depending on another element.
-         * @method
-         * @param {object} elem - element.
-         * @returns {boolean} dependency exists.
-         */
-        /*
-        deepDependsOn(elem,target) {
-            if (elem === target)
-                return true;
-            else {
-                for (const node of this.nodes)
-                    if (elem.dependsOn(node))
-                        return true;
-                for (const constraint of this.constraints)
-                    if (elem.dependsOn(elem) || this.deepDependsOn(elem,constraint))
-                        return true;
-                for (const load of this.loads)
-                    if (load.dependsOn(elem))
-                        deps.loads.push(load);
-            for (const view of this.views)
-                if (view.dependsOn(elem))
-                    deps.views.push(view);
-            for (const shape of this.shapes)
-                if (shape.dependsOn(elem))
-                    deps.shapes.push(shape);
-                for 
-            }
-        },
-*/
-        /**
-         * Purge all elements in an element dictionary.
-         * @method
-         * @param {object} elems - element dictionary.
-         */
-        purgeElements(elems) {
-            this.forAllModules((elm, module) => {
-                module.splice(module.indexOf(elm), 1);
-            });
-        },
-        /**
-         * Get element by id.
-         * @method
-         * @param {string} id - element id.
-         */
-        elementById(id) {
-            // TODO These functions should be in their respective module.
-            return this.nodeById(id)
-                || this.constraintById(id)
-                || this.loadById(id)
-                || this.viewById(id)
-                || id === 'model' && this;
-        },
-        /**
-         * Add node to model.
-         * @method
-         * @param {object} node - node to add.
-         */
-        addNode(node) {
-            this.nodes.push(node);
-        },
-        /**
-         * Get node by id.
-         * @method
-         * @param {object} node - node to find.
-         */
-        nodeById(id) {
-            for (const node of this.nodes)
-                if (node.id === id)
-                    return node;
-            return false;
-        },
-        /**
-         * Remove node, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `node` is in fact an entry of
-         * the `model.nodes` array.
-         * @method
-         * @param {object} node - node to remove.
-         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
-         */
-        removeNode(node) {
-            const dependency = this.hasDependents(node);
-            if (!dependency)
-                this.nodes.splice(this.nodes.indexOf(node), 1);  // finally remove node from array.
-
-            return !dependency;
-        },
-        /**
-         * Delete node and all depending elements from model.
-         * The calling app has to ensure, that `node` is in fact an entry of
-         * the `model.nodes` array.
-         * @method
-         * @param {object} node - node to remove.
-         */
-        purgeNode(node) {
-            this.purgeElements(this.dependentsOf(node));
-            this.nodes.splice(this.nodes.indexOf(node), 1);
-        },
-        /**
-         * Add constraint to model.
-         * @method
-         * @param {object} constraint - constraint to add.
-         */
-        addConstraint(constraint) {
-            this.constraints.push(constraint);
-        },
-        /**
-         * Get constraint by id.
-         * @method
-         * @param {object} id - constraint id.
-         * @returns {object} constraint to find.
-         */
-        constraintById(id) {
-            for (const constraint of this.constraints)
-                if (constraint.id === id)
-                    return constraint;
-            return false;
-        },
-        /**
-         * Remove constraint, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `constraint` is in fact an entry of
-         * the `model.constraints` array.
-         * @method
-         * @param {object} constraint - constraint to remove.
-         * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
-         */
-        removeConstraint(constraint) {
-            const dependency = this.hasDependents(constraint);
-            if (!dependency)
-                this.constraints.splice(this.constraints.indexOf(constraint), 1);  // finally remove node from array.
-
-            return !dependency;
-        },
-        /**
-         * Delete constraint and all depending elements from model.
-         * The calling app has to ensure, that `constraint` is in fact an entry of
-         * the `model.constraints` array.
-         * @method
-         * @param {object} constraint - constraint to remove.
-         */
-        purgeConstraint(constraint) {
-            this.purgeElements(this.dependentsOf(constraint));
-            this.constraints.splice(this.constraints.indexOf(constraint), 1);
-        },
-        /**
-         * Add load to model.
-         * @method
-         * @param {object} load - load to add.
-         */
-        addLoad(load) {
-            this.loads.push(load);
-        },
-        /**
-         * Get load by id.
-         * @method
-         * @param {object} id - load id.
-         * @returns {object} load to find.
-         */
-        loadById(id) {
-            for (const load of this.loads)
-                if (load.id === id)
-                    return load;
-            return false;
-        },
-        /**
-         * Remove load, if there are no other objects depending on it.
-         * The calling app has to ensure, that `load` is in fact an entry of
-         * the `model.loads` array.
-         * @method
-         * @param {object} node - load to remove.
-         * @returns {boolean} true, the node was removed, otherwise other objects depend on it.
-         */
-        removeLoad(load) {
-            const dependency = this.hasDependents(load);
-            if (!dependency)
-                this.loads.splice(this.loads.indexOf(load), 1);
-            return !dependency;
-        },
-        /**
-         * Delete load and all depending elements from model.
-         * The calling app has to ensure, that `load` is in fact an entry of
-         * the `model.loads` array.
-         * @method
-         * @param {object} load - load to delete.
-         */
-        purgeLoad(load) {
-            this.purgeElements(this.dependentsOf(load));
-            this.loads.splice(this.loads.indexOf(load), 1);
-        },
-        /**
-         * Add shape to model.
-         * @method
-         * @param {object} shape - shape to add.
-         */
-        addShape(shape) {
-            this.shapes.push(shape);
-        },
-        /**
-         * Remove shape, if there are no other objects depending on it.
-         * The calling app has to ensure, that `shape` is in fact an entry of
-         * the `model.shapes` array.
-         * @method
-         * @param {object} shape - shape to remove.
-         */
-        removeShape(shape) {
-            const idx = this.shapes.indexOf(shape);
-            if (idx >= 0)
-                this.shapes.splice(idx, 1);
-        },
-        /**
-         * Delete shape and all dependent elements from model.
-         * The calling app has to ensure, that `shape` is in fact an entry of
-         * the `model.shapes` array.
-         * @method
-         * @param {object} shape - shape to delete.
-         */
-        purgeShape(shape) {
-            this.purgeElements(this.dependentsOf(shape));
-            this.shapes.splice(this.shapes.indexOf(shape), 1);
-        },
-        /**
-         * Add view to model.
-         * @method
-         * @param {object} view - view to add.
-         */
-        addView(view) {
-            this.views.push(view);
-        },
-        /**
-         * Get view by id.
-         * @method
-         * @param {object} id - view id.
-         * @returns {object} view to find.
-         */
-        viewById(id) {
-            for (const view of this.views)
-                if (view.id === id)
-                    return view;
-            return false;
-        },
-        /**
-         * Remove view, if there are no other objects depending on it.
-         * The calling app has to ensure, that `view` is in fact an entry of
-         * the `model.views` array.
-         * @method
-         * @param {object} view - view to remove.
-         */
-        removeView(view) {
-            const idx = this.views.indexOf(view);
-            if (idx >= 0)
-                this.views.splice(idx, 1);
-        },
-        /**
-         * Delete view and all dependent elements from model.
-         * The calling app has to ensure, that `view` is in fact an entry of
-         * the `model.views` array.
-         * @method
-         * @param {object} view - view to delete.
-         */
-        purgeView(view) {
-            this.purgeElements(this.dependentsOf(view));
-            this.views.splice(this.views.indexOf(view), 1);
-        },
-        /**
-         * Return a JSON-string of the model
-         * @method
-         * @returns {string} model as JSON-string.
-         */
-        asJSON() {
-            // dynamically create a JSON output string ...
-            const nodeCnt = this.nodes.length;
-            const contraintCnt = this.constraints.length;
-            const loadCnt = this.loads.length;
-            const shapeCnt = this.shapes.length;
-            const viewCnt = this.views.length;
-            const comma = (i, n) => i < n - 1 ? ',' : '';
-            const str = '{'
-                + '\n  "id":"' + this.id + '"'
-                + (this.title ? (',\n  "title":"' + this.title + '"') : '')
-                + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
-                + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
-                + (nodeCnt ? this.nodes.map((n, i) => '    ' + n.asJSON() + comma(i, nodeCnt) + '\n').join('') : '')
-                + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                + (contraintCnt ? '  "constraints": [\n' : '')
-                + (contraintCnt ? this.constraints.map((n, i) => '    ' + n.asJSON() + comma(i, contraintCnt) + '\n').join('') : '')
-                + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                + (loadCnt ? '  "loads": [\n' : '')
-                + (loadCnt ? this.loads.map((n, i) => '    ' + n.asJSON() + comma(i, loadCnt) + '\n').join('') : '')
-                + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                + (shapeCnt ? '  "shapes": [\n' : '')
-                + (shapeCnt ? this.shapes.map((n, i) => '    ' + n.asJSON() + comma(i, shapeCnt) + '\n').join('') : '')
-                + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
-                + (viewCnt ? '  "views": [\n' : '')
-                + (viewCnt ? this.views.map((n, i) => '    ' + n.asJSON() + comma(i, viewCnt) + '\n').join('') : '')
-                + (viewCnt ? '  ]\n' : '')
-                + '}';
-
-            return str;
-        },
-        /**
-         * Apply loads to their nodes.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        applyLoads() {
-            // Apply node weight in case of gravity.
-            for (const node of this.nodes) {
-                node.Qx = node.Qy = 0;
-                if (!node.base && this.hasGravity) {
-                    node.Qx = node.m * mec.from_m(this.gravity.x);
-                    node.Qy = node.m * mec.from_m(this.gravity.y);
-                }
-            }
-            // Apply external loads.
-            for (const load of this.loads)
-                load.apply();
-            return this;
-        },
-        /**
-         * Assemble positions of model.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        asmPos() {
-            let valid = false;
-            this.itrpos = 0;
-            while (!valid && this.itrpos++ < mec.asmItrMax) {
-                valid = this.posStep();
-            }
-            return this.valid = valid;
-        },
-        /**
-         * Position iteration step over all constraints.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        posStep() {
-            let valid = true;  // pre-assume valid constraints positions ...
-            for (const constraint of this.constraints)
-                valid = constraint.posStep() && valid;
-            return valid;
-        },
-        /**
-         * Assemble velocities of model.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        asmVel() {
-            let valid = false;
-            this.itrvel = 0;
-            while (!valid && this.itrvel++ < mec.asmItrMax)
-                valid = this.velStep();
-            return this.valid = valid;
-        },
-        /**
-         * Velocity iteration step over all constraints.
-         * @method
-         * @returns {object} model
-         */
-        velStep() {
-            let valid = true;  // pre-assume valid constraints velocities ...
-            for (const constraint of this.constraints) {
-                valid = constraint.velStep(this.timer.dt) && valid;
-            }
-            return valid;
-        },
-        /**
-         * Pre-process model.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        pre() {
-            // Clear node loads and velocity differences.
-            for (const node of this.nodes)
-                node.pre_0();
-            // Apply external loads.
-            for (const load of this.loads)
-                load.apply();
-            // pre process nodes
-            for (const node of this.nodes)
-                node.pre(this.timer.dt);
-            // pre process constraints
-            for (const constraint of this.constraints)
-                constraint.pre(this.timer.dt);
-            // eliminate drift ...
-            this.asmPos(this.timer.dt);
-            // pre process views
-            for (const view of this.views)
-                if (view.pre)
-                    view.pre(this.timer.dt);
-            return this;
-        },
-
-        /**
-         * Perform iteration steps until constraints are valid or max-iteration
-         * steps for assembly are reached.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        itr() {
-            if (this.valid)  // valid asmPos as prerequisite ...
-                this.asmVel();
-            return this;
-        },
-        /**
-         * Post-process model.
-         * @internal
-         * @method
-         * @returns {object} model
-         */
-        post() {
-            // post process nodes
-            for (const node of this.nodes)
-                node.post(this.timer.dt);
-            // post process constraints
-            for (const constraint of this.constraints)
-                constraint.post(this.timer.dt);
-            // post process views
-            for (const view of this.views)
-                if (view.post)
-                    view.post(this.timer.dt);
-
-            //    console.log('E:'+mec.to_J(this.energy))
-            return this;
-        },
-        /**
-         * Draw model.
-         * @method
-         * @param {object} g - g2 object.
-         * @returns {object} model
-         */
-        draw(g) {
-            // Make sure constraints and nodes are rendered last.
-            this.forAllModules((elm, module) => {
-                if (module === this.modules['constraints'] ||
-                    module === this.modules['nodes']) {
-                    return;
-                }
-                elm.draw(g);
-            });
-            for (const elm of this.constraints) {
-                elm.draw(g);
-            }
-            for (const elm of this.nodes) {
-                elm.draw(g);
-            }
-            return this;
-        }
-    }
-}
 /**
  * mec.msg.en (c) 2018 Stefan Goessner
  * @license MIT License
