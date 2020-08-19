@@ -46,11 +46,12 @@ class Mec2Element extends HTMLElement {
             this._model.sleepMinDelta = 1;
             if (this.editing)  // do not run in edit mode ... so toggle !
                 this.editing = false;
-            this._runbtn.innerHTML = '&#10074;&#10074;';
+                this._runbtn.innerHTML = this.updateRunBtn();
         }
         else if (!this._state.pause && q) {
             this._state.pause = true;
-            this._runbtn.innerHTML = '&#9654;';
+            this._runbtn.innerHTML = this.updateRunBtn();
+
         }
         //  else  ... nothing to do
     }
@@ -236,7 +237,13 @@ class Mec2Element extends HTMLElement {
         this._g.exe(this._ctx);
     }
 
-    run = () => { this.pausing = !this.pausing; }
+    run = () => {
+        this.pausing = !this.pausing;
+        this._runbtn.innerHTML = this.updateRunBtn();
+    }
+
+    updateRunBtn = () => this._inputs.length ? '' :
+        this.pausing ? '&#9654;' : '&#10074;&#10074;';
     toggleGravity = () => { this.gravity = !this.gravity; }
 
     reset() {
@@ -387,10 +394,10 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
     }
 
     static runbtn({inputs}) {
-        return `<span id="runbtn" title="run/pause" ${inputs.length ? ' disabled' : ''}>&#9654;</span>`;
+        return `<span id="runbtn" title="run/pause">${inputs.length ? '' : '&#9654;'}</span>`;
     }
     static resetbtn() {
-        return `<span id="resetbtn" title="reset">&#8617;</span>`;
+        return `<span id="resetbtn" title="reset">&nbsp;&nbsp;&#8617;</span>`;
     }
     static gravbtn() {
         return `<span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>`
