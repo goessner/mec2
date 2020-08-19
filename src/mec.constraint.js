@@ -187,8 +187,8 @@ mec.constraint = {
             }
             else
                 this.r0 = Math.hypot(this.ay,this.ax);
-
-            if (this.ori.hasOwnProperty('w0')) { 
+       
+                if (this.ori.hasOwnProperty('w0')) { 
                 this.w0 = this.ori.w0;                 // presume absolute value ...
                 correctOri = true;
                 if (this.ori.hasOwnProperty('ref')) {  // relative ...
@@ -437,10 +437,10 @@ mec.constraint = {
          * @param {number} impulse - pseudo impulse.
          */
         ori_impulse_pos(impulse) {
-                this.p1.x +=  this.p1.im * this.sw * impulse;
-                this.p1.y += -this.p1.im * this.cw * impulse;
-                this.p2.x += -this.p2.im * this.sw * impulse;
-                this.p2.y +=  this.p2.im * this.cw * impulse;
+            this.p1.x +=  this.p1.im * this.sw * impulse;
+            this.p1.y += -this.p1.im * this.cw * impulse;
+            this.p2.x += -this.p2.im * this.sw * impulse;
+            this.p2.y +=  this.p2.im * this.cw * impulse;
         },
         /**
          * Apply impulse `impulse` from ori constraint to its node displacements.
@@ -908,3 +908,5 @@ mec.constraint = {
         'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
     }
 }
+
+mec.model.prototype.addModule('constraints', mec.constraint);

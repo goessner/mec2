@@ -104,8 +104,7 @@ class Mec2Element extends HTMLElement {
                 // this._charts[idx].previewNod;
                 const data = chart.graph.funcs[0].data;
                 const pt = data.findIndex(data => data.t > chart.local_t);
-                return pt === -1
-                    ? { scl: 0 } // If point is out of bounds
+                const coord = pt === -1 ? undefined // If point is out of bounds
                     : {
                         x: (data[pt].x - elm._chart.xmin) * (elm._chart.b / 
                             (elm._chart.xmax - elm._chart.xmin)) + elm._chart.x,
@@ -114,6 +113,12 @@ class Mec2Element extends HTMLElement {
                         // y: elm._chart.y + elm._chart.h,
                         scl: 1
                     };
+                if (!coord ||
+                    coord.y < elm._chart.y ||
+                    coord.y > elm._chart.y + elm._chart.h) {
+                        return { scl: 0 }
+                    }
+                return coord;
             }
         }
 

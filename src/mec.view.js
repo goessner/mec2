@@ -593,3 +593,5 @@ mec.view.chart = {
         }
     }
 }
+
+mec.model.prototype.addModule('views', mec.view);

@@ -252,3 +252,5 @@ mec.node = {
                     .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"}),
     g2Node:     g2().cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
 }
+
+mec.model.prototype.addModule('nodes', mec.node);
