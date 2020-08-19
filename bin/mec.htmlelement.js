@@ -106,7 +106,7 @@ class Mec2Element extends HTMLElement {
                 const pt = data.findIndex(data => data.t > chart.local_t);
                 const coord = pt === -1 ? undefined // If point is out of bounds
                     : {
-                        x: (data[pt].x - elm._chart.xmin) * (elm._chart.b / 
+                        x: (data[pt].x - elm._chart.xmin) * (elm._chart.b /
                             (elm._chart.xmax - elm._chart.xmin)) + elm._chart.x,
                         y: (data[pt].y - elm._chart.ymin) * (elm._chart.h /
                             (elm._chart.ymax - elm._chart.ymin)) + elm._chart.y,
@@ -116,8 +116,8 @@ class Mec2Element extends HTMLElement {
                 if (!coord ||
                     coord.y < elm._chart.y ||
                     coord.y > elm._chart.y + elm._chart.h) {
-                        return { scl: 0 }
-                    }
+                    return { scl: 0 }
+                }
                 return coord;
             }
         }
@@ -354,61 +354,7 @@ class Mec2Element extends HTMLElement {
     }
 </style>
 <div style="width:${width};">
-<nav>
-  <span class="left">
-    <svg style="margin-bottom:-5pt; padding-left: 5pt;" class="flex-shrink-0 mr-2" version="1.0" xmlns="http://www.w3.org/2000/svg" width="16pt" height="16pt" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
-    <g transform="translate(0,512) scale(0.1,-0.1)" fill="#ddd" stroke="none">
-        <path d="M1300 4786 c-345 -47 -603 -160 -734 -322 -50 -61 -115 -188 -143
-        -280 -24 -81 -23 -272 2 -369 58 -225 237 -425 380 -425 34 0 35 1 35 38 0 21
-        -5 43 -12 50 -15 15 -50 124 -94 294 -64 251 -45 366 83 493 173 171 430 243
-        823 232 286 -8 538 -52 845 -147 144 -44 205 -59 247 -60 32 0 40 4 54 33 9
-        17 34 53 55 79 22 26 39 57 39 70 0 44 -58 80 -212 130 -274 90 -481 140 -728
-        173 -156 22 -518 28 -640 11z" fill="orange"></path>
-        <path d="M3217 4489 c-159 -37 -309 -189 -346 -350 -26 -111 -8 -266 41 -364
-        27 -51 120 -148 172 -179 151 -89 371 -90 519 -3 95 56 191 188 216 298 13 57
-        13 191 0 248 -37 163 -187 313 -350 350 -53 13 -199 12 -252 0z"></path>
-        <path d="M2684 3899 c-31 -34 -183 -153 -261 -203 -139 -90 -328 -168 -520
-        -216 -24 -6 -43 -16 -43 -21 0 -6 22 -36 50 -66 55 -60 106 -157 116 -221 4
-        -27 12 -42 21 -42 8 0 51 31 96 69 202 169 431 285 685 346 39 9 72 22 72 27
-        0 6 -20 33 -45 60 -50 56 -100 152 -110 213 -14 83 -25 93 -61 54z"></path>
-        <path d="M3954 3813 c-9 -21 -29 -67 -45 -102 -16 -35 -29 -77 -29 -95 0 -34
-        23 -64 174 -233 162 -180 257 -356 300 -550 20 -90 20 -139 0 -228 -9 -38 -20
-        -90 -24 -115 -4 -25 -14 -65 -23 -90 -55 -159 -51 -190 19 -190 34 0 121 61
-        167 117 44 53 101 167 129 257 25 81 34 232 19 336 -38 258 -212 556 -471 806
-        -135 131 -189 153 -216 87z" fill="orange"></path>
-        <path d="M3659 3474 c-70 -48 -144 -66 -286 -72 -97 -3 -133 -8 -133 -17 0 -7
-        11 -37 24 -66 48 -110 125 -329 170 -484 88 -308 136 -618 162 -1052 7 -127
-        10 -129 72 -88 77 51 146 68 300 73 78 2 142 8 142 11 0 4 -18 54 -41 112
-        -208 529 -299 923 -331 1427 -13 203 -13 202 -79 156z"></path>
-        <path d="M1297 3480 c-162 -41 -309 -190 -346 -351 -13 -57 -13 -191 0 -248
-        17 -74 58 -149 116 -212 99 -106 202 -149 358 -149 156 0 264 46 364 156 86
-        94 120 189 121 336 0 150 -44 253 -153 355 -93 86 -167 115 -312 119 -60 2
-        -127 -1 -148 -6z"></path>
-        <path d="M1110 2333 c0 -149 -21 -275 -71 -425 -21 -65 -39 -122 -39 -127 0
-        -5 66 -11 148 -13 120 -4 158 -9 207 -27 33 -13 67 -25 76 -28 14 -4 15 15 15
-        164 0 186 14 266 73 416 17 43 31 81 31 86 0 5 -64 11 -142 13 -115 4 -155 9
-        -203 27 -105 40 -95 49 -95 -86z"></path>
-        <path d="M978 1621 c-152 -49 -282 -189 -317 -342 -13 -57 -13 -191 0 -248 37
-        -163 187 -313 350 -350 57 -13 191 -13 248 0 163 37 313 187 350 350 13 57 13
-        191 0 248 -25 110 -121 242 -216 298 -110 64 -292 83 -415 44z"></path>
-        <path d="M3828 1621 c-83 -27 -138 -62 -201 -130 -58 -63 -99 -138 -116 -212
-        -13 -57 -13 -191 0 -248 37 -163 187 -313 350 -350 57 -13 191 -13 248 0 163
-        37 313 187 350 350 13 57 13 191 0 248 -35 155 -166 294 -320 342 -81 25 -231
-        25 -311 0z"></path>
-    </g>
-    </svg>
-    <span>&nbsp;</span>
-    <span id="runbtn" title="run/pause"${inputs.length ? ' disabled' : ''}>&#9654;</span>
-    <span id="resetbtn" title="reset">&#8617;</span>
-    <span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>
-  </span>
-  <span class="right">
-    <output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>
-    <output id="fpsview" title="frames per second" style="min-width:3em;"></output>
-    <output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>
-    itr: <output id="itrview" title="pos/vel iterations" style="min-width:3.5em"></output>
-  </span>
-</nav>
+${true ? Mec2Element.nav({ dof, inputs }) : ""}
 <canvas id="cnv" width="${width}" height="${height}" touch-action="none"></canvas><br>
 <span id="info" style="position:absolute;display:none;color:#222;background-color:#ffb;border:1px solid black;font:0.9em monospace;padding:0.1em;font-family:Courier;font-size:9pt;">tooltip</span>
 ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width })).join('') : ''}
@@ -416,6 +362,24 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
 </div>
 `
     }
+    static nav({ dof, inputs }) {
+        return `<nav>
+            <span class="left">
+                ${this.logo}
+                <span>&nbsp;</span>
+                <span id="runbtn" title="run/pause" ${inputs.length ? ' disabled' : ''}>&#9654;</span>
+                <span id="resetbtn" title="reset">&#8617;</span>
+                <span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>
+            </span>
+            <span class="right">
+                <output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>
+                <output id="fpsview" title="frames per second" style="min-width:3em;"></output>
+                <output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>
+    itr: <output id="itrview" title="pos/vel iterations" style="min-width:3.5em"></output>
+            </span>
+        </nav>`
+    }
+
     static slider({ input, i, width, darkmode }) {
         const sub = input.sub, cstr = input.constraint;
         input.id = 'slider_' + i;
@@ -431,5 +395,48 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
             return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
     }
+
+    static logo = `<svg style="margin-bottom:-5pt; padding-left: 5pt;" class="flex-shrink-0 mr-2" version="1.0" xmlns="http://www.w3.org/2000/svg" width="16pt" height="16pt" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+<g transform="translate(0,512) scale(0.1,-0.1)" fill="#ddd" stroke="none">
+    <path d="M1300 4786 c-345 -47 -603 -160 -734 -322 -50 -61 -115 -188 -143
+-280 -24 -81 -23 -272 2 -369 58 -225 237 -425 380 -425 34 0 35 1 35 38 0 21
+-5 43 -12 50 -15 15 -50 124 -94 294 -64 251 -45 366 83 493 173 171 430 243
+823 232 286 -8 538 -52 845 -147 144 -44 205 -59 247 -60 32 0 40 4 54 33 9
+17 34 53 55 79 22 26 39 57 39 70 0 44 -58 80 -212 130 -274 90 -481 140 -728
+173 -156 22 -518 28 -640 11z" fill="orange"></path>
+    <path d="M3217 4489 c-159 -37 -309 -189 -346 -350 -26 -111 -8 -266 41 -364
+27 -51 120 -148 172 -179 151 -89 371 -90 519 -3 95 56 191 188 216 298 13 57
+13 191 0 248 -37 163 -187 313 -350 350 -53 13 -199 12 -252 0z"></path>
+    <path d="M2684 3899 c-31 -34 -183 -153 -261 -203 -139 -90 -328 -168 -520
+-216 -24 -6 -43 -16 -43 -21 0 -6 22 -36 50 -66 55 -60 106 -157 116 -221 4
+-27 12 -42 21 -42 8 0 51 31 96 69 202 169 431 285 685 346 39 9 72 22 72 27
+0 6 -20 33 -45 60 -50 56 -100 152 -110 213 -14 83 -25 93 -61 54z"></path>
+    <path d="M3954 3813 c-9 -21 -29 -67 -45 -102 -16 -35 -29 -77 -29 -95 0 -34
+23 -64 174 -233 162 -180 257 -356 300 -550 20 -90 20 -139 0 -228 -9 -38 -20
+-90 -24 -115 -4 -25 -14 -65 -23 -90 -55 -159 -51 -190 19 -190 34 0 121 61
+167 117 44 53 101 167 129 257 25 81 34 232 19 336 -38 258 -212 556 -471 806
+-135 131 -189 153 -216 87z" fill="orange"></path>
+    <path d="M3659 3474 c-70 -48 -144 -66 -286 -72 -97 -3 -133 -8 -133 -17 0 -7
+11 -37 24 -66 48 -110 125 -329 170 -484 88 -308 136 -618 162 -1052 7 -127
+10 -129 72 -88 77 51 146 68 300 73 78 2 142 8 142 11 0 4 -18 54 -41 112
+-208 529 -299 923 -331 1427 -13 203 -13 202 -79 156z"></path>
+    <path d="M1297 3480 c-162 -41 -309 -190 -346 -351 -13 -57 -13 -191 0 -248
+17 -74 58 -149 116 -212 99 -106 202 -149 358 -149 156 0 264 46 364 156 86
+94 120 189 121 336 0 150 -44 253 -153 355 -93 86 -167 115 -312 119 -60 2
+-127 -1 -148 -6z"></path>
+    <path d="M1110 2333 c0 -149 -21 -275 -71 -425 -21 -65 -39 -122 -39 -127 0
+-5 66 -11 148 -13 120 -4 158 -9 207 -27 33 -13 67 -25 76 -28 14 -4 15 15 15
+164 0 186 14 266 73 416 17 43 31 81 31 86 0 5 -64 11 -142 13 -115 4 -155 9
+-203 27 -105 40 -95 49 -95 -86z"></path>
+    <path d="M978 1621 c-152 -49 -282 -189 -317 -342 -13 -57 -13 -191 0 -248 37
+-163 187 -313 350 -350 57 -13 191 -13 248 0 163 37 313 187 350 350 13 57 13
+191 0 248 -25 110 -121 242 -216 298 -110 64 -292 83 -415 44z"></path>
+    <path d="M3828 1621 c-83 -27 -138 -62 -201 -130 -58 -63 -99 -138 -116 -212
+-13 -57 -13 -191 0 -248 37 -163 187 -313 350 -350 57 -13 191 -13 248 0 163
+37 313 187 350 350 13 57 13 191 0 248 -35 155 -166 294 -320 342 -81 25 -231
+25 -311 0z"></path>
+</g>
+</svg>`
 }
+
 customElements.define('mec-2', Mec2Element);
