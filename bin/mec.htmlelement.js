@@ -372,9 +372,9 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
                 ${this.gravbtn()}
             </span>
             <span class="right">
-                <output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>
-                <output id="fpsview" title="frames per second" style="min-width:3em;"></output>
-                <output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>
+                ${this.corview()}
+                ${this.fpsview()}
+                ${this.dofview({dof})}
     itr: <output id="itrview" title="pos/vel iterations" style="min-width:3.5em"></output>
             </span>
         </nav>`
@@ -406,6 +406,18 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
 
     static gravbtn() {
         return `<span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>`
+    }
+
+    static corview() {
+        return `<output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>`;
+    }
+
+    static fpsview() {
+        return `<output id="fpsview" title="frames per second" style="min-width:3em;"></output>`;
+    }
+
+    static dofview({dof}) {
+        return `<output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>`;
     }
 
     static logo = `<svg style="margin-bottom:-5pt; padding-left: 5pt;" class="flex-shrink-0 mr-2" version="1.0" xmlns="http://www.w3.org/2000/svg" width="16pt" height="16pt" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
