@@ -5124,7 +5124,9 @@ class Mec2Element extends HTMLElement {
         if (this._root && this._root.getElementById('cnv')) {
             if (name === 'width') {  // todo: preserve minimum width
                 this._root.getElementById('cnv').setAttribute('width', val);
-                this._root.querySelector('.status').style.width = val + 'px';
+                if (this.nav) {
+                    this._root.querySelector('.status').style.width = val + 'px';
+                }
             }
             if (name === 'height')   // todo: preserve minimum height
                 this._root.getElementById('cnv').setAttribute('height', val);
