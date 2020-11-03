@@ -65,13 +65,13 @@ class Mec2Element extends HTMLElement {
     }
     /*
         get editing() { return this._state.edit; }
-        set editing(q) { 
+        set editing(q) {
             if (!this._state.edit && q) {  // edit in initial pose only
                 if (this.hasInputs)
                     for (const input of this._inputs) {
                         const val0 = input.sub === 'ori' ? input.w0 : input.r0;
                         this._root.getElementById(input.id).value = val0;
-    //                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
+                        //                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
                     }
                 this._model.reset();
                 this._editbtn.innerHTML = 'drag';
@@ -81,10 +81,10 @@ class Mec2Element extends HTMLElement {
                 this._editbtn.innerHTML = 'edit';
                 this._state.edit = false;
             }
-        //  else  ... nothing to do
-    //        this.log(`editing=${this._state.edit}`)
+            //  else  ... nothing to do
+            //        this.log(`editing=${this._state.edit}`)
         }
-    */
+        */
     init() {
         // create model
         if (!this.parseModel(this.innerHTML)) return;
@@ -314,7 +314,7 @@ class Mec2Element extends HTMLElement {
             this._g.exe(this._selector);
             this.render();
         }
-        // avoid unnecessary model.tick's with mechanims fully controlled by inputs .. !  
+        // avoid unnecessary model.tick's with mechanims fully controlled by inputs .. !
         if (this.pausing === false &&
             this._model.activeDriveCount - this.inputDriveCount === 0 &&
             (this._model.dof === 0 || this._model.isSleeping))
@@ -384,7 +384,7 @@ class Mec2Element extends HTMLElement {
     nav > span > span:hover { color:#fff; }
     nav > span > output { display:inline-block; padding:0px 1px; margin:0px 0px; }
     #cnv {
-        border:solid 1px ${darkmode ? '#777' : '#eee'}; 
+        border:solid 1px ${darkmode ? '#777' : '#eee'};
         background-color:${darkmode ? '#777' : '#eee'};
         touch-action: none;
     }

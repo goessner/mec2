@@ -73,7 +73,7 @@ class G2ChartElement extends HTMLElement {
                     funcs[itr].fn = (() => Function('"use strict"; return (' + a[4] + ')')())();
                     itr++;
                 }
-                this.funcs = [funcs];          
+                this.funcs = [funcs];
             }
         }
         catch (e) {
@@ -84,7 +84,8 @@ class G2ChartElement extends HTMLElement {
             this._g.chart(this._chart).nod({
                 x: () => this.nod && this.nod().x,
                 y: () => this.nod && this.nod().y,
-                scl: () => this.nod && this.nod().scl || 0});
+                scl: () => this.nod && this.nod().scl || 0
+            });
             this.render();
         }
     }

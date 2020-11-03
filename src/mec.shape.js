@@ -38,9 +38,9 @@ mec.shape.fix = {
      */
     validate(idx) {
         if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'shape',id:this.id,idx,reftype:'node',name:'p'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
         if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'shape',id:this.id,idx,reftype:'node',name:this.p};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
         else
             this.p = this.model.nodeById(this.p);
         return false;
@@ -51,7 +51,7 @@ mec.shape.fix = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
@@ -61,59 +61,59 @@ mec.shape.fix = {
         return this.p === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
-                + ' }';
+        return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
+            + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
+            + ' }';
     },
     draw(g) {
-        g.nodfix({x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+        g.nodfix({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
     }
 },
-/**
- * @param {object} - floating node shape.
- * @property {string} p - referenced node id for position.
- * @property {number} [w0] - initial angle.
- */
-mec.shape.flt = {
     /**
-     * Check floating node properties for validity.
-     * @method
-     * @param {number} idx - index in shape array.
-     * @returns {boolean} false - if no error / warning was detected.
+     * @param {object} - floating node shape.
+     * @property {string} p - referenced node id for position.
+     * @property {number} [w0] - initial angle.
      */
-    validate(idx) {
-        if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'shape',id:this.id,idx,reftype:'node',name:'p'};
-        if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'shape',id:this.id,idx,reftype:'node',name:this.p};
-        else
-            this.p = this.model.nodeById(this.p);
-        return false;
-    },
-    /**
-     * Initialize shape. Multiple initialization allowed.
-     * @method
-     * @param {object} model - model parent.
-     * @param {number} idx - index in shapes array.
-     */
-    init(model,idx) {
-        this.model = model;
-        if (!this.model.notifyValid(this.validate(idx))) return;
+    mec.shape.flt = {
+        /**
+         * Check floating node properties for validity.
+         * @method
+         * @param {number} idx - index in shape array.
+         * @returns {boolean} false - if no error / warning was detected.
+         */
+        validate(idx) {
+            if (this.p === undefined)
+                return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
+            if (!this.model.nodeById(this.p))
+                return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
+            else
+                this.p = this.model.nodeById(this.p);
+            return false;
+        },
+        /**
+         * Initialize shape. Multiple initialization allowed.
+         * @method
+         * @param {object} model - model parent.
+         * @param {number} idx - index in shapes array.
+         */
+        init(model, idx) {
+            this.model = model;
+            if (!this.model.notifyValid(this.validate(idx))) return;
 
-        this.w0 = this.w0 || 0;
-    },
-    dependsOn(elem) {
-        return this.p === elem;
-    },
-    asJSON() {
-        return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
+            this.w0 = this.w0 || 0;
+        },
+        dependsOn(elem) {
+            return this.p === elem;
+        },
+        asJSON() {
+            return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
+                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
                 + ' }';
-    },
-    draw(g) {
-        g.nodflt({x:()=>this.p.x,y:()=>this.p.y,w:this.w0 || 0});
+        },
+        draw(g) {
+            g.nodflt({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
+        }
     }
-}
 
 /**
  * @param {object} - slider shape.
@@ -130,14 +130,14 @@ mec.shape.slider = {
      */
     validate(idx) {
         if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'slider',id:this.id,idx,reftype:'node',name:'p'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'slider', id: this.id, idx, reftype: 'node', name: 'p' };
         if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'slider',id:this.id,idx,reftype:'node',name:this.p};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'slider', id: this.id, idx, reftype: 'node', name: this.p };
         else
             this.p = this.model.nodeById(this.p);
 
         if (this.wref && !this.model.constraintById(this.wref))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'slider',id:this.id,idx,reftype:'constraint',name:this.wref};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'slider', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
             this.wref = this.model.constraintById(this.wref);
 
@@ -149,7 +149,7 @@ mec.shape.slider = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
@@ -165,16 +165,16 @@ mec.shape.slider = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":"'+this.p.id+'"'
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
-                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
-                + ' }';
+        return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
+            + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
+            + (this.wref ? ',"wref":"' + this.wref.id + '"' : '')
+            + ' }';
     },
     draw(g) {
-        const w = this.wref ? ()=>this.wref.w : this.w0 || 0;
-        g.beg({x:()=>this.p.x,y:()=>this.p.y,w})
-           .rec({x:-16,y:-10,b:32,h:20,ls:"@nodcolor",fs:"@linkfill",lw:1,lj:"round"})
-         .end()
+        const w = this.wref ? () => this.wref.w : this.w0 || 0;
+        g.beg({ x: () => this.p.x, y: () => this.p.y, w })
+            .rec({ x: -16, y: -10, b: 32, h: 20, ls: "@nodcolor", fs: "@linkfill", lw: 1, lj: "round" })
+            .end()
     }
 }
 
@@ -192,16 +192,16 @@ mec.shape.bar = {
      */
     validate(idx) {
         if (this.p1 === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'bar',id:this.id,idx,reftype:'node',name:'p1'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: 'p1' };
         if (!this.model.nodeById(this.p1))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'bar',id:this.id,idx,reftype:'node',name:this.p1};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: this.p1 };
         else
             this.p1 = this.model.nodeById(this.p1);
 
         if (this.p2 === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'bar',id:this.id,idx,reftype:'node',name:'p2'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: 'p2' };
         if (!this.model.nodeById(this.p2))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'bar',id:this.id,idx,reftype:'node',name:this.p2};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: this.p2 };
         else
             this.p2 = this.model.nodeById(this.p2);
 
@@ -213,7 +213,7 @@ mec.shape.bar = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         this.model.notifyValid(this.validate(idx));
     },
@@ -221,16 +221,16 @@ mec.shape.bar = {
         return this.p1 === elem || this.p2 === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p1":"'+this.p1.id+'","p2":"'+this.p2.id+'" }';
+        return '{ "type":"' + this.type + '","p1":"' + this.p1.id + '","p2":"' + this.p2.id + '" }';
     },
     draw(g) {
         const x1 = () => this.p1.x,
-              y1 = () => this.p1.y,
-              x2 = () => this.p2.x,
-              y2 = () => this.p2.y;
-        g.lin({x1,y1,x2,y2,ls:"@nodcolor",lw:8,lc:"round"})
-         .lin({x1,y1,x2,y2,ls:"@nodfill2",lw:5.5,lc:"round"})
-         .lin({x1,y1,x2,y2,ls:"@nodfill",lw:3,lc:"round"})
+            y1 = () => this.p1.y,
+            x2 = () => this.p2.x,
+            y2 = () => this.p2.y;
+        g.lin({ x1, y1, x2, y2, ls: "@nodcolor", lw: 8, lc: "round" })
+            .lin({ x1, y1, x2, y2, ls: "@nodfill2", lw: 5.5, lc: "round" })
+            .lin({ x1, y1, x2, y2, ls: "@nodfill", lw: 3, lc: "round" })
     }
 }
 
@@ -249,16 +249,16 @@ mec.shape.beam = {
      */
     validate(idx) {
         if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'beam',id:this.id,idx,reftype:'node',name:'p'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'beam', id: this.id, idx, reftype: 'node', name: 'p' };
         if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'beam',id:this.id,idx,reftype:'node',name:this.p};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'beam', id: this.id, idx, reftype: 'node', name: this.p };
         else
             this.p = this.model.nodeById(this.p);
 
         if (this.wref === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'beam',id:this.id,idx,reftype:'constraint',name:'wref'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'beam', id: this.id, idx, reftype: 'constraint', name: 'wref' };
         if (!this.model.constraintById(this.wref))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'beam',id:this.id,idx,reftype:'constraint',name:this.wref};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'beam', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
             this.wref = this.model.constraintById(this.wref);
 
@@ -270,7 +270,7 @@ mec.shape.beam = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
@@ -280,16 +280,16 @@ mec.shape.beam = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":"'+this.p.id+'","wref":"'+this.wref.id+'","len":"'+this.len+'" }';
+        return '{ "type":"' + this.type + '","p":"' + this.p.id + '","wref":"' + this.wref.id + '","len":"' + this.len + '" }';
     },
     draw(g) {
         const x1 = () => this.p.x,
-              y1 = () => this.p.y,
-              x2 = () => this.p.x + this.len*Math.cos(this.wref.w),
-              y2 = () => this.p.y + this.len*Math.sin(this.wref.w);
-        g.lin({x1,y1,x2,y2,ls:"@nodcolor",lw:8,lc:"round"})
-         .lin({x1,y1,x2,y2,ls:"@nodfill2",lw:5.5,lc:"round"})
-         .lin({x1,y1,x2,y2,ls:"@nodfill",lw:3,lc:"round"})
+            y1 = () => this.p.y,
+            x2 = () => this.p.x + this.len * Math.cos(this.wref.w),
+            y2 = () => this.p.y + this.len * Math.sin(this.wref.w);
+        g.lin({ x1, y1, x2, y2, ls: "@nodcolor", lw: 8, lc: "round" })
+            .lin({ x1, y1, x2, y2, ls: "@nodfill2", lw: 5.5, lc: "round" })
+            .lin({ x1, y1, x2, y2, ls: "@nodfill", lw: 3, lc: "round" })
     }
 }
 
@@ -309,16 +309,16 @@ mec.shape.wheel = {
      */
     validate(idx) {
         if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'wheel',id:this.id,idx,reftype:'node',name:'p'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'wheel', id: this.id, idx, reftype: 'node', name: 'p' };
         if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'wheel',id:this.id,idx,reftype:'node',name:this.p};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'wheel', id: this.id, idx, reftype: 'node', name: this.p };
         else
             this.p = this.model.nodeById(this.p);
 
         if (this.wref === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'wheel',id:this.id,idx,reftype:'constraint',name:'wref'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'wheel', id: this.id, idx, reftype: 'constraint', name: 'wref' };
         if (!this.model.constraintById(this.wref))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'wheel',id:this.id,idx,reftype:'constraint',name:this.wref};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'wheel', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
             this.wref = this.model.constraintById(this.wref);
 
@@ -330,7 +330,7 @@ mec.shape.wheel = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
@@ -341,31 +341,31 @@ mec.shape.wheel = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","p":"'+this.p.id+'","r":'+this.r
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":'+this.w0 : '')
-                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
-                + ' }';
+        return '{ "type":"' + this.type + '","p":"' + this.p.id + '","r":' + this.r
+            + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
+            + (this.wref ? ',"wref":"' + this.wref.id + '"' : '')
+            + ' }';
     },
     draw(g) {
-        const w = this.wref ? ()=>this.wref.w : this.w0 || 0, r = this.r,
-              sgamma = Math.sin(2*Math.PI/3), cgamma = Math.cos(2*Math.PI/3);
-        g.beg({x:()=>this.p.x,y:()=>this.p.y,w})
-            .lin({x1:0,y1:0,x2:r-4,y2:0,ls:"@nodcolor",lw:8,lc:"round"})
-            .lin({x1:0,y1:0,x2:r-4,y2:0,ls:"@nodfill2",lw:5.5,lc:"round"})
-            .lin({x1:0,y1:0,x2:r-4,y2:0,ls:"@nodfill",lw:3,lc:"round"})
+        const w = this.wref ? () => this.wref.w : this.w0 || 0, r = this.r,
+            sgamma = Math.sin(2 * Math.PI / 3), cgamma = Math.cos(2 * Math.PI / 3);
+        g.beg({ x: () => this.p.x, y: () => this.p.y, w })
+            .lin({ x1: 0, y1: 0, x2: r - 4, y2: 0, ls: "@nodcolor", lw: 8, lc: "round" })
+            .lin({ x1: 0, y1: 0, x2: r - 4, y2: 0, ls: "@nodfill2", lw: 5.5, lc: "round" })
+            .lin({ x1: 0, y1: 0, x2: r - 4, y2: 0, ls: "@nodfill", lw: 3, lc: "round" })
 
-            .lin({x1:0,y1:0,x2:(r-4)*cgamma,y2:(r-4)*sgamma,ls:"@nodcolor",lw:8,lc:"round"})
-            .lin({x1:0,y1:0,x2:(r-4)*cgamma,y2:(r-4)*sgamma,ls:"@nodfill2",lw:5.5,lc:"round"})
-            .lin({x1:0,y1:0,x2:(r-4)*cgamma,y2:(r-4)*sgamma,ls:"@nodfill",lw:3,lc:"round"})
+            .lin({ x1: 0, y1: 0, x2: (r - 4) * cgamma, y2: (r - 4) * sgamma, ls: "@nodcolor", lw: 8, lc: "round" })
+            .lin({ x1: 0, y1: 0, x2: (r - 4) * cgamma, y2: (r - 4) * sgamma, ls: "@nodfill2", lw: 5.5, lc: "round" })
+            .lin({ x1: 0, y1: 0, x2: (r - 4) * cgamma, y2: (r - 4) * sgamma, ls: "@nodfill", lw: 3, lc: "round" })
 
-            .lin({x1:0,y1:0,x2:(r-4)*cgamma,y2:-(r-4)*sgamma,ls:"@nodcolor",lw:8,lc:"round"})
-            .lin({x1:0,y1:0,x2:(r-4)*cgamma,y2:-(r-4)*sgamma,ls:"@nodfill2",lw:5.5,lc:"round"})
-            .lin({x1:0,y1:0,x2:(r-4)*cgamma,y2:-(r-4)*sgamma,ls:"@nodfill",lw:3,lc:"round"})
+            .lin({ x1: 0, y1: 0, x2: (r - 4) * cgamma, y2: -(r - 4) * sgamma, ls: "@nodcolor", lw: 8, lc: "round" })
+            .lin({ x1: 0, y1: 0, x2: (r - 4) * cgamma, y2: -(r - 4) * sgamma, ls: "@nodfill2", lw: 5.5, lc: "round" })
+            .lin({ x1: 0, y1: 0, x2: (r - 4) * cgamma, y2: -(r - 4) * sgamma, ls: "@nodfill", lw: 3, lc: "round" })
 
-            .cir({x:0,y:0,r:r-2.5,ls:"#e6e6e6",fs:"transparent",lw:5})
-            .cir({x:0,y:0,r,ls:"@nodcolor",fs:"transparent",lw:1})
-            .cir({x:0,y:0,r:r-5,ls:"@nodcolor",fs:"transparent",lw:1})
-         .end()
+            .cir({ x: 0, y: 0, r: r - 2.5, ls: "#e6e6e6", fs: "transparent", lw: 5 })
+            .cir({ x: 0, y: 0, r, ls: "@nodcolor", fs: "transparent", lw: 1 })
+            .cir({ x: 0, y: 0, r: r - 5, ls: "@nodcolor", fs: "transparent", lw: 1 })
+            .end()
     }
 }
 
@@ -386,21 +386,21 @@ mec.shape.poly = {
      */
     validate(idx) {
         if (this.pts === undefined)
-            return { mid:'E_POLY_PTS_MISSING',id:this.id,idx};
+            return { mid: 'E_POLY_PTS_MISSING', id: this.id, idx };
         if (this.pts.length < 2)
-            return { mid:'E_POLY_PTS_INVALID',id:this.id,idx};
+            return { mid: 'E_POLY_PTS_INVALID', id: this.id, idx };
 
         if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'polygon',id:this.id,idx,reftype:'node',name:'p'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'polygon', id: this.id, idx, reftype: 'node', name: 'p' };
         if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'polygon',id:this.id,idx,reftype:'node',name:this.p};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'polygon', id: this.id, idx, reftype: 'node', name: this.p };
         else
             this.p = this.model.nodeById(this.p);
 
         if (this.wref === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'polygon',id:this.id,idx,reftype:'constraint',name:'wref'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'polygon', id: this.id, idx, reftype: 'constraint', name: 'wref' };
         if (!this.model.constraintById(this.wref))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'polygon',id:this.id,idx,reftype:'constraint',name:this.wref};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'polygon', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
             this.wref = this.model.constraintById(this.wref);
 
@@ -412,38 +412,38 @@ mec.shape.poly = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
         this.fill = this.fill || '#aaaaaa88';
         this.stroke = this.stroke || 'transparent';
     },
-    get x0() { return  this.p.x0; },
-    get y0() { return  this.p.y0; },
-    get w0() { return  this.wref.w0; },
-    get w() { return  this.wref.w - this.wref.w0; },
+    get x0() { return this.p.x0; },
+    get y0() { return this.p.y0; },
+    get w0() { return this.wref.w0; },
+    get w() { return this.wref.w - this.wref.w0; },
     get x() {
         const w = this.wref.w - this.wref.w0;
-        return this.p.x - Math.cos(w)*this.p.x0 + Math.sin(w)*this.p.y0;
+        return this.p.x - Math.cos(w) * this.p.x0 + Math.sin(w) * this.p.y0;
     },
     get y() {
         const w = this.wref.w - this.wref.w0;
-        return this.p.y - Math.sin(w)*this.p.x0 - Math.cos(w)*this.p.y0;
+        return this.p.y - Math.sin(w) * this.p.x0 - Math.cos(w) * this.p.y0;
     },
     dependsOn(elem) {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","pts":'+JSON.stringify(this.pts)+',"p":"'+this.p.id+'"'
-                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
-                + ((this.w0 && this.w0 > 0.0001 && !(this.wref.w0 === this.w0 )) ? ',"w0":'+this.w0 : '')
-                + (this.stroke && !(this.stroke === 'transparent') ? ',"stroke":"'+this.stroke+'"' : '')
-                + (this.fill && !(this.fill === '#aaaaaa88') ? ',"fill":"'+this.fill+'"' : '')
-                + ' }';
+        return '{ "type":"' + this.type + '","pts":' + JSON.stringify(this.pts) + ',"p":"' + this.p.id + '"'
+            + (this.wref ? ',"wref":"' + this.wref.id + '"' : '')
+            + ((this.w0 && this.w0 > 0.0001 && !(this.wref.w0 === this.w0)) ? ',"w0":' + this.w0 : '')
+            + (this.stroke && !(this.stroke === 'transparent') ? ',"stroke":"' + this.stroke + '"' : '')
+            + (this.fill && !(this.fill === '#aaaaaa88') ? ',"fill":"' + this.fill + '"' : '')
+            + ' }';
     },
     draw(g) {
-        g.ply({pts:this.pts,closed:true,x:()=>this.x,y:()=>this.y,w:()=>this.w,fs:this.fill,ls:this.stroke})
+        g.ply({ pts: this.pts, closed: true, x: () => this.x, y: () => this.y, w: () => this.w, fs: this.fill, ls: this.stroke })
     }
 }
 
@@ -466,17 +466,17 @@ mec.shape.img = {
      */
     validate(idx) {
         if (this.uri === undefined)
-            return { mid:'E_IMG_URI_MISSING',id:this.id,idx};
+            return { mid: 'E_IMG_URI_MISSING', id: this.id, idx };
 
         if (this.p === undefined)
-            return { mid:'E_ELEM_REF_MISSING',elemtype:'image',id:this.id,idx,reftype:'node',name:'p'};
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'image', id: this.id, idx, reftype: 'node', name: 'p' };
         if (!this.model.nodeById(this.p))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'image',id:this.id,idx,reftype:'node',name:this.p};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'image', id: this.id, idx, reftype: 'node', name: this.p };
         else
             this.p = this.model.nodeById(this.p);
 
         if (this.wref && !this.model.constraintById(this.wref))
-            return { mid:'E_ELEM_INVALID_REF',elemtype:'image',id:this.id,idx,reftype:'constraint',name:this.wref};
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'image', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
             this.wref = this.model.constraintById(this.wref);
 
@@ -488,7 +488,7 @@ mec.shape.img = {
      * @param {object} model - model parent.
      * @param {number} idx - index in shapes array.
      */
-    init(model,idx) {
+    init(model, idx) {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
@@ -501,17 +501,17 @@ mec.shape.img = {
         return this.p === elem || this.wref === elem;
     },
     asJSON() {
-        return '{ "type":"'+this.type+'","uri":"'+this.uri+'","p":"'+this.p.id+'"'
-                + (this.wref ? ',"wref":"'+this.wref.id+'"' : '')
-                + ((this.w0 && Math.abs(this.w0) > 0.0001) ? ',"w0":'+this.w0 : '')
-                + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":'+this.xoff : '')
-                + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":'+this.yoff : '')
-                + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":'+this.scl : '')
-                + ' }';
+        return '{ "type":"' + this.type + '","uri":"' + this.uri + '","p":"' + this.p.id + '"'
+            + (this.wref ? ',"wref":"' + this.wref.id + '"' : '')
+            + ((this.w0 && Math.abs(this.w0) > 0.0001) ? ',"w0":' + this.w0 : '')
+            + ((this.xoff && Math.abs(this.xoff) > 0.0001) ? ',"xoff":' + this.xoff : '')
+            + ((this.yoff && Math.abs(this.yoff) > 0.0001) ? ',"yoff":' + this.yoff : '')
+            + ((this.scl && Math.abs(this.scl - 1) > 0.0001) ? ',"scl":' + this.scl : '')
+            + ' }';
     },
     draw(g) {
-        const w0 = this.w0 || 0, w = this.wref ? ()=>this.wref.w + w0 : w0;
-        g.img({uri:this.uri,x:()=>this.p.x,y:()=>this.p.y,w,scl:this.scl,xoff:this.xoff,yoff:this.yoff})
+        const w0 = this.w0 || 0, w = this.wref ? () => this.wref.w + w0 : w0;
+        g.img({ uri: this.uri, x: () => this.p.x, y: () => this.p.y, w, scl: this.scl, xoff: this.xoff, yoff: this.yoff })
     }
 }
 
