@@ -323,7 +323,7 @@ class Mec2Element extends HTMLElement {
         if (this._corview) {
             this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
         }
-        if (this.fpsview) {
+        if (this._fpsview) {
             this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
         }
         //        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
