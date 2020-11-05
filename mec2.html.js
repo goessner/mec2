@@ -5179,12 +5179,12 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
 </div>
 `
     }
-    static nav({ dof, inputs }) {
+    static nav({ dof }) {
         return `<nav>
             <span class="left">
                 ${this.logo}
                 <span>&nbsp;</span>
-                ${this.runbtn({ inputs })}
+                ${this.runbtn({ dof })}
                 ${this.resetbtn()}
                 ${this.gravbtn()}
             </span>
@@ -5197,8 +5197,8 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
         </nav>`
     }
 
-    static runbtn({ inputs }) {
-        return `<span id="runbtn" title="run/pause">${inputs.length ? '' : '&#9654;'}</span>`;
+    static runbtn({ dof }) {
+        return `<span id="runbtn" title="run/pause">${dof > 0 ? '&#9654;' : ''}</span>`;
     }
     static resetbtn() {
         return `<span id="resetbtn" title="reset">&nbsp;&nbsp;&#8617;</span>`;
