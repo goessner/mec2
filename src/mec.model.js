@@ -354,7 +354,7 @@ mec.model = {
         hasDependents(elem) {
             // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            this.forAllModules(() => dependency = elm.dependency.dependsOn(elem) || dependency)
+            this.forAllModules((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
