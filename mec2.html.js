@@ -975,7 +975,7 @@ mec.model = {
         forAllModules(fn) {
             for (const [key, module] of Object.entries(this.modules)) {
                 for (const elm of this[key]) {
-                    fn(elm, module);
+                    fn(elm, module, key);
                 }
             }
         },
@@ -1258,13 +1258,11 @@ mec.model = {
          * @param {object} elem - element.
          * @returns {object} dictionary object containing dependent elements.
          */
-        dependentsOf(elem, deps) {
-            deps = deps || {}
-
-            this.forAllModules((elm, module) => {
+        dependentsOf(elem, deps = {}) {
+            this.forAllModules((elm, module, moduleKey) => {
                 if (elm.dependsOn(elem)) {
                     this.dependentsOf(elm, deps);
-                    deps[module].push(elm);
+                    (deps[moduleKey] = deps[moduleKey] || []).push(elm);
                 }
             });
             return deps;
@@ -1305,9 +1303,11 @@ mec.model = {
          * @param {object} elems - element dictionary.
          */
         purgeElements(elems) {
-            this.forAllModules((elm, module) => {
-                module.splice(module.indexOf(elm), 1);
-            });
+            for (const key of Object.keys(elems)) {
+                for (const elm of elems[key]) {
+                    this[key].splice(this[key].indexOf(elm), 1)
+                }
+            }
         },
         /**
          * Get element by id.
