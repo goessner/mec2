@@ -73,13 +73,13 @@ mec.constraint = {
             if (!this.p2)
                 return { mid: 'E_CSTR_NODE_MISSING', id: this.id, loc: 'end', p: 'p2' };
             if (typeof this.p1 === 'string') {
-                if (!(tmp = this.model.nodeById(this.p1)))
+                if (!(tmp = this.model.nodes.find(e => e.id === this.p1)))
                     return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'start', p: 'p1', nodeId: this.p1 };
                 else
                     this.p1 = tmp;
             }
             if (typeof this.p2 === 'string') {
-                if (!(tmp = this.model.nodeById(this.p2)))
+                if (!(tmp = this.model.nodes.find(e => e.id === this.p2)))
                     return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'end', p: 'p2', nodeId: this.p2 };
                 else
                     this.p2 = tmp;
@@ -97,7 +97,7 @@ mec.constraint = {
                 this.len.type = 'free';
 
             if (typeof this.ori.ref === 'string') {
-                if (!(tmp = this.model.constraintById(this.ori.ref)))
+                if (!(tmp = this.model.constraints.find(e => e.id === (this.ori.ref))))
                     return { mid: 'E_CSTR_REF_NOT_EXISTS', id: this.id, sub: 'ori', ref: this.ori.ref };
                 else
                     this.ori.ref = tmp;
@@ -110,7 +110,7 @@ mec.constraint = {
                 }
             }
             if (typeof this.len.ref === 'string') {
-                if (!(tmp = this.model.constraintById(this.len.ref)))
+                if (!(tmp = this.model.constraints.find(e => e.id === (this.len.ref))))
                     return { mid: 'E_CSTR_REF_NOT_EXISTS', id: this.id, sub: 'len', ref: this.len.ref };
                 else
                     this.len.ref = tmp;
@@ -554,7 +554,7 @@ mec.constraint = {
          */
         init_ori_const(ori) {
             if (!!ori.ref) {
-                const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
+                const ref = ori.ref = this.model.constraints.find(e => e.id === (ori.ref)) || ori.ref,
                     reftype = ori.reftype || 'ori',
                     ratio = ori.ratio || 1;
 
@@ -633,7 +633,7 @@ mec.constraint = {
             });
 
             if (!!ori.ref) {
-                const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
+                const ref = ori.ref = this.model.constraints.find(e => e.id  === ori.ref) || ori.ref,
                     reftype = ori.reftype || 'ori',
                     ratio = ori.ratio || 1;
 
@@ -685,7 +685,7 @@ mec.constraint = {
          */
         init_len_const(len) {
             if (!!len.ref) {
-                const ref = len.ref = this.model.constraintById(len.ref) || len.ref,
+                const ref = len.ref = this.model.constraints.find(e => e.id === len.ref) || len.ref,
                     reftype = len.reftype || 'len',
                     ratio = len.ratio || 1;
 
@@ -759,7 +759,7 @@ mec.constraint = {
             });
 
             if (!!len.ref) {
-                const ref = len.ref = this.model.constraintById(len.ref) || len.ref,
+                const ref = len.ref = this.model.constraints.find(e => e.id === len.ref) || len.ref,
                     reftype = len.reftype || 'len',
                     ratio = len.ratio || 1;
 

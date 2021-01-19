@@ -475,7 +475,8 @@ mec.model = {
         forAllModules(fn) {
             for (const [key, module] of Object.entries(this.modules)) {
                 for (const elm of this[key]) {
-                    fn(elm, module, key);
+                    const ret = fn(elm, module, key);
+                    if (ret) return ret;
                 }
             }
         },
@@ -815,12 +816,9 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
-            // TODO These functions should be in their respective module.
-            return this.nodeById(id)
-                || this.constraintById(id)
-                || this.loadById(id)
-                || this.viewById(id)
-                || id === 'model' && this;
+            return this.forAllModules(elm => {
+                if (elm.id === id) return elm;
+            }) || id === 'model' && this;
         },
         /**
          * Add node to model.
@@ -829,17 +827,6 @@ mec.model = {
          */
         addNode(node) {
             this.nodes.push(node);
-        },
-        /**
-         * Get node by id.
-         * @method
-         * @param {object} node - node to find.
-         */
-        nodeById(id) {
-            for (const node of this.nodes)
-                if (node.id === id)
-                    return node;
-            return false;
         },
         /**
          * Remove node, if there are no dependencies to other objects.
@@ -876,18 +863,6 @@ mec.model = {
             this.constraints.push(constraint);
         },
         /**
-         * Get constraint by id.
-         * @method
-         * @param {object} id - constraint id.
-         * @returns {object} constraint to find.
-         */
-        constraintById(id) {
-            for (const constraint of this.constraints)
-                if (constraint.id === id)
-                    return constraint;
-            return false;
-        },
-        /**
          * Remove constraint, if there are no dependencies to other objects.
          * The calling app has to ensure, that `constraint` is in fact an entry of
          * the `model.constraints` array.
@@ -920,18 +895,6 @@ mec.model = {
          */
         addLoad(load) {
             this.loads.push(load);
-        },
-        /**
-         * Get load by id.
-         * @method
-         * @param {object} id - load id.
-         * @returns {object} load to find.
-         */
-        loadById(id) {
-            for (const load of this.loads)
-                if (load.id === id)
-                    return load;
-            return false;
         },
         /**
          * Remove load, if there are no other objects depending on it.
@@ -996,18 +959,6 @@ mec.model = {
          */
         addView(view) {
             this.views.push(view);
-        },
-        /**
-         * Get view by id.
-         * @method
-         * @param {object} id - view id.
-         * @returns {object} view to find.
-         */
-        viewById(id) {
-            for (const view of this.views)
-                if (view.id === id)
-                    return view;
-            return false;
         },
         /**
          * Remove view, if there are no other objects depending on it.
@@ -1568,13 +1519,13 @@ mec.constraint = {
             if (!this.p2)
                 return { mid: 'E_CSTR_NODE_MISSING', id: this.id, loc: 'end', p: 'p2' };
             if (typeof this.p1 === 'string') {
-                if (!(tmp = this.model.nodeById(this.p1)))
+                if (!(tmp = this.model.nodes.find(e => e.id === this.p1)))
                     return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'start', p: 'p1', nodeId: this.p1 };
                 else
                     this.p1 = tmp;
             }
             if (typeof this.p2 === 'string') {
-                if (!(tmp = this.model.nodeById(this.p2)))
+                if (!(tmp = this.model.nodes.find(e => e.id === this.p2)))
                     return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'end', p: 'p2', nodeId: this.p2 };
                 else
                     this.p2 = tmp;

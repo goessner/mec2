@@ -50,15 +50,15 @@ mec.load.force = {
             warn = { mid: 'W_ELEM_ID_MISSING', elemtype: 'force', idx };
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'force', id: this.id, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'force', id: this.id, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
 
-        if (this.wref && !this.model.constraintById(this.wref))
+        if (this.wref && !this.model.constraints.find(e => e.id ===this.wref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'force', id: this.id, reftype: 'constraint', name: 'wref' };
         else
-            this.wref = this.model.constraintById(this.wref);
+            this.wref = this.model.constraints.find(e => e.id === this.wref);
 
         if (typeof this.value === 'number' && mec.isEps(this.value))
             return { mid: 'E_FORCE_VALUE_INVALID', val: this.value, id: this.id };
@@ -180,17 +180,17 @@ mec.load.spring = {
 
         if (this.p1 === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'spring', id: this.id, reftype: 'node', name: 'p1' };
-        if (!this.model.nodeById(this.p1))
+        if (!this.model.nodes.find(e => e.id === this.p1))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'spring', id: this.id, reftype: 'node', name: this.p1 };
         else
-            this.p1 = this.model.nodeById(this.p1);
+            this.p1 = this.model.nodes.find(e => e.id === this.p1);
 
         if (this.p2 === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'spring', id: this.id, reftype: 'node', name: 'p2' };
-        if (!this.model.nodeById(this.p2))
+        if (!this.model.nodes.find(e => e.id === this.p2))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'spring', id: this.id, reftype: 'node', name: this.p2 };
         else
-            this.p2 = this.model.nodeById(this.p2);
+            this.p2 = this.model.nodes.find(e => e.id === this.p2);
 
         if (typeof this.k === 'number' && mec.isEps(this.k))
             return { mid: 'E_SPRING_RATE_INVALID', id: this.id, val: this.k };

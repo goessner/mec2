@@ -123,8 +123,8 @@ mec.view.vector = {
                 return { mid: 'E_SHOW_VEC_ANCHOR_MISSING', elemtype: 'view as vector', id: this.id, idx, name: 'at' };
         }
         else {
-            if (this.model.nodeById(this.at)) {
-                let at = this.model.nodeById(this.at);
+            if (this.model.nodes.find(e => e.id === this.at)) {
+                let at = this.model.nodes.find(e => e.id === this.at);
                 Object.defineProperty(this, 'anchor', { get: () => at['pos'], enumerable: true, configurable: true });
             }
             else if (this.at in this.of)
@@ -222,18 +222,18 @@ mec.view.trace = {
         if (this.show && !(this.show in this.of))
             return { mid: 'E_ALY_INVALID_PROP', elemtype: 'view as trace', id: this.id, idx, reftype: this.of, name: this.show };
 
-        if (this.ref && !this.model.constraintById(this.ref))
+        if (this.ref && !this.model.constraints.find(e => e.id === this.ref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'view as trace', id: this.id, idx, reftype: 'constraint', name: this.ref };
         else
-            this.ref = this.model.constraintById(this.ref);
+            this.ref = this.model.constraints.find(e => e.id === this.ref);
 
         // (deprecated !)
         if (this.p) {
-            if (!this.model.nodeById(this.p))
+            if (!this.model.nodes.find(e => e.id === this.p))
                 return { mid: 'E_ELEM_INVALID_REF', elemtype: 'trace', id: this.id, idx, reftype: 'node', name: this.p };
             else {
                 this.show = 'pos';
-                this.of = this.model.nodeById(this.p);
+                this.of = this.model.nodes.find(e => e.id === this.p);
             }
         }
 
