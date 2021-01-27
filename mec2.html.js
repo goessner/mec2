@@ -925,12 +925,12 @@ mec.model = {
             this.state = { valid: true, itrpos: 0, itrvel: 0, preview: false };
             this.timer = { t: 0, dt: 1 / 60, sleepMin: 1 };
             // create empty containers for all elements
-            for (const key of Object.keys(this.modules)) {
+            for (const key of Object.keys(this.plugIns)) {
                 if (!this[key]) {
                     this[key] = [];
                 }
             }
-            this.forAllModules((elm, module) => { module.extend(elm); });
+            this.forAllPlugins((elm, plugIn) => { plugIn.extend(elm); });
         },
         /**
          * Init model
@@ -948,7 +948,7 @@ mec.model = {
 
             this.state.valid = true;  // clear previous logical error result ...
 
-            for (const key of Object.keys(this.modules)) {
+            for (const key of Object.keys(this.plugIns)) {
                 for (let idx = 0; idx < this[key].length; ++idx) {
                     this[key][idx].init(this, idx);
                 }
@@ -956,25 +956,24 @@ mec.model = {
 
             return this;
         },
-        modules: {},
-        addModule(name, module) {
-            // TODO define interface
-            // if (!module ||
-            //     !module.extend ||
-            //     !module.init ||
-            //     !module.reset
-            //     // !module.dependsOn not sure if this is a hard requirement...
+        plugIns: {},
+        addPlugIn(name, plugIn) {
+            // TODO define interface ? 
+            // if (!plugIn ||
+            //     !plugIn.extend ||
+            //     !plugIn.init ||
+            //     !plugIn.reset
+            //     // !plugIn.dependsOn not sure if this is a hard requirement...
             //     ) {
-            //     console.warn('TODO');
             //     return;
             // }
-            this.modules[name] = module;
+            this.plugIns[name] = plugIn;
         },
 
-        forAllModules(fn) {
-            for (const [key, module] of Object.entries(this.modules)) {
+        forAllPlugins(fn) {
+            for (const [key, plugIn] of Object.entries(this.plugIns)) {
                 for (const elm of this[key]) {
-                    const ret = fn(elm, module, key);
+                    const ret = fn(elm, plugIn, key);
                     if (ret) return ret;
                 }
             }
@@ -1003,7 +1002,7 @@ mec.model = {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
             Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
-            this.forAllModules((elm) => elm.reset && elm.reset());
+            this.forAllPlugins((elm) => elm.reset && elm.reset());
             return this;
         },
         /**
@@ -1247,7 +1246,7 @@ mec.model = {
         hasDependents(elem) {
             // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            this.forAllModules((elm) => dependency = elm.dependsOn(elem) || dependency)
+            this.forAllPlugins((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
@@ -1259,10 +1258,10 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem, deps = {}) {
-            this.forAllModules((elm, module, moduleKey) => {
+            this.forAllPlugins((elm, plugIn, plugInKey) => {
                 if (elm.dependsOn(elem)) {
                     this.dependentsOf(elm, deps);
-                    (deps[moduleKey] = deps[moduleKey] || []).push(elm);
+                    (deps[plugInKey] = deps[plugInKey] || []).push(elm);
                 }
             });
             return deps;
@@ -1315,7 +1314,7 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
-            return this.forAllModules(elm => {
+            return this.forAllPlugins(elm => {
                 if (elm.id === id) return elm;
             }) || id === 'model' && this;
         },
@@ -1535,9 +1534,9 @@ mec.model = {
          */
         draw(g) {
             // Make sure constraints and nodes are rendered last.
-            this.forAllModules((elm, module) => {
-                if (module === this.modules['constraints'] ||
-                    module === this.modules['nodes']) {
+            this.forAllPlugins((elm, plugIn) => {
+                if (plugIn === this.plugIns['constraints'] ||
+                    plugIn === this.plugIns['nodes']) {
                     return;
                 }
                 elm.draw(g);
@@ -1844,7 +1843,7 @@ mec.node = {
     g2Node: g2().cir({ x: 0, y: 0, r: 5, ls: "@nodcolor", fs: "@nodfill" })
 }
 
-mec.model.prototype.addModule('nodes', mec.node);
+mec.model.prototype.addPlugIn('nodes', mec.node);
 /**
  * mec.constraint (c) 2018 Stefan Goessner
  * @license MIT License
@@ -1919,56 +1918,30 @@ mec.constraint = {
                 return { mid: 'E_CSTR_NODE_MISSING', id: this.id, loc: 'start', p: 'p1' };
             if (!this.p2)
                 return { mid: 'E_CSTR_NODE_MISSING', id: this.id, loc: 'end', p: 'p2' };
-            if (typeof this.p1 === 'string') {
-                if (!(tmp = this.model.nodes.find(e => e.id === this.p1)))
-                    return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'start', p: 'p1', nodeId: this.p1 };
-                else
-                    this.p1 = tmp;
-            }
-            if (typeof this.p2 === 'string') {
-                if (!(tmp = this.model.nodes.find(e => e.id === this.p2)))
-                    return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'end', p: 'p2', nodeId: this.p2 };
-                else
-                    this.p2 = tmp;
-            }
             if (mec.isEps(this.p1.x - this.p2.x) && mec.isEps(this.p1.y - this.p2.y))
                 warn = { mid: 'W_CSTR_NODES_COINCIDE', id: this.id, p1: this.p1.id, p2: this.p2.id };
 
-            if (!this.hasOwnProperty('ori'))
+            if (!this.hasOwnProperty('ori')) {
                 this.ori = { type: 'free' };
-            if (!this.hasOwnProperty('len'))
+            } else if (this.ori.type === 'drive') {
+                if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
+                    return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
+                if (this.ratio !== undefined && this.ratio !== 1)
+                    return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
+            }
+            if (!this.hasOwnProperty('len')) {
                 this.len = { type: 'free' };
+            } else if (this.len.type === 'drive') {
+                if (this.len.ref[this.len.reftype || 'len'].type === 'free')
+                    return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'len', ref: this.len.ref.id, reftype: this.len.reftype || 'len' };
+                if (this.ratio !== undefined && this.ratio !== 1)
+                    return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'len', ref: this.ori.ref.id, reftype: this.ori.reftype || 'len' };
+            }
             if (!this.ori.hasOwnProperty('type'))
                 this.ori.type = 'free';
             if (!this.len.hasOwnProperty('type'))
                 this.len.type = 'free';
 
-            if (typeof this.ori.ref === 'string') {
-                if (!(tmp = this.model.constraints.find(e => e.id === (this.ori.ref))))
-                    return { mid: 'E_CSTR_REF_NOT_EXISTS', id: this.id, sub: 'ori', ref: this.ori.ref };
-                else
-                    this.ori.ref = tmp;
-
-                if (this.ori.type === 'drive') {
-                    if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
-                        return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
-                    if (this.ratio !== undefined && this.ratio !== 1)
-                        return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
-                }
-            }
-            if (typeof this.len.ref === 'string') {
-                if (!(tmp = this.model.constraints.find(e => e.id === (this.len.ref))))
-                    return { mid: 'E_CSTR_REF_NOT_EXISTS', id: this.id, sub: 'len', ref: this.len.ref };
-                else
-                    this.len.ref = tmp;
-
-                if (this.len.type === 'drive') {
-                    if (this.len.ref[this.len.reftype || 'len'].type === 'free')
-                        return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'len', ref: this.len.ref.id, reftype: this.len.reftype || 'len' };
-                    if (this.ratio !== undefined && this.ratio !== 1)
-                        return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'len', ref: this.ori.ref.id, reftype: this.ori.reftype || 'len' };
-                }
-            }
             return warn;
         },
         /**
@@ -1979,6 +1952,7 @@ mec.constraint = {
          */
         init(model, idx) {
             this.model = model;
+            this.assignRefs();
             if (!this.model.notifyValid(this.validate(idx))) return;
 
             const ori = this.ori, len = this.len;
@@ -2003,6 +1977,20 @@ mec.constraint = {
             // lagrange identifiers
             this.lambda_r = this.dlambda_r = 0;
             this.lambda_w = this.dlambda_w = 0;
+        },
+        assignRefs() {
+            if (typeof this.p1 === 'string') {
+                this.p1 = this.model.nodes.find(e => e.id === this.p1);
+            }
+            if (typeof this.p2 === 'string') {
+                this.p1 = this.model.nodes.find(e => e.id === this.p1);
+            }
+            if (typeof this.ori.ref === 'string') {
+                this.ori.ref = this.model.constraints.find(e => e.id === (this.ori.ref));
+            }
+            if (typeof this.len.ref === 'string') {
+                this.len.ref = this.model.constraints.find(e => e.id === (this.len.ref));
+            }
         },
         /**
          * Init vector magnitude and orientation.
@@ -2505,7 +2493,7 @@ mec.constraint = {
             });
 
             if (!!ori.ref) {
-                const ref = ori.ref = this.model.constraints.find(e => e.id  === ori.ref) || ori.ref,
+                const ref = ori.ref = this.model.constraints.find(e => e.id === ori.ref) || ori.ref,
                     reftype = ori.reftype || 'ori',
                     ratio = ori.ratio || 1;
 
@@ -2786,7 +2774,7 @@ mec.constraint = {
     }
 }
 
-mec.model.prototype.addModule('constraints', mec.constraint);
+mec.model.prototype.addPlugin('constraints', mec.constraint);
 /**
  * mec.drive (c) 2018 Stefan Goessner
  * @license MIT License
@@ -2946,7 +2934,7 @@ mec.drive = {
     get inOutQuint() { return this.inOutPot(5); }
 }
 
-mec.model.prototype.addModule('drives', mec.drive);
+mec.model.prototype.addPlugin('drives', mec.drive);
 
 /**
  * mec.load (c) 2018 Stefan Goessner
@@ -2970,7 +2958,8 @@ mec.load = {
         if (!load.type)
             load.type = 'force';
         if (mec.load[load.type]) {
-            Object.setPrototypeOf(view, this.prototype, mec.load[load.type]);
+            const o = Object.assign({}, this.prototype, mec.load[load.type])
+            Object.setPrototypeOf(view, o);
             load.constructor();
         }
         return load;
@@ -3278,7 +3267,7 @@ mec.load.force.arrowLength = 45;
         }
     }
 
-mec.model.prototype.addModule('loads', mec.load);
+mec.model.prototype.addPlugIn('loads', mec.load);
 /**
  * mec.view (c) 2018 Stefan Goessner
  * @license MIT License
@@ -3299,7 +3288,8 @@ mec.model.prototype.addModule('loads', mec.load);
 mec.view = {
     extend(view) {
         if (view.as && mec.view[view.as]) {
-            Object.setPrototypeOf(view, this.prototype, mec.view[view.as]);
+            const o = Object.assign({}, this.prototype, mec.view[view.as])
+            Object.setPrototypeOf(view, o);
             view.constructor();
         }
         return view;
@@ -3902,7 +3892,7 @@ mec.view.chart = {
     }
 }
 
-mec.model.prototype.addModule('views', mec.view);
+mec.model.prototype.addPlugIn('views', mec.view);
 /**
  * mec.shape (c) 2018 Stefan Goessner
  * @license MIT License
@@ -4448,7 +4438,7 @@ mec.shape.img = {
     }
 }
 
-mec.model.prototype.addModule('shapes', mec.shape);
+mec.model.prototype.addPlugIn('shapes', mec.shape);
 /**
  * mec.msg.en (c) 2018 Stefan Goessner
  * @license MIT License
