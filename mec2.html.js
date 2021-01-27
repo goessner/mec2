@@ -930,7 +930,7 @@ mec.model = {
                     this[key] = [];
                 }
             }
-            this.forAllPlugins((elm, plugIn) => { plugIn.extend(elm); });
+            this.forAllPlugIns((elm, plugIn) => { plugIn.extend(elm); });
         },
         /**
          * Init model
@@ -970,7 +970,7 @@ mec.model = {
             this.plugIns[name] = plugIn;
         },
 
-        forAllPlugins(fn) {
+        forAllPlugIns(fn) {
             for (const [key, plugIn] of Object.entries(this.plugIns)) {
                 for (const elm of this[key]) {
                     const ret = fn(elm, plugIn, key);
@@ -1002,7 +1002,7 @@ mec.model = {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
             Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
-            this.forAllPlugins((elm) => elm.reset && elm.reset());
+            this.forAllPlugIns((elm) => elm.reset && elm.reset());
             return this;
         },
         /**
@@ -1246,7 +1246,7 @@ mec.model = {
         hasDependents(elem) {
             // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            this.forAllPlugins((elm) => dependency = elm.dependsOn(elem) || dependency)
+            this.forAllPlugIns((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
@@ -1258,7 +1258,7 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem, deps = {}) {
-            this.forAllPlugins((elm, plugIn, plugInKey) => {
+            this.forAllPlugIns((elm, plugIn, plugInKey) => {
                 if (elm.dependsOn(elem)) {
                     this.dependentsOf(elm, deps);
                     (deps[plugInKey] = deps[plugInKey] || []).push(elm);
@@ -1314,7 +1314,7 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
-            return this.forAllPlugins(elm => {
+            return this.forAllPlugIns(elm => {
                 if (elm.id === id) return elm;
             }) || id === 'model' && this;
         },
@@ -1534,7 +1534,7 @@ mec.model = {
          */
         draw(g) {
             // Make sure constraints and nodes are rendered last.
-            this.forAllPlugins((elm, plugIn) => {
+            this.forAllPlugIns((elm, plugIn) => {
                 if (plugIn === this.plugIns['constraints'] ||
                     plugIn === this.plugIns['nodes']) {
                     return;
@@ -1924,7 +1924,7 @@ mec.constraint = {
             if (!this.hasOwnProperty('ori')) {
                 this.ori = { type: 'free' };
             } else if (this.ori.type === 'drive') {
-                if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
+                if (this.ori.ref && this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
                     return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
                 if (this.ratio !== undefined && this.ratio !== 1)
                     return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
@@ -1932,7 +1932,7 @@ mec.constraint = {
             if (!this.hasOwnProperty('len')) {
                 this.len = { type: 'free' };
             } else if (this.len.type === 'drive') {
-                if (this.len.ref[this.len.reftype || 'len'].type === 'free')
+                if (this.len.ref && this.len.ref[this.len.reftype || 'len'].type === 'free')
                     return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'len', ref: this.len.ref.id, reftype: this.len.reftype || 'len' };
                 if (this.ratio !== undefined && this.ratio !== 1)
                     return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'len', ref: this.ori.ref.id, reftype: this.ori.reftype || 'len' };
@@ -1983,12 +1983,12 @@ mec.constraint = {
                 this.p1 = this.model.nodes.find(e => e.id === this.p1);
             }
             if (typeof this.p2 === 'string') {
-                this.p1 = this.model.nodes.find(e => e.id === this.p1);
+                this.p2 = this.model.nodes.find(e => e.id === this.p2);
             }
-            if (typeof this.ori.ref === 'string') {
+            if (this.ori && typeof this.ori.ref === 'string') {
                 this.ori.ref = this.model.constraints.find(e => e.id === (this.ori.ref));
             }
-            if (typeof this.len.ref === 'string') {
+            if (this.len && typeof this.len.ref === 'string') {
                 this.len.ref = this.model.constraints.find(e => e.id === (this.len.ref));
             }
         },
@@ -2774,7 +2774,7 @@ mec.constraint = {
     }
 }
 
-mec.model.prototype.addPlugin('constraints', mec.constraint);
+mec.model.prototype.addPlugIn('constraints', mec.constraint);
 /**
  * mec.drive (c) 2018 Stefan Goessner
  * @license MIT License
@@ -2934,7 +2934,7 @@ mec.drive = {
     get inOutQuint() { return this.inOutPot(5); }
 }
 
-mec.model.prototype.addPlugin('drives', mec.drive);
+mec.model.prototype.addPlugIn('drives', mec.drive);
 
 /**
  * mec.load (c) 2018 Stefan Goessner

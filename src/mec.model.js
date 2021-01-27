@@ -37,7 +37,7 @@ mec.model = {
                     this[key] = [];
                 }
             }
-            this.forAllPlugins((elm, plugIn) => { plugIn.extend(elm); });
+            this.forAllPlugIns((elm, plugIn) => { plugIn.extend(elm); });
         },
         /**
          * Init model
@@ -77,7 +77,7 @@ mec.model = {
             this.plugIns[name] = plugIn;
         },
 
-        forAllPlugins(fn) {
+        forAllPlugIns(fn) {
             for (const [key, plugIn] of Object.entries(this.plugIns)) {
                 for (const elm of this[key]) {
                     const ret = fn(elm, plugIn, key);
@@ -109,7 +109,7 @@ mec.model = {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
             Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
-            this.forAllPlugins((elm) => elm.reset && elm.reset());
+            this.forAllPlugIns((elm) => elm.reset && elm.reset());
             return this;
         },
         /**
@@ -353,7 +353,7 @@ mec.model = {
         hasDependents(elem) {
             // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            this.forAllPlugins((elm) => dependency = elm.dependsOn(elem) || dependency)
+            this.forAllPlugIns((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
@@ -365,7 +365,7 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem, deps = {}) {
-            this.forAllPlugins((elm, plugIn, plugInKey) => {
+            this.forAllPlugIns((elm, plugIn, plugInKey) => {
                 if (elm.dependsOn(elem)) {
                     this.dependentsOf(elm, deps);
                     (deps[plugInKey] = deps[plugInKey] || []).push(elm);
@@ -421,7 +421,7 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
-            return this.forAllPlugins(elm => {
+            return this.forAllPlugIns(elm => {
                 if (elm.id === id) return elm;
             }) || id === 'model' && this;
         },
@@ -641,7 +641,7 @@ mec.model = {
          */
         draw(g) {
             // Make sure constraints and nodes are rendered last.
-            this.forAllPlugins((elm, plugIn) => {
+            this.forAllPlugIns((elm, plugIn) => {
                 if (plugIn === this.plugIns['constraints'] ||
                     plugIn === this.plugIns['nodes']) {
                     return;

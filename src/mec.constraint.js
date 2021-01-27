@@ -78,7 +78,7 @@ mec.constraint = {
             if (!this.hasOwnProperty('ori')) {
                 this.ori = { type: 'free' };
             } else if (this.ori.type === 'drive') {
-                if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
+                if (this.ori.ref && this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
                     return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
                 if (this.ratio !== undefined && this.ratio !== 1)
                     return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
@@ -86,7 +86,7 @@ mec.constraint = {
             if (!this.hasOwnProperty('len')) {
                 this.len = { type: 'free' };
             } else if (this.len.type === 'drive') {
-                if (this.len.ref[this.len.reftype || 'len'].type === 'free')
+                if (this.len.ref && this.len.ref[this.len.reftype || 'len'].type === 'free')
                     return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'len', ref: this.len.ref.id, reftype: this.len.reftype || 'len' };
                 if (this.ratio !== undefined && this.ratio !== 1)
                     return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'len', ref: this.ori.ref.id, reftype: this.ori.reftype || 'len' };
@@ -137,12 +137,12 @@ mec.constraint = {
                 this.p1 = this.model.nodes.find(e => e.id === this.p1);
             }
             if (typeof this.p2 === 'string') {
-                this.p1 = this.model.nodes.find(e => e.id === this.p1);
+                this.p2 = this.model.nodes.find(e => e.id === this.p2);
             }
-            if (typeof this.ori.ref === 'string') {
+            if (this.ori && typeof this.ori.ref === 'string') {
                 this.ori.ref = this.model.constraints.find(e => e.id === (this.ori.ref));
             }
-            if (typeof this.len.ref === 'string') {
+            if (this.len && typeof this.len.ref === 'string') {
                 this.len.ref = this.model.constraints.find(e => e.id === (this.len.ref));
             }
         },
@@ -928,4 +928,4 @@ mec.constraint = {
     }
 }
 
-mec.model.prototype.addPlugin('constraints', mec.constraint);
+mec.model.prototype.addPlugIn('constraints', mec.constraint);
