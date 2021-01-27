@@ -174,6 +174,31 @@ mec.constraint = {
                     }
                 },
         */
+        /**
+         * Remove constraint, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `constraint` is in fact an entry of
+         * the `model.constraints` array.
+         * @method
+         * @param {object} constraint - constraint to remove.
+         * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
+         */
+        remove() {
+            const elms = this.model.constraints;
+            return this.model.hasDependents(this) ?
+                false :
+                !!elms.splice(elms.indexOf(this), 1);
+        },
+        /**
+         * Delete constraint and all depending elements from model.
+         * The calling app has to ensure, that `constraint` is in fact an entry of
+         * the `model.constraints` array.
+         * @method
+         * @param {object} constraint - constraint to remove.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        },
         initVector() {
             let correctLen = false, correctOri = false;
             if (this.len.hasOwnProperty('r0')) {

@@ -18,10 +18,38 @@
 mec.view = {
     extend(view) {
         if (view.as && mec.view[view.as]) {
-            Object.setPrototypeOf(view, mec.view[view.as]);
+            const o = Object.assign({}, this.prototype, mec.view[view.as])
+            Object.setPrototypeOf(view, o);
             view.constructor();
         }
         return view;
+    },
+
+    prototype: {
+        /**
+         * Remove view, if there are no other objects depending on it.
+         * The calling app has to ensure, that `view` is in fact an entry of
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to remove.
+         */
+        remove() {
+            const elms = this.model.shapes;
+            return this.model.hasDependents(this) ?
+                false :
+                !!elms.splice(elms.indexOf(this), 1);
+        },
+        /**
+         * Delete view and all dependent elements from model.
+         * The calling app has to ensure, that `view` is in fact an entry of
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to delete.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        }
     }
 }
 

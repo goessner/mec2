@@ -17,10 +17,37 @@
 mec.shape = {
     extend(shape) {
         if (shape.type && mec.shape[shape.type]) {
-            Object.setPrototypeOf(shape, mec.shape[shape.type]);
+            const o = Object.assign({}, this.prototype, mec.shape[shape.type]);
+            Object.setPrototypeOf(shape, o);
             shape.constructor();
         }
         return shape;
+    },
+    prototype: {
+        /**
+         * Remove shape, if there are no other objects depending on it.
+         * The calling app has to ensure, that `shape` is in fact an entry of
+         * the `model.shapes` array.
+         * @method
+         * @param {object} shape - shape to remove.
+         */
+        remove() {
+            const shapes = this.model.shapes;
+            return this.model.hasDependents(this) ?
+                false :
+                !!shapes.splice(shapes.indexOf(this), 1);
+        },
+        /**
+         * Delete shape and all dependent elements from model.
+         * The calling app has to ensure, that `shape` is in fact an entry of
+         * the `model.shapes` array.
+         * @method
+         * @param {object} shape - shape to delete.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        }
     }
 }
 
@@ -68,52 +95,53 @@ mec.shape.fix = {
     draw(g) {
         g.nodfix({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
     }
-},
-    /**
-     * @param {object} - floating node shape.
-     * @property {string} p - referenced node id for position.
-     * @property {number} [w0] - initial angle.
-     */
-    mec.shape.flt = {
-        /**
-         * Check floating node properties for validity.
-         * @method
-         * @param {number} idx - index in shape array.
-         * @returns {boolean} false - if no error / warning was detected.
-         */
-        validate(idx) {
-            if (this.p === undefined)
-                return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
-            if (!this.model.nodes.find(e => e.id === this.p))
-                return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
-            else
-                this.p = this.model.nodes.find(e => e.id === this.p);
-            return false;
-        },
-        /**
-         * Initialize shape. Multiple initialization allowed.
-         * @method
-         * @param {object} model - model parent.
-         * @param {number} idx - index in shapes array.
-         */
-        init(model, idx) {
-            this.model = model;
-            if (!this.model.notifyValid(this.validate(idx))) return;
+}
 
-            this.w0 = this.w0 || 0;
-        },
-        dependsOn(elem) {
-            return this.p === elem;
-        },
-        asJSON() {
-            return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
-                + ' }';
-        },
-        draw(g) {
-            g.nodflt({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
-        }
+/**
+ * @param {object} - floating node shape.
+ * @property {string} p - referenced node id for position.
+ * @property {number} [w0] - initial angle.
+ */
+mec.shape.flt = {
+    /**
+     * Check floating node properties for validity.
+     * @method
+     * @param {number} idx - index in shape array.
+     * @returns {boolean} false - if no error / warning was detected.
+     */
+    validate(idx) {
+        if (this.p === undefined)
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
+        if (!this.model.nodes.find(e => e.id === this.p))
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
+        else
+            this.p = this.model.nodes.find(e => e.id === this.p);
+        return false;
+    },
+    /**
+     * Initialize shape. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in shapes array.
+     */
+    init(model, idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) return;
+
+        this.w0 = this.w0 || 0;
+    },
+    dependsOn(elem) {
+        return this.p === elem;
+    },
+    asJSON() {
+        return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
+            + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
+            + ' }';
+    },
+    draw(g) {
+        g.nodflt({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
     }
+}
 
 /**
  * @param {object} - slider shape.

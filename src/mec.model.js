@@ -70,7 +70,6 @@ mec.model = {
             //     !module.extend ||
             //     !module.init ||
             //     !module.reset
-            //     // !module.byId
             //     // !module.dependsOn not sure if this is a hard requirement...
             //     ) {
             //     console.warn('TODO');
@@ -436,64 +435,12 @@ mec.model = {
             this.nodes.push(node);
         },
         /**
-         * Remove node, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `node` is in fact an entry of
-         * the `model.nodes` array.
-         * @method
-         * @param {object} node - node to remove.
-         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
-         */
-        removeNode(node) {
-            const dependency = this.hasDependents(node);
-            if (!dependency)
-                this.nodes.splice(this.nodes.indexOf(node), 1);  // finally remove node from array.
-
-            return !dependency;
-        },
-        /**
-         * Delete node and all depending elements from model.
-         * The calling app has to ensure, that `node` is in fact an entry of
-         * the `model.nodes` array.
-         * @method
-         * @param {object} node - node to remove.
-         */
-        purgeNode(node) {
-            this.purgeElements(this.dependentsOf(node));
-            this.nodes.splice(this.nodes.indexOf(node), 1);
-        },
-        /**
          * Add constraint to model.
          * @method
          * @param {object} constraint - constraint to add.
          */
         addConstraint(constraint) {
             this.constraints.push(constraint);
-        },
-        /**
-         * Remove constraint, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `constraint` is in fact an entry of
-         * the `model.constraints` array.
-         * @method
-         * @param {object} constraint - constraint to remove.
-         * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
-         */
-        removeConstraint(constraint) {
-            const dependency = this.hasDependents(constraint);
-            if (!dependency)
-                this.constraints.splice(this.constraints.indexOf(constraint), 1);  // finally remove node from array.
-
-            return !dependency;
-        },
-        /**
-         * Delete constraint and all depending elements from model.
-         * The calling app has to ensure, that `constraint` is in fact an entry of
-         * the `model.constraints` array.
-         * @method
-         * @param {object} constraint - constraint to remove.
-         */
-        purgeConstraint(constraint) {
-            this.purgeElements(this.dependentsOf(constraint));
-            this.constraints.splice(this.constraints.indexOf(constraint), 1);
         },
         /**
          * Add load to model.
@@ -504,31 +451,6 @@ mec.model = {
             this.loads.push(load);
         },
         /**
-         * Remove load, if there are no other objects depending on it.
-         * The calling app has to ensure, that `load` is in fact an entry of
-         * the `model.loads` array.
-         * @method
-         * @param {object} node - load to remove.
-         * @returns {boolean} true, the node was removed, otherwise other objects depend on it.
-         */
-        removeLoad(load) {
-            const dependency = this.hasDependents(load);
-            if (!dependency)
-                this.loads.splice(this.loads.indexOf(load), 1);
-            return !dependency;
-        },
-        /**
-         * Delete load and all depending elements from model.
-         * The calling app has to ensure, that `load` is in fact an entry of
-         * the `model.loads` array.
-         * @method
-         * @param {object} load - load to delete.
-         */
-        purgeLoad(load) {
-            this.purgeElements(this.dependentsOf(load));
-            this.loads.splice(this.loads.indexOf(load), 1);
-        },
-        /**
          * Add shape to model.
          * @method
          * @param {object} shape - shape to add.
@@ -537,58 +459,12 @@ mec.model = {
             this.shapes.push(shape);
         },
         /**
-         * Remove shape, if there are no other objects depending on it.
-         * The calling app has to ensure, that `shape` is in fact an entry of
-         * the `model.shapes` array.
-         * @method
-         * @param {object} shape - shape to remove.
-         */
-        removeShape(shape) {
-            const idx = this.shapes.indexOf(shape);
-            if (idx >= 0)
-                this.shapes.splice(idx, 1);
-        },
-        /**
-         * Delete shape and all dependent elements from model.
-         * The calling app has to ensure, that `shape` is in fact an entry of
-         * the `model.shapes` array.
-         * @method
-         * @param {object} shape - shape to delete.
-         */
-        purgeShape(shape) {
-            this.purgeElements(this.dependentsOf(shape));
-            this.shapes.splice(this.shapes.indexOf(shape), 1);
-        },
-        /**
          * Add view to model.
          * @method
          * @param {object} view - view to add.
          */
         addView(view) {
             this.views.push(view);
-        },
-        /**
-         * Remove view, if there are no other objects depending on it.
-         * The calling app has to ensure, that `view` is in fact an entry of
-         * the `model.views` array.
-         * @method
-         * @param {object} view - view to remove.
-         */
-        removeView(view) {
-            const idx = this.views.indexOf(view);
-            if (idx >= 0)
-                this.views.splice(idx, 1);
-        },
-        /**
-         * Delete view and all dependent elements from model.
-         * The calling app has to ensure, that `view` is in fact an entry of
-         * the `model.views` array.
-         * @method
-         * @param {object} view - view to delete.
-         */
-        purgeView(view) {
-            this.purgeElements(this.dependentsOf(view));
-            this.views.splice(this.views.indexOf(view), 1);
         },
         /**
          * Return a JSON-string of the model
