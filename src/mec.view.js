@@ -622,4 +622,4 @@ mec.view.chart = {
     }
 }
 
-mec.model.prototype.addModule('views', mec.view);
+mec.model.prototype.addPlugIn('views', mec.view);

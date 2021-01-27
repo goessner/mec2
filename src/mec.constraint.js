@@ -939,4 +939,4 @@ mec.constraint = {
     }
 }
 
-mec.model.prototype.addModule('constraints', mec.constraint);
+mec.model.prototype.addPlugin('constraints', mec.constraint);

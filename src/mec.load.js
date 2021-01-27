@@ -329,4 +329,4 @@ mec.load.force.arrowLength = 45;
         }
     }
 
-mec.model.prototype.addModule('loads', mec.load);
+mec.model.prototype.addPlugIn('loads', mec.load);

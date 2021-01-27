@@ -543,4 +543,4 @@ mec.shape.img = {
     }
 }
 
-mec.model.prototype.addModule('shapes', mec.shape);
+mec.model.prototype.addPlugIn('shapes', mec.shape);

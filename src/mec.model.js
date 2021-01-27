@@ -32,12 +32,12 @@ mec.model = {
             this.state = { valid: true, itrpos: 0, itrvel: 0, preview: false };
             this.timer = { t: 0, dt: 1 / 60, sleepMin: 1 };
             // create empty containers for all elements
-            for (const key of Object.keys(this.modules)) {
+            for (const key of Object.keys(this.plugIns)) {
                 if (!this[key]) {
                     this[key] = [];
                 }
             }
-            this.forAllModules((elm, module) => { module.extend(elm); });
+            this.forAllPlugins((elm, plugIn) => { plugIn.extend(elm); });
         },
         /**
          * Init model
@@ -55,7 +55,7 @@ mec.model = {
 
             this.state.valid = true;  // clear previous logical error result ...
 
-            for (const key of Object.keys(this.modules)) {
+            for (const key of Object.keys(this.plugIns)) {
                 for (let idx = 0; idx < this[key].length; ++idx) {
                     this[key][idx].init(this, idx);
                 }
@@ -63,25 +63,24 @@ mec.model = {
 
             return this;
         },
-        modules: {},
-        addModule(name, module) {
-            // TODO define interface
-            // if (!module ||
-            //     !module.extend ||
-            //     !module.init ||
-            //     !module.reset
-            //     // !module.dependsOn not sure if this is a hard requirement...
+        plugIns: {},
+        addPlugIn(name, plugIn) {
+            // TODO define interface ? 
+            // if (!plugIn ||
+            //     !plugIn.extend ||
+            //     !plugIn.init ||
+            //     !plugIn.reset
+            //     // !plugIn.dependsOn not sure if this is a hard requirement...
             //     ) {
-            //     console.warn('TODO');
             //     return;
             // }
-            this.modules[name] = module;
+            this.plugIns[name] = plugIn;
         },
 
-        forAllModules(fn) {
-            for (const [key, module] of Object.entries(this.modules)) {
+        forAllPlugins(fn) {
+            for (const [key, plugIn] of Object.entries(this.plugIns)) {
                 for (const elm of this[key]) {
-                    const ret = fn(elm, module, key);
+                    const ret = fn(elm, plugIn, key);
                     if (ret) return ret;
                 }
             }
@@ -110,7 +109,7 @@ mec.model = {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
             Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
-            this.forAllModules((elm) => elm.reset && elm.reset());
+            this.forAllPlugins((elm) => elm.reset && elm.reset());
             return this;
         },
         /**
@@ -354,7 +353,7 @@ mec.model = {
         hasDependents(elem) {
             // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            this.forAllModules((elm) => dependency = elm.dependsOn(elem) || dependency)
+            this.forAllPlugins((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
@@ -366,10 +365,10 @@ mec.model = {
          * @returns {object} dictionary object containing dependent elements.
          */
         dependentsOf(elem, deps = {}) {
-            this.forAllModules((elm, module, moduleKey) => {
+            this.forAllPlugins((elm, plugIn, plugInKey) => {
                 if (elm.dependsOn(elem)) {
                     this.dependentsOf(elm, deps);
-                    (deps[moduleKey] = deps[moduleKey] || []).push(elm);
+                    (deps[plugInKey] = deps[plugInKey] || []).push(elm);
                 }
             });
             return deps;
@@ -422,7 +421,7 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
-            return this.forAllModules(elm => {
+            return this.forAllPlugins(elm => {
                 if (elm.id === id) return elm;
             }) || id === 'model' && this;
         },
@@ -642,9 +641,9 @@ mec.model = {
          */
         draw(g) {
             // Make sure constraints and nodes are rendered last.
-            this.forAllModules((elm, module) => {
-                if (module === this.modules['constraints'] ||
-                    module === this.modules['nodes']) {
+            this.forAllPlugins((elm, plugIn) => {
+                if (plugIn === this.plugIns['constraints'] ||
+                    plugIn === this.plugIns['nodes']) {
                     return;
                 }
                 elm.draw(g);

@@ -157,4 +157,4 @@ mec.drive = {
     get inOutQuint() { return this.inOutPot(5); }
 }
 
-mec.model.prototype.addModule('drives', mec.drive);
+mec.model.prototype.addPlugin('drives', mec.drive);

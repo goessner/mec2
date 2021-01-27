@@ -290,4 +290,4 @@ mec.node = {
     g2Node: g2().cir({ x: 0, y: 0, r: 5, ls: "@nodcolor", fs: "@nodfill" })
 }
 
-mec.model.prototype.addModule('nodes', mec.node);
+mec.model.prototype.addPlugIn('nodes', mec.node);
