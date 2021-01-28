@@ -3641,8 +3641,6 @@ mec.view.info = {
             return { mid: 'E_ELEM_MISSING', elemtype: 'view as info', id: this.id, idx, reftype: 'element', name: 'of' };
         if (!this.model.elementById(this.of))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'view as info', id: this.id, idx, reftype: 'element', name: this.of };
-        else
-            this.of = this.model.elementById(this.of);
 
         if (this.show && !(this.show in this.of))
             return { mid: 'E_ALY_PROP_INVALID', elemtype: 'view as infot', id: this.id, idx, reftype: this.of, name: this.show };
@@ -3657,7 +3655,14 @@ mec.view.info = {
      */
     init(model, idx) {
         this.model = model;
+        this.assignRefs();
         this.model.notifyValid(this.validate(idx));
+    },
+    assignRefs()
+    {
+        if (typeof this.of === string) {
+            this.of = this.model.elementById(this.of);
+        }
     },
     dependsOn(elem) {
         return this.of === elem;
