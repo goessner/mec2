@@ -970,6 +970,32 @@ mec.model = {
             this.plugIns[name] = plugIn;
         },
 
+        /**
+         * Run function on alle plugIns.
+         * This function is used to run a specific function on all PlugIns.
+         * These PlugIns have to provide said function themselves.
+         * 
+         * @param {object} fn - Function to be run on all plugins
+         * @example
+         * // This example runs the reset function on all elements of all PlugIns
+         * // that provide a reset function.
+         * this.forAllPlugins((elm) => elm.reset && elm.reset());
+         * @example
+         * // This example checks for dependencies of an element to other elements.
+         * // The elem property is closured to keep the reference up inside the
+         * // forAllPlugIns call.
+         * // The deps argument is used to save found dependencies and to keep them
+         * // Between recursive function calls.
+         * dependentsOf(elem, deps = {}) {
+         *     this.forAllPlugIns((elm, plugIn, plugInKey) => {
+         *         if (elm.dependsOn(elem)) {
+         *             this.dependentsOf(elm, deps);
+         *             (deps[plugInKey] = deps[plugInKey] || []).push(elm);
+         *         }
+         *     });
+         *     return deps;
+         * },
+         */
         forAllPlugIns(fn) {
             for (const [key, plugIn] of Object.entries(this.plugIns)) {
                 for (const elm of this[key]) {
@@ -1319,44 +1345,12 @@ mec.model = {
             }) || id === 'model' && this;
         },
         /**
-         * Add node to model.
-         * @method
-         * @param {object} node - node to add.
+         * Add element to respective elements array of model.
+         * @param {object} plugIn - plugIn name to add element to.
+         * @param {object} element - element to add
          */
-        addNode(node) {
-            this.nodes.push(node);
-        },
-        /**
-         * Add constraint to model.
-         * @method
-         * @param {object} constraint - constraint to add.
-         */
-        addConstraint(constraint) {
-            this.constraints.push(constraint);
-        },
-        /**
-         * Add load to model.
-         * @method
-         * @param {object} load - load to add.
-         */
-        addLoad(load) {
-            this.loads.push(load);
-        },
-        /**
-         * Add shape to model.
-         * @method
-         * @param {object} shape - shape to add.
-         */
-        addShape(shape) {
-            this.shapes.push(shape);
-        },
-        /**
-         * Add view to model.
-         * @method
-         * @param {object} view - view to add.
-         */
-        addView(view) {
-            this.views.push(view);
+        add(plugIn, element) {
+            this[plugIn].push(element);
         },
         /**
          * Return a JSON-string of the model
