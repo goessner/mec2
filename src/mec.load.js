@@ -75,9 +75,9 @@ mec.load.force = {
         this.model = model;
         if (!this.model.notifyValid(this.validate(idx))) return;
 
-        this._value = mec.from_N(this.value || 1);  // allow multiple init's
         this.w0 = typeof this.w0 === 'number' ? this.w0 : 0;
     },
+    get _value() { return mec.from_N(this.value || 1) },
     /**
      * Check load for dependencies on another element.
      * @method
