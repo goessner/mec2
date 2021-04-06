@@ -7,6 +7,9 @@
  */
 "use strict";
 
+import { g2 } from 'g2d';
+import { mec } from './mec.core';
+
 /**
  * Wrapper class for extending plain node objects, usually coming from JSON strings.
  * @method
@@ -39,11 +42,11 @@ mec.node = {
          */
         validate(idx) {
             if (!this.id)
-                return { mid:'E_ELEM_ID_MISSING',elemtype:'node',idx };
+                return { mid: 'E_ELEM_ID_MISSING', elemtype: 'node', idx };
             if (this.model.elementById(this.id) !== this)
-                return { mid:'E_ELEM_ID_AMBIGIOUS', id:this.id };
-            if (typeof this.m === 'number' && mec.isEps(this.m) )
-                return { mid:'E_NODE_MASS_TOO_SMALL', id:this.id, m:this.m };
+                return { mid: 'E_ELEM_ID_AMBIGIOUS', id: this.id };
+            if (typeof this.m === 'number' && mec.isEps(this.m))
+                return { mid: 'E_NODE_MASS_TOO_SMALL', id: this.id, m: this.m };
             return false;
         },
         /**
@@ -57,16 +60,20 @@ mec.node = {
             if (!this.model.notifyValid(this.validate(idx))) return;
 
             // make inverse mass to first class citizen ...
-            this.im = typeof this.m === 'number' ? 1/this.m
-                    : this.base === true         ? 0
+            this.im = typeof this.m === 'number' ? 1 / this.m
+                : this.base === true ? 0
                     : 1;
             // ... and mass / base to getter/setter
-            Object.defineProperty(this,'m',{ get: () => 1/this.im,
-                                             set: (m) => this.im = 1/m,
-                                             enumerable:true, configurable:true });
-            Object.defineProperty(this,'base',{ get: () => this.im === 0,
-                                                set: (q) => this.im = q ? 0 : 1,
-                                                enumerable:true, configurable:true });
+            Object.defineProperty(this, 'm', {
+                get: () => 1 / this.im,
+                set: (m) => this.im = 1 / m,
+                enumerable: true, configurable: true
+            });
+            Object.defineProperty(this, 'base', {
+                get: () => this.im === 0,
+                set: (q) => this.im = q ? 0 : 1,
+                enumerable: true, configurable: true
+            });
 
             this.g2cache = false;
         },
@@ -84,10 +91,10 @@ mec.node = {
          */
         get isSleeping() {
             return this.base
-                || mec.isEps(this.xt,mec.velTol)
-                && mec.isEps(this.yt,mec.velTol)
-                && mec.isEps(this.xtt,mec.velTol/this.model.timer.dt)
-                && mec.isEps(this.ytt,mec.velTol/this.model.timer.dt);
+                || mec.isEps(this.xt, mec.velTol)
+                && mec.isEps(this.yt, mec.velTol)
+                && mec.isEps(this.xtt, mec.velTol / this.model.timer.dt)
+                && mec.isEps(this.ytt, mec.velTol / this.model.timer.dt);
         },
         /**
          * Energy [kgu^2/s^2]
@@ -96,8 +103,8 @@ mec.node = {
             var e = 0;
             if (!this.base) {
                 if (this.model.hasGravity)
-                    e += this.m*(-(this.x-this.x0)*mec.from_m(this.model.gravity.x) - (this.y-this.y0)*mec.from_m(this.model.gravity.y));
-                e += 0.5*this.m*(this.xt**2 + this.yt**2);
+                    e += this.m * (-(this.x - this.x0) * mec.from_m(this.model.gravity.x) - (this.y - this.y0) * mec.from_m(this.model.gravity.y));
+                e += 0.5 * this.m * (this.xt ** 2 + this.yt ** 2);
             }
             return e;
         },
@@ -118,10 +125,10 @@ mec.node = {
             return elem === this;
         },
         reset() {
-           if (!this.base) {
-               this.x = this.x0;
-               this.y = this.y0;
-           }
+            if (!this.base) {
+                this.x = this.x0;
+                this.y = this.y0;
+            }
             // resetting kinematic values ...
             this.xt = this.yt = 0;
             this.xtt = this.ytt = 0;
@@ -146,19 +153,19 @@ mec.node = {
         pre(dt) {
             // apply optional gravitational force
             if (!this.base && this.model.hasGravity) {
-                this.Qx += this.m*mec.from_m(this.model.gravity.x);
-                this.Qy += this.m*mec.from_m(this.model.gravity.y);
+                this.Qx += this.m * mec.from_m(this.model.gravity.x);
+                this.Qy += this.m * mec.from_m(this.model.gravity.y);
             }
             // semi-implicite Euler step ... !
-            this.dxt += this.Qx*this.im * dt;
-            this.dyt += this.Qy*this.im * dt;
+            this.dxt += this.Qx * this.im * dt;
+            this.dyt += this.Qy * this.im * dt;
 
             // increasing velocity is done dynamically and implicitly by using `xtcur, ytcur` during iteration ...
 
             // increase positions using previously incremented velocities ... !
             // x = x0 + (dx/dt)*dt + 1/2*(dv/dt)*dt^2
-            this.x += (this.xt + 1.5*this.dxt)*dt;
-            this.y += (this.yt + 1.5*this.dyt)*dt;
+            this.x += (this.xt + 1.5 * this.dxt) * dt;
+            this.y += (this.yt + 1.5 * this.dyt) * dt;
         },
 
         /**
@@ -172,29 +179,29 @@ mec.node = {
             this.xt += this.dxt;
             this.yt += this.dyt;
             // get accelerations from velocity differences...
-            this.xtt = this.dxt/dt;
-            this.ytt = this.dyt/dt;
+            this.xtt = this.dxt / dt;
+            this.ytt = this.dyt / dt;
         },
         asJSON() {
-            return '{ "id":"'+this.id+'","x":'+this.x0+',"y":'+this.y0
-                 + (this.base ? ',"base":true' : '')
-                 + ((!this.base && this.m !== 1) ? ',"m":'+this.m : '')
-                 + (this.idloc ? ',"idloc":"'+this.idloc+'"' : '')
-                 + ' }';
+            return '{ "id":"' + this.id + '","x":' + this.x0 + ',"y":' + this.y0
+                + (this.base ? ',"base":true' : '')
+                + ((!this.base && this.m !== 1) ? ',"m":' + this.m : '')
+                + (this.idloc ? ',"idloc":"' + this.idloc + '"' : '')
+                + ' }';
         },
 
         // analysis getters
-        get force() { return {x:this.Qx,y:this.Qy}; },
-        get pos() { return {x:this.x,y:this.y}; },
-        get vel() { return {x:this.xt,y:this.yt}; },
-        get acc() { return {x:this.xtt,y:this.ytt}; },
-        get forceAbs() { return Math.hypot(this.Qx,this.Qy); },
-        get velAbs() { return Math.hypot(this.xt,this.yt); },
-        get accAbs() { return Math.hypot(this.xtt,this.ytt); },
+        get force() { return { x: this.Qx, y: this.Qy }; },
+        get pos() { return { x: this.x, y: this.y }; },
+        get vel() { return { x: this.xt, y: this.yt }; },
+        get acc() { return { x: this.xtt, y: this.ytt }; },
+        get forceAbs() { return Math.hypot(this.Qx, this.Qy); },
+        get velAbs() { return Math.hypot(this.xt, this.yt); },
+        get accAbs() { return Math.hypot(this.xtt, this.ytt); },
 
         // interaction
         get showInfo() {
-            return this.state & g2.OVER; 
+            return this.state & g2.OVER;
         },
         get infos() {
             return {
@@ -204,51 +211,59 @@ mec.node = {
                 'm': () => `m=${this.m}`
             }
         },
-        info(q) { const i =  this.infos[q]; return i ? i() : '?'; },
-//        _info() { return `x:${this.x.toFixed(1)}<br>y:${this.y.toFixed(1)}` },
-        hitInner({x,y,eps}) {
-            return g2.isPntInCir({x,y},this,eps);
+        info(q) { const i = this.infos[q]; return i ? i() : '?'; },
+        //        _info() { return `x:${this.x.toFixed(1)}<br>y:${this.y.toFixed(1)}` },
+        hitInner({ x, y, eps }) {
+            return g2.isPntInCir({ x, y }, this, eps);
         },
-        selectBeg({x,y,t}) { },
-        selectEnd({x,y,t}) {
+        selectBeg({ x, y, t }) { },
+        selectEnd({ x, y, t }) {
             if (!this.base) {
                 this.xt = this.yt = this.xtt = this.ytt = 0;
             }
         },
-        drag({x,y,mode}) {
+        drag({ x, y, mode }) {
             if (mode === 'edit' && !this.base) { this.x0 = x; this.y0 = y; }
-            else                               { this.x = x; this.y = y; }
+            else { this.x = x; this.y = y; }
         },
         // graphics ...
         get isSolid() { return true },
-        get sh() { return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor] 
-                        : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor] 
-                        : false; },
+        get sh() {
+            return this.state & g2.OVER ? [0, 0, 10, this.model.env.show.hoveredElmColor]
+                : this.state & g2.EDIT ? [0, 0, 10, this.model.env.show.selectedElmColor]
+                    : false;
+        },
         get r() { return mec.node.radius; },
 
         g2() {
-            const g = g2().use({grp: this.base ? mec.node.g2BaseNode 
-                                               : mec.node.g2Node, x:this.x, y:this.y, sh:this.sh});
+            const g = g2().use({
+                grp: this.base ? mec.node.g2BaseNode
+                    : mec.node.g2Node, x: this.x, y: this.y, sh: this.sh
+            });
             if (this.model.env.show.nodeLabels) {
                 const loc = mec.node.locdir[this.idloc || 'n'];
-                g.txt({str:this.id||'?',
-                        x: this.x + 3*this.r*loc[0],
-                        y: this.y + 3*this.r*loc[1],
-                        thal:'center',tval:'middle',
-                        ls:this.model.env.show.txtColor});
+                g.txt({
+                    str: this.id || '?',
+                    x: this.x + 3 * this.r * loc[0],
+                    y: this.y + 3 * this.r * loc[1],
+                    thal: 'center', tval: 'middle',
+                    ls: this.model.env.show.txtColor
+                });
             }
             return g;
         },
         draw(g) {
             if (this.model.env.show.nodes)
-                g.ins(this); 
+                g.ins(this);
         }
     },
     radius: 5,
-    locdir: { e:[ 1,0],ne:[ Math.SQRT2/2, Math.SQRT2/2],n:[0, 1],nw:[-Math.SQRT2/2, Math.SQRT2/2],
-              w:[-1,0],sw:[-Math.SQRT2/2,-Math.SQRT2/2],s:[0,-1],se:[ Math.SQRT2/2,-Math.SQRT2/2] },
-    g2BaseNode: g2().cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
-                    .p().m({x:0,y:5}).a({dw:Math.PI/2,x:-5,y:0}).l({x:5,y:0})
-                    .a({dw:-Math.PI/2,x:0,y:-5}).z().fill({fs:"@nodcolor"}),
-    g2Node:     g2().cir({x:0,y:0,r:5,ls:"@nodcolor",fs:"@nodfill"})
+    locdir: {
+        e: [1, 0], ne: [Math.SQRT2 / 2, Math.SQRT2 / 2], n: [0, 1], nw: [-Math.SQRT2 / 2, Math.SQRT2 / 2],
+        w: [-1, 0], sw: [-Math.SQRT2 / 2, -Math.SQRT2 / 2], s: [0, -1], se: [Math.SQRT2 / 2, -Math.SQRT2 / 2]
+    },
+    g2BaseNode: g2().cir({ x: 0, y: 0, r: 5, ls: "@nodcolor", fs: "@nodfill" })
+        .p().m({ x: 0, y: 5 }).a({ dw: Math.PI / 2, x: -5, y: 0 }).l({ x: 5, y: 0 })
+        .a({ dw: -Math.PI / 2, x: 0, y: -5 }).z().fill({ fs: "@nodcolor" }),
+    g2Node: g2().cir({ x: 0, y: 0, r: 5, ls: "@nodcolor", fs: "@nodfill" })
 }

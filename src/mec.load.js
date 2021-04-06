@@ -8,6 +8,9 @@
  * @requires g2.js
  */
 "use strict";
+
+import { mec } from './mec.core';
+
 /**
  * Wrapper class for extending plain load objects, usually coming from JSON objects.
  * @method
