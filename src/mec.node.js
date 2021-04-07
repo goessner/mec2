@@ -7,7 +7,7 @@
  */
 "use strict";
 
-import { g2 } from 'g2d';
+import { g2 } from 'g2-module';
 import { mec } from './mec.core';
 
 /**

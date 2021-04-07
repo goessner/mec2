@@ -10,7 +10,7 @@
 "use strict";
 
 import { mec } from './mec.core';
-import { g2 } from 'g2d';
+import { g2 } from 'g2-module';
 
 /**
  * @method

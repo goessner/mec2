@@ -52,7 +52,7 @@
  * @property {boolean} [len.input=false] - drive flags for actuation via an existing range-input with the same id.
  */
 import { mec } from './mec.core';
-import { g2 } from 'g2d';
+import { g2 } from 'g2-module';
 
 mec.constraint = {
     extend(c) { Object.setPrototypeOf(c, this.prototype); c.constructor(); return c; },
