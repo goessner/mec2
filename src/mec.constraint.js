@@ -75,56 +75,30 @@ mec.constraint = {
                 return { mid: 'E_CSTR_NODE_MISSING', id: this.id, loc: 'start', p: 'p1' };
             if (!this.p2)
                 return { mid: 'E_CSTR_NODE_MISSING', id: this.id, loc: 'end', p: 'p2' };
-            if (typeof this.p1 === 'string') {
-                if (!(tmp = this.model.nodeById(this.p1)))
-                    return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'start', p: 'p1', nodeId: this.p1 };
-                else
-                    this.p1 = tmp;
-            }
-            if (typeof this.p2 === 'string') {
-                if (!(tmp = this.model.nodeById(this.p2)))
-                    return { mid: 'E_CSTR_NODE_NOT_EXISTS', id: this.id, loc: 'end', p: 'p2', nodeId: this.p2 };
-                else
-                    this.p2 = tmp;
-            }
             if (mec.isEps(this.p1.x - this.p2.x) && mec.isEps(this.p1.y - this.p2.y))
                 warn = { mid: 'W_CSTR_NODES_COINCIDE', id: this.id, p1: this.p1.id, p2: this.p2.id };
 
-            if (!this.hasOwnProperty('ori'))
+            if (!this.hasOwnProperty('ori')) {
                 this.ori = { type: 'free' };
-            if (!this.hasOwnProperty('len'))
+            } else if (this.ori.type === 'drive') {
+                if (this.ori.ref && this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
+                    return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
+                if (this.ratio !== undefined && this.ratio !== 1)
+                    return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
+            }
+            if (!this.hasOwnProperty('len')) {
                 this.len = { type: 'free' };
+            } else if (this.len.type === 'drive') {
+                if (this.len.ref && this.len.ref[this.len.reftype || 'len'].type === 'free')
+                    return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'len', ref: this.len.ref.id, reftype: this.len.reftype || 'len' };
+                if (this.ratio !== undefined && this.ratio !== 1)
+                    return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'len', ref: this.ori.ref.id, reftype: this.ori.reftype || 'len' };
+            }
             if (!this.ori.hasOwnProperty('type'))
                 this.ori.type = 'free';
             if (!this.len.hasOwnProperty('type'))
                 this.len.type = 'free';
-
-            if (typeof this.ori.ref === 'string') {
-                if (!(tmp = this.model.constraintById(this.ori.ref)))
-                    return { mid: 'E_CSTR_REF_NOT_EXISTS', id: this.id, sub: 'ori', ref: this.ori.ref };
-                else
-                    this.ori.ref = tmp;
-
-                if (this.ori.type === 'drive') {
-                    if (this.ori.ref[this.ori.reftype || 'ori'].type === 'free')
-                        return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
-                    if (this.ratio !== undefined && this.ratio !== 1)
-                        return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'ori', ref: this.ori.ref.id, reftype: this.ori.reftype || 'ori' };
-                }
-            }
-            if (typeof this.len.ref === 'string') {
-                if (!(tmp = this.model.constraintById(this.len.ref)))
-                    return { mid: 'E_CSTR_REF_NOT_EXISTS', id: this.id, sub: 'len', ref: this.len.ref };
-                else
-                    this.len.ref = tmp;
-
-                if (this.len.type === 'drive') {
-                    if (this.len.ref[this.len.reftype || 'len'].type === 'free')
-                        return { mid: 'E_CSTR_DRIVEN_REF_TO_FREE', id: this.id, sub: 'len', ref: this.len.ref.id, reftype: this.len.reftype || 'len' };
-                    if (this.ratio !== undefined && this.ratio !== 1)
-                        return { mid: 'E_CSTR_RATIO_IGNORED', id: this.id, sub: 'len', ref: this.ori.ref.id, reftype: this.ori.reftype || 'len' };
-                }
-            }
+      
             return warn;
         },
         /**
@@ -135,6 +109,7 @@ mec.constraint = {
          */
         init(model, idx) {
             this.model = model;
+            this.assignRefs();
             if (!this.model.notifyValid(this.validate(idx))) return;
 
             const ori = this.ori, len = this.len;
@@ -160,6 +135,20 @@ mec.constraint = {
             this.lambda_r = this.dlambda_r = 0;
             this.lambda_w = this.dlambda_w = 0;
         },
+        assignRefs() {
+            if (typeof this.p1 === 'string') {
+                this.p1 = this.model.nodes.find(e => e.id === this.p1);
+            }
+            if (typeof this.p2 === 'string') {
+                this.p2 = this.model.nodes.find(e => e.id === this.p2);
+            }
+            if (this.ori && typeof this.ori.ref === 'string') {
+                this.ori.ref = this.model.constraints.find(e => e.id === (this.ori.ref));
+            }
+            if (this.len && typeof this.len.ref === 'string') {
+                this.len.ref = this.model.constraints.find(e => e.id === (this.len.ref));
+            }
+        },
         /**
          * Init vector magnitude and orientation.
          * Referenced constraints can be assumed to be already initialized here.
@@ -177,6 +166,31 @@ mec.constraint = {
                     }
                 },
         */
+        /**
+         * Remove constraint, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `constraint` is in fact an entry of
+         * the `model.constraints` array.
+         * @method
+         * @param {object} constraint - constraint to remove.
+         * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
+         */
+        remove() {
+            const elms = this.model.constraints;
+            return this.model.hasDependents(this) ?
+                false :
+                !!elms.splice(elms.indexOf(this), 1);
+        },
+        /**
+         * Delete constraint and all depending elements from model.
+         * The calling app has to ensure, that `constraint` is in fact an entry of
+         * the `model.constraints` array.
+         * @method
+         * @param {object} constraint - constraint to remove.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        },
         initVector() {
             let correctLen = false, correctOri = false;
             if (this.len.hasOwnProperty('r0')) {
@@ -557,7 +571,7 @@ mec.constraint = {
          */
         init_ori_const(ori) {
             if (!!ori.ref) {
-                const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
+                const ref = ori.ref = this.model.constraints.find(e => e.id === (ori.ref)) || ori.ref,
                     reftype = ori.reftype || 'ori',
                     ratio = ori.ratio || 1;
 
@@ -636,7 +650,7 @@ mec.constraint = {
             });
 
             if (!!ori.ref) {
-                const ref = ori.ref = this.model.constraintById(ori.ref) || ori.ref,
+                const ref = ori.ref = this.model.constraints.find(e => e.id === ori.ref) || ori.ref,
                     reftype = ori.reftype || 'ori',
                     ratio = ori.ratio || 1;
 
@@ -688,7 +702,7 @@ mec.constraint = {
          */
         init_len_const(len) {
             if (!!len.ref) {
-                const ref = len.ref = this.model.constraintById(len.ref) || len.ref,
+                const ref = len.ref = this.model.constraints.find(e => e.id === len.ref) || len.ref,
                     reftype = len.reftype || 'len',
                     ratio = len.ratio || 1;
 
@@ -762,7 +776,7 @@ mec.constraint = {
             });
 
             if (!!len.ref) {
-                const ref = len.ref = this.model.constraintById(len.ref) || len.ref,
+                const ref = len.ref = this.model.constraints.find(e => e.id === len.ref) || len.ref,
                     reftype = len.reftype || 'len',
                     ratio = len.ratio || 1;
 
@@ -916,3 +930,5 @@ mec.constraint = {
         'free': 'M12,0 8,6 12,0 8,-6ZM0,0 8,0M15,0 18,0M22,0 24,0 M28,0 35,0M45,0 36,-3 37,0 36,3 Z'
     }
 }
+
+mec.model.prototype.addPlugIn('constraints', mec.constraint);

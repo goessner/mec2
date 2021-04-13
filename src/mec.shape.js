@@ -19,10 +19,37 @@ import { mec } from './mec.core';
 mec.shape = {
     extend(shape) {
         if (shape.type && mec.shape[shape.type]) {
-            Object.setPrototypeOf(shape, mec.shape[shape.type]);
+            const o = Object.assign({}, this.prototype, mec.shape[shape.type]);
+            Object.setPrototypeOf(shape, o);
             shape.constructor();
         }
         return shape;
+    },
+    prototype: {
+        /**
+         * Remove shape, if there are no other objects depending on it.
+         * The calling app has to ensure, that `shape` is in fact an entry of
+         * the `model.shapes` array.
+         * @method
+         * @param {object} shape - shape to remove.
+         */
+        remove() {
+            const shapes = this.model.shapes;
+            return this.model.hasDependents(this) ?
+                false :
+                !!shapes.splice(shapes.indexOf(this), 1);
+        },
+        /**
+         * Delete shape and all dependent elements from model.
+         * The calling app has to ensure, that `shape` is in fact an entry of
+         * the `model.shapes` array.
+         * @method
+         * @param {object} shape - shape to delete.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        }
     }
 }
 
@@ -41,10 +68,10 @@ mec.shape.fix = {
     validate(idx) {
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
         return false;
     },
     /**
@@ -70,51 +97,51 @@ mec.shape.fix = {
     draw(g) {
         g.nodfix({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
     }
-},
-    /**
-     * @param {object} - floating node shape.
-     * @property {string} p - referenced node id for position.
-     * @property {number} [w0] - initial angle.
-     */
-    mec.shape.flt = {
-        /**
-         * Check floating node properties for validity.
-         * @method
-         * @param {number} idx - index in shape array.
-         * @returns {boolean} false - if no error / warning was detected.
-         */
-        validate(idx) {
-            if (this.p === undefined)
-                return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
-            if (!this.model.nodeById(this.p))
-                return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
-            else
-                this.p = this.model.nodeById(this.p);
-            return false;
-        },
-        /**
-         * Initialize shape. Multiple initialization allowed.
-         * @method
-         * @param {object} model - model parent.
-         * @param {number} idx - index in shapes array.
-         */
-        init(model, idx) {
-            this.model = model;
-            if (!this.model.notifyValid(this.validate(idx))) return;
+}
 
-            this.w0 = this.w0 || 0;
-        },
-        dependsOn(elem) {
-            return this.p === elem;
-        },
-        asJSON() {
-            return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
-                + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
-                + ' }';
-        },
-        draw(g) {
-            g.nodflt({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
-        }
+/**
+ * @param {object} - floating node shape.
+ * @property {string} p - referenced node id for position.
+ * @property {number} [w0] - initial angle.
+ */
+mec.shape.flt = {
+    /**
+     * Check floating node properties for validity.
+     * @method
+     * @param {number} idx - index in shape array.
+     * @returns {boolean} false - if no error / warning was detected.
+     */
+    validate(idx) {
+        if (this.p === undefined)
+            return { mid: 'E_ELEM_REF_MISSING', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: 'p' };
+        if (!this.model.nodes.find(e => e.id === this.p))
+            return { mid: 'E_ELEM_INVALID_REF', elemtype: 'shape', id: this.id, idx, reftype: 'node', name: this.p };
+        else
+            this.p = this.model.nodes.find(e => e.id === this.p);
+        return false;
+    },
+    /**
+     * Initialize shape. Multiple initialization allowed.
+     * @method
+     * @param {object} model - model parent.
+     * @param {number} idx - index in shapes array.
+     */
+    init(model, idx) {
+        this.model = model;
+        if (!this.model.notifyValid(this.validate(idx))) return;
+
+        this.w0 = this.w0 || 0;
+    },
+    dependsOn(elem) {
+        return this.p === elem;
+    },
+    asJSON() {
+        return '{ "type":"' + this.type + '","p":"' + this.p.id + '"'
+            + ((this.w0 && this.w0 > 0.0001) ? ',"w0":' + this.w0 : '')
+            + ' }';
+    },
+    draw(g) {
+        g.nodflt({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
     }
 
 /**
@@ -133,15 +160,15 @@ mec.shape.slider = {
     validate(idx) {
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'slider', id: this.id, idx, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'slider', id: this.id, idx, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
 
-        if (this.wref && !this.model.constraintById(this.wref))
+        if (this.wref && !this.model.constraints.find(e => e.id === this.wref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'slider', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
-            this.wref = this.model.constraintById(this.wref);
+            this.wref = this.model.constraints.find(e => e.id === this.wref);
 
         return false;
     },
@@ -195,17 +222,17 @@ mec.shape.bar = {
     validate(idx) {
         if (this.p1 === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: 'p1' };
-        if (!this.model.nodeById(this.p1))
+        if (!this.model.nodes.find(e => e.id === this.p1))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: this.p1 };
         else
-            this.p1 = this.model.nodeById(this.p1);
+            this.p1 = this.model.nodes.find(e => e.id === this.p1);
 
         if (this.p2 === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: 'p2' };
-        if (!this.model.nodeById(this.p2))
+        if (!this.model.nodes.find(e => e.id === this.p2))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'bar', id: this.id, idx, reftype: 'node', name: this.p2 };
         else
-            this.p2 = this.model.nodeById(this.p2);
+            this.p2 = this.model.nodes.find(e => e.id === this.p2);
 
         return false;
     },
@@ -252,17 +279,17 @@ mec.shape.beam = {
     validate(idx) {
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'beam', id: this.id, idx, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'beam', id: this.id, idx, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
 
         if (this.wref === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'beam', id: this.id, idx, reftype: 'constraint', name: 'wref' };
-        if (!this.model.constraintById(this.wref))
+        if (!this.model.constraints.find(e => e.id === this.wref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'beam', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
-            this.wref = this.model.constraintById(this.wref);
+            this.wref = this.model.constraints.find(e => e.id === this.wref);
 
         return false;
     },
@@ -312,17 +339,17 @@ mec.shape.wheel = {
     validate(idx) {
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'wheel', id: this.id, idx, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'wheel', id: this.id, idx, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
 
         if (this.wref === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'wheel', id: this.id, idx, reftype: 'constraint', name: 'wref' };
-        if (!this.model.constraintById(this.wref))
+        if (!this.model.constraints.find(e => e.id === this.wref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'wheel', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
-            this.wref = this.model.constraintById(this.wref);
+            this.wref = this.model.constraints.find(e => e.id === this.wref);
 
         return false;
     },
@@ -394,17 +421,17 @@ mec.shape.poly = {
 
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'polygon', id: this.id, idx, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'polygon', id: this.id, idx, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
 
         if (this.wref === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'polygon', id: this.id, idx, reftype: 'constraint', name: 'wref' };
-        if (!this.model.constraintById(this.wref))
+        if (!this.model.constraints.find(e => e.id === this.wref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'polygon', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
-            this.wref = this.model.constraintById(this.wref);
+            this.wref = this.model.constraints.find(e => e.id === this.wref);
 
         return false;
     },
@@ -472,15 +499,15 @@ mec.shape.img = {
 
         if (this.p === undefined)
             return { mid: 'E_ELEM_REF_MISSING', elemtype: 'image', id: this.id, idx, reftype: 'node', name: 'p' };
-        if (!this.model.nodeById(this.p))
+        if (!this.model.nodes.find(e => e.id === this.p))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'image', id: this.id, idx, reftype: 'node', name: this.p };
         else
-            this.p = this.model.nodeById(this.p);
+            this.p = this.model.nodes.find(e => e.id === this.p);
 
-        if (this.wref && !this.model.constraintById(this.wref))
+        if (this.wref && !this.model.constraints.find(e => e.id === this.wref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'image', id: this.id, idx, reftype: 'constraint', name: this.wref };
         else
-            this.wref = this.model.constraintById(this.wref);
+            this.wref = this.model.constraints.find(e => e.id === this.wref);
 
         return false;
     },
@@ -516,3 +543,5 @@ mec.shape.img = {
         g.img({ uri: this.uri, x: () => this.p.x, y: () => this.p.y, w, scl: this.scl, xoff: this.xoff, yoff: this.yoff })
     }
 }
+
+mec.model.prototype.addPlugIn('shapes', mec.shape);

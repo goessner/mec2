@@ -4,10 +4,6 @@
  * @requires mec.core.js
  * @requires mec.node.js
  * @requires mec.constraint.js
- * @requires mec.drive.js
- * @requires mec.load.js
- * @requires mec.view.js
- * @requires mec.shape.js
  */
 "use strict";
 
@@ -21,9 +17,6 @@ import { mec } from './mec.core';
  * @property {string} id - model id.
  * @property {boolean|object} [gravity] - Vector `{x,y}` of gravity or `{x:0,y:-10}` in case of `true`.
  * @property {object} [labels] - user specification of labels to show `default={nodes:false,constraints:true,loads:true}`.
- * @property {array} nodes - Array of node objects.
- * @property {array} constraints - Array of constraint objects.
- * @property {array} shapes - Array of shape objects.
  */
 mec.model = {
     extend(model, env = mec) {
@@ -37,26 +30,16 @@ mec.model = {
             if (env !== mec && !env.show) // it's possible that user defined a (complete!) custom show object
                 this.env.show = Object.create(Object.getPrototypeOf(mec.show), Object.getOwnPropertyDescriptors(mec.show)); // copy show object including getters
 
-            this.showInfo = { nodes:this.env.show.nodeInfo, constraints:this.env.show.constraintInfo, loads:false };
-            this.state = { valid:true,itrpos:0,itrvel:0,preview:false };
-            this.timer = { t:0,dt:1/60,sleepMin:1 };
+            this.showInfo = { nodes: this.env.show.nodeInfo, constraints: this.env.show.constraintInfo, loads: false };
+            this.state = { valid: true, itrpos: 0, itrvel: 0, preview: false };
+            this.timer = { t: 0, dt: 1 / 60, sleepMin: 1 };
             // create empty containers for all elements
-            if (!this.nodes) this.nodes = [];
-            if (!this.constraints) this.constraints = [];
-            if (!this.loads) this.loads = [];
-            if (!this.views) this.views = [];
-            if (!this.shapes) this.shapes = [];
-            // extending elements by their prototypes
-            for (const node of this.nodes)
-                mec.node.extend(node);
-            for (const constraint of this.constraints)
-                mec.constraint.extend(constraint);
-            for (const load of this.loads)
-                mec.load.extend(load)
-            for (const view of this.views)
-                mec.view.extend(view)
-            for (const shape of this.shapes)
-                mec.shape.extend(shape)
+            for (const key of Object.keys(this.plugIns)) {
+                if (!this[key]) {
+                    this[key] = [];
+                }
+            }
+            this.forAllPlugIns((elm, plugIn) => { plugIn.extend(elm); });
         },
         /**
          * Init model
@@ -65,26 +48,70 @@ mec.model = {
          */
         init() {
             if (this.gravity === true)
-                this.gravity = Object.assign({},mec.gravity,{active:true});
+                this.gravity = Object.assign({}, mec.gravity, { active: true });
             else if (!this.gravity)
-                this.gravity = Object.assign({},mec.gravity,{active:false});
-         // else ... gravity might be given by user as vector !
+                this.gravity = Object.assign({}, mec.gravity, { active: false });
+            // else ... gravity might be given by user as vector !
 
             if (!this.tolerance) this.tolerance = 'medium';
 
             this.state.valid = true;  // clear previous logical error result ...
-            for (let i=0; i < this.nodes.length && this.valid; i++)
-                this.nodes[i].init(this,i);
-            for (let i=0; i < this.constraints.length && this.valid; i++) // just in time initialization with 'ref' possible .. !
-                if (!this.constraints[i].initialized) this.constraints[i].init(this,i);
-            for (let i=0; i < this.loads.length && this.valid; i++)
-                this.loads[i].init(this,i);
-            for (let i=0; i < this.views.length && this.valid; i++)
-                this.views[i].init(this,i);
-            for (let i=0; i < this.shapes.length && this.valid; i++)
-                this.shapes[i].init(this,i);
+
+            for (const key of Object.keys(this.plugIns)) {
+                for (let idx = 0; idx < this[key].length; ++idx) {
+                    this[key][idx].init(this, idx);
+                }
+            }
 
             return this;
+        },
+        plugIns: {},
+        addPlugIn(name, plugIn) {
+            // TODO define interface ? 
+            // if (!plugIn ||
+            //     !plugIn.extend ||
+            //     !plugIn.init ||
+            //     !plugIn.reset
+            //     // !plugIn.dependsOn not sure if this is a hard requirement...
+            //     ) {
+            //     return;
+            // }
+            this.plugIns[name] = plugIn;
+        },
+
+        /**
+         * Run function on alle plugIns.
+         * This function is used to run a specific function on all PlugIns.
+         * These PlugIns have to provide said function themselves.
+         * 
+         * @param {object} fn - Function to be run on all plugins
+         * @example
+         * // This example runs the reset function on all elements of all PlugIns
+         * // that provide a reset function.
+         * this.forAllPlugins((elm) => elm.reset && elm.reset());
+         * @example
+         * // This example checks for dependencies of an element to other elements.
+         * // The elem property is closured to keep the reference up inside the
+         * // forAllPlugIns call.
+         * // The deps argument is used to save found dependencies and to keep them
+         * // Between recursive function calls.
+         * dependentsOf(elem, deps = {}) {
+         *     this.forAllPlugIns((elm, plugIn, plugInKey) => {
+         *         if (elm.dependsOn(elem)) {
+         *             this.dependentsOf(elm, deps);
+         *             (deps[plugInKey] = deps[plugInKey] || []).push(elm);
+         *         }
+         *     });
+         *     return deps;
+         * },
+         */
+        forAllPlugIns(fn) {
+            for (const [key, plugIn] of Object.entries(this.plugIns)) {
+                for (const elm of this[key]) {
+                    const ret = fn(elm, plugIn, key);
+                    if (ret) return ret;
+                }
+            }
         },
         /**
          * Notification of validity by child. Error message aborts init procedure.
@@ -109,15 +136,8 @@ mec.model = {
         reset() {
             this.timer.t = 0;
             this.timer.sleepMin = 1;
-            Object.assign(this.state,{valid:true,itrpos:0,itrvel:0});
-            for (const node of this.nodes)
-                node.reset();
-            for (const constraint of this.constraints)
-                constraint.reset();
-            for (const load of this.loads)
-                load.reset();
-            for (const view of this.views)
-                view.reset();
+            Object.assign(this.state, { valid: true, itrpos: 0, itrvel: 0 });
+            this.forAllPlugIns((elm) => elm.reset && elm.reset());
             return this;
         },
         /**
@@ -138,7 +158,7 @@ mec.model = {
             if (previewMode) {
                 this.reset();
                 this.state.preview = true;
-                this.timer.dt = 1/30;
+                this.timer.dt = 1 / 30;
 
                 for (this.timer.t = 0; this.timer.t <= tmax; this.timer.t += this.timer.dt) {
                     this.pre().itr().post();
@@ -147,7 +167,7 @@ mec.model = {
                             view.preview();
                 }
 
-                this.timer.dt = 1/60;
+                this.timer.dt = 1 / 60;
                 this.state.preview = false;
                 this.reset();
             }
@@ -184,7 +204,7 @@ mec.model = {
          */
         tick(dt) {
             // fix: ignore dt for now, take it as a constant (study variable time step theoretically) !!
-            this.timer.t += (this.timer.dt = 1/60);
+            this.timer.t += (this.timer.dt = 1 / 60);
             this.pre().itr().post();
             return this;
         },
@@ -205,10 +225,15 @@ mec.model = {
          */
         get dof() {
             let dof = 0;
-            for (const node of this.nodes)
+            if (!this.nodes || !this.constraints) {
+                console.warn('TODO');
+            }
+            for (const node of this.nodes) {
                 dof += node.dof;
-            for (const constraint of this.constraints)
+            }
+            for (const constraint of this.constraints) {
                 dof -= (2 - constraint.dof);
+            }
             return dof;
         },
         /**
@@ -234,15 +259,15 @@ mec.model = {
                     if (constraint.showInfo)
                         return constraint.info(this.showInfo.constraints);
         },
-/*
-        get info() {
-            let str = '';
-            for (const view of this.views)
-                if (view.hasInfo)
-                    str += view.infoString()+'<br>';
-            return str.length === 0 ? false : str;
-        },
-*/
+        /*
+                get info() {
+                    let str = '';
+                    for (const view of this.views)
+                        if (view.hasInfo)
+                            str += view.infoString()+'<br>';
+                    return str.length === 0 ? false : str;
+                },
+        */
         /**
          * Number of positional iterations.
          * @type {number}
@@ -303,9 +328,9 @@ mec.model = {
             const inputs = [];
             for (const constraint of this.constraints) {
                 if (constraint.ori.type === 'drive' && constraint.ori.input)
-                    inputs.push({constraint:constraint,sub:'ori'})
+                    inputs.push({ constraint: constraint, sub: 'ori' })
                 if (constraint.len.type === 'drive' && constraint.len.input)
-                    inputs.push({constraint:constraint,sub:'len'})
+                    inputs.push({ constraint: constraint, sub: 'len' })
             }
             return inputs;
         },
@@ -334,11 +359,11 @@ mec.model = {
          * center of gravity 
          */
         get cog() {
-            var center = {x:0,y:0}, m = 0;
+            var center = { x: 0, y: 0 }, m = 0;
             for (const node of this.nodes) {
                 if (!node.base) {
-                    center.x += node.x*node.m;
-                    center.y += node.y*node.m;
+                    center.x += node.x * node.m;
+                    center.y += node.y * node.m;
                     m += node.m;
                 }
             }
@@ -354,15 +379,9 @@ mec.model = {
          * @returns {boolean} true in case of existing dependents.
          */
         hasDependents(elem) {
+            // TODO why return the last occurence? Why not stop at the first? 
             let dependency = false;
-            for (const constraint of this.constraints)
-                dependency = constraint.dependsOn(elem) || dependency;
-            for (const load of this.loads)
-                dependency = load.dependsOn(elem) || dependency;
-            for (const view of this.views)
-                dependency = view.dependsOn(elem) || dependency;
-            for (const shape of this.shapes)
-                dependency = shape.dependsOn(elem) || dependency;
+            this.forAllPlugIns((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
         },
         /**
@@ -373,22 +392,13 @@ mec.model = {
          * @param {object} elem - element.
          * @returns {object} dictionary object containing dependent elements.
          */
-        dependentsOf(elem, deps) {
-            deps = deps || {constraints:[],loads:[],views:[],shapes:[]};
-            for (const constraint of this.constraints)
-                if (constraint.dependsOn(elem)) {
-                    this.dependentsOf(constraint,deps);
-                    deps.constraints.push(constraint);
+        dependentsOf(elem, deps = {}) {
+            this.forAllPlugIns((elm, plugIn, plugInKey) => {
+                if (elm.dependsOn(elem)) {
+                    this.dependentsOf(elm, deps);
+                    (deps[plugInKey] = deps[plugInKey] || []).push(elm);
                 }
-            for (const load of this.loads)
-                if (load.dependsOn(elem))
-                    deps.loads.push(load);
-            for (const view of this.views)
-                if (view.dependsOn(elem))
-                    deps.views.push(view);
-            for (const shape of this.shapes)
-                if (shape.dependsOn(elem))
-                    deps.shapes.push(shape);
+            });
             return deps;
         },
         /**
@@ -427,14 +437,11 @@ mec.model = {
          * @param {object} elems - element dictionary.
          */
         purgeElements(elems) {
-            for (const constraint of elems.constraints)
-                this.constraints.splice(this.constraints.indexOf(constraint),1);
-            for (const load of elems.loads)
-                this.loads.splice(this.loads.indexOf(load),1);
-            for (const view of elems.views)
-                this.views.splice(this.views.indexOf(view),1);
-            for (const shape of elems.shapes)
-                this.shapes.splice(this.shapes.indexOf(shape),1);
+            for (const key of Object.keys(elems)) {
+                for (const elm of elems[key]) {
+                    this[key].splice(this[key].indexOf(elm), 1)
+                }
+            }
         },
         /**
          * Get element by id.
@@ -442,221 +449,17 @@ mec.model = {
          * @param {string} id - element id.
          */
         elementById(id) {
-            return this.nodeById(id)
-                || this.constraintById(id)
-                || this.loadById(id)
-                || this.viewById(id)
-                || id === 'model' && this;
+            return this.forAllPlugIns(elm => {
+                if (elm.id === id) return elm;
+            }) || id === 'model' && this;
         },
         /**
-         * Add node to model.
-         * @method
-         * @param {object} node - node to add.
+         * Add element to respective elements array of model.
+         * @param {object} plugIn - plugIn name to add element to.
+         * @param {object} element - element to add
          */
-        addNode(node) {
-            this.nodes.push(node);
-        },
-        /**
-         * Get node by id.
-         * @method
-         * @param {object} node - node to find.
-         */
-        nodeById(id) {
-            for (const node of this.nodes)
-                if (node.id === id)
-                    return node;
-            return false;
-        },
-        /**
-         * Remove node, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `node` is in fact an entry of
-         * the `model.nodes` array.
-         * @method
-         * @param {object} node - node to remove.
-         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
-         */
-        removeNode(node) {
-            const dependency = this.hasDependents(node);
-            if (!dependency)
-                this.nodes.splice(this.nodes.indexOf(node),1);  // finally remove node from array.
-
-            return !dependency;
-        },
-        /**
-         * Delete node and all depending elements from model.
-         * The calling app has to ensure, that `node` is in fact an entry of
-         * the `model.nodes` array.
-         * @method
-         * @param {object} node - node to remove.
-         */
-        purgeNode(node) {
-            this.purgeElements(this.dependentsOf(node));
-            this.nodes.splice(this.nodes.indexOf(node),1);
-        },
-        /**
-         * Add constraint to model.
-         * @method
-         * @param {object} constraint - constraint to add.
-         */
-        addConstraint(constraint) {
-            this.constraints.push(constraint);
-        },
-        /**
-         * Get constraint by id.
-         * @method
-         * @param {object} id - constraint id.
-         * @returns {object} constraint to find.
-         */
-        constraintById(id) {
-            for (const constraint of this.constraints)
-                if (constraint.id === id)
-                    return constraint;
-            return false;
-        },
-        /**
-         * Remove constraint, if there are no dependencies to other objects.
-         * The calling app has to ensure, that `constraint` is in fact an entry of
-         * the `model.constraints` array.
-         * @method
-         * @param {object} constraint - constraint to remove.
-         * @returns {boolean} true, the constraint was removed, otherwise false in case of existing dependencies.
-         */
-        removeConstraint(constraint) {
-            const dependency = this.hasDependents(constraint);
-            if (!dependency)
-                this.constraints.splice(this.constraints.indexOf(constraint),1);  // finally remove node from array.
-
-            return !dependency;
-        },
-        /**
-         * Delete constraint and all depending elements from model.
-         * The calling app has to ensure, that `constraint` is in fact an entry of
-         * the `model.constraints` array.
-         * @method
-         * @param {object} constraint - constraint to remove.
-         */
-        purgeConstraint(constraint) {
-            this.purgeElements(this.dependentsOf(constraint));
-            this.constraints.splice(this.constraints.indexOf(constraint),1);
-        },
-        /**
-         * Add load to model.
-         * @method
-         * @param {object} load - load to add.
-         */
-        addLoad(load) {
-            this.loads.push(load);
-        },
-        /**
-         * Get load by id.
-         * @method
-         * @param {object} id - load id.
-         * @returns {object} load to find.
-         */
-        loadById(id) {
-            for (const load of this.loads)
-                if (load.id === id)
-                    return load;
-            return false;
-        },
-        /**
-         * Remove load, if there are no other objects depending on it.
-         * The calling app has to ensure, that `load` is in fact an entry of
-         * the `model.loads` array.
-         * @method
-         * @param {object} node - load to remove.
-         * @returns {boolean} true, the node was removed, otherwise other objects depend on it.
-         */
-        removeLoad(load) {
-            const dependency = this.hasDependents(load);
-            if (!dependency)
-                this.loads.splice(this.loads.indexOf(load),1);
-            return !dependency;
-        },
-        /**
-         * Delete load and all depending elements from model.
-         * The calling app has to ensure, that `load` is in fact an entry of
-         * the `model.loads` array.
-         * @method
-         * @param {object} load - load to delete.
-         */
-        purgeLoad(load) {
-            this.purgeElements(this.dependentsOf(load));
-            this.loads.splice(this.loads.indexOf(load),1);
-        },
-        /**
-         * Add shape to model.
-         * @method
-         * @param {object} shape - shape to add.
-         */
-        addShape(shape) {
-            this.shapes.push(shape);
-        },
-        /**
-         * Remove shape, if there are no other objects depending on it.
-         * The calling app has to ensure, that `shape` is in fact an entry of
-         * the `model.shapes` array.
-         * @method
-         * @param {object} shape - shape to remove.
-         */
-        removeShape(shape) {
-            const idx = this.shapes.indexOf(shape);
-            if (idx >= 0)
-                this.shapes.splice(idx,1);
-        },
-        /**
-         * Delete shape and all dependent elements from model.
-         * The calling app has to ensure, that `shape` is in fact an entry of
-         * the `model.shapes` array.
-         * @method
-         * @param {object} shape - shape to delete.
-         */
-        purgeShape(shape) {
-            this.purgeElements(this.dependentsOf(shape));
-            this.shapes.splice(this.shapes.indexOf(shape),1);
-        },
-        /**
-         * Add view to model.
-         * @method
-         * @param {object} view - view to add.
-         */
-        addView(view) {
-            this.views.push(view);
-        },
-        /**
-         * Get view by id.
-         * @method
-         * @param {object} id - view id.
-         * @returns {object} view to find.
-         */
-        viewById(id) {
-            for (const view of this.views)
-                if (view.id === id)
-                    return view;
-            return false;
-        },
-        /**
-         * Remove view, if there are no other objects depending on it.
-         * The calling app has to ensure, that `view` is in fact an entry of
-         * the `model.views` array.
-         * @method
-         * @param {object} view - view to remove.
-         */
-        removeView(view) {
-            const idx = this.views.indexOf(view);
-            if (idx >= 0)
-                this.views.splice(idx,1);
-        },
-        /**
-         * Delete view and all dependent elements from model.
-         * The calling app has to ensure, that `view` is in fact an entry of
-         * the `model.views` array.
-         * @method
-         * @param {object} view - view to delete.
-         */
-        purgeView(view) {
-            this.purgeElements(this.dependentsOf(view));
-            this.views.splice(this.views.indexOf(view),1);
+        add(plugIn, element) {
+            this[plugIn].push(element);
         },
         /**
          * Return a JSON-string of the model
@@ -670,27 +473,27 @@ mec.model = {
             const loadCnt = this.loads.length;
             const shapeCnt = this.shapes.length;
             const viewCnt = this.views.length;
-            const comma = (i,n) => i < n-1 ? ',' : '';
+            const comma = (i, n) => i < n - 1 ? ',' : '';
             const str = '{'
-                      + '\n  "id":"'+this.id+'"'
-                      + (this.title ? (',\n  "title":"'+this.title+'"') : '')
-                      + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
-                      + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
-                      + (nodeCnt ? this.nodes.map((n,i) => '    '+n.asJSON()+comma(i,nodeCnt)+'\n').join('') : '')
-                      + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                      + (contraintCnt ? '  "constraints": [\n' : '')
-                      + (contraintCnt ? this.constraints.map((n,i) => '    '+n.asJSON()+comma(i,contraintCnt)+'\n').join('') : '')
-                      + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                      + (loadCnt ? '  "loads": [\n' : '')
-                      + (loadCnt ? this.loads.map((n,i) => '    '+n.asJSON()+comma(i,loadCnt)+'\n').join('') : '')
-                      + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
-                      + (shapeCnt ? '  "shapes": [\n' : '')
-                      + (shapeCnt ? this.shapes.map((n,i) => '    '+n.asJSON()+comma(i,shapeCnt)+'\n').join('') : '')
-                      + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
-                      + (viewCnt ? '  "views": [\n' : '')
-                      + (viewCnt ? this.views.map((n,i) => '    '+n.asJSON()+comma(i,viewCnt)+'\n').join('') : '')
-                      + (viewCnt ? '  ]\n' : '')
-                      + '}';
+                + '\n  "id":"' + this.id + '"'
+                + (this.title ? (',\n  "title":"' + this.title + '"') : '')
+                + (this.gravity.active ? ',\n  "gravity":true' : '')  // in case of true, should also look at vector components  .. !
+                + (nodeCnt ? ',\n  "nodes": [\n' : '\n')
+                + (nodeCnt ? this.nodes.map((n, i) => '    ' + n.asJSON() + comma(i, nodeCnt) + '\n').join('') : '')
+                + (nodeCnt ? (contraintCnt || loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (contraintCnt ? '  "constraints": [\n' : '')
+                + (contraintCnt ? this.constraints.map((n, i) => '    ' + n.asJSON() + comma(i, contraintCnt) + '\n').join('') : '')
+                + (contraintCnt ? (loadCnt || shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (loadCnt ? '  "loads": [\n' : '')
+                + (loadCnt ? this.loads.map((n, i) => '    ' + n.asJSON() + comma(i, loadCnt) + '\n').join('') : '')
+                + (loadCnt ? (shapeCnt || viewCnt) ? '  ],\n' : '  ]\n' : '')
+                + (shapeCnt ? '  "shapes": [\n' : '')
+                + (shapeCnt ? this.shapes.map((n, i) => '    ' + n.asJSON() + comma(i, shapeCnt) + '\n').join('') : '')
+                + (shapeCnt ? viewCnt ? '  ],\n' : '  ]\n' : '')
+                + (viewCnt ? '  "views": [\n' : '')
+                + (viewCnt ? this.views.map((n, i) => '    ' + n.asJSON() + comma(i, viewCnt) + '\n').join('') : '')
+                + (viewCnt ? '  ]\n' : '')
+                + '}';
 
             return str;
         },
@@ -705,8 +508,8 @@ mec.model = {
             for (const node of this.nodes) {
                 node.Qx = node.Qy = 0;
                 if (!node.base && this.hasGravity) {
-                    node.Qx = node.m*mec.from_m(this.gravity.x);
-                    node.Qy = node.m*mec.from_m(this.gravity.y);
+                    node.Qx = node.m * mec.from_m(this.gravity.x);
+                    node.Qy = node.m * mec.from_m(this.gravity.y);
                 }
             }
             // Apply external loads.
@@ -823,7 +626,7 @@ mec.model = {
                 if (view.post)
                     view.post(this.timer.dt);
 
-//    console.log('E:'+mec.to_J(this.energy))
+            //    console.log('E:'+mec.to_J(this.energy))
             return this;
         },
         /**
@@ -833,16 +636,20 @@ mec.model = {
          * @returns {object} model
          */
         draw(g) {
-            for (const shape of this.shapes)
-                shape.draw(g);
-            for (const view of this.views)
-                view.draw(g);
-            for (const constraint of this.constraints)
-                constraint.draw(g);
-            for (const load of this.loads)
-                load.draw(g);
-            for (const node of this.nodes)
-                node.draw(g);
+            // Make sure constraints and nodes are rendered last.
+            this.forAllPlugIns((elm, plugIn) => {
+                if (plugIn === this.plugIns['constraints'] ||
+                    plugIn === this.plugIns['nodes']) {
+                    return;
+                }
+                elm.draw(g);
+            });
+            for (const elm of this.constraints) {
+                elm.draw(g);
+            }
+            for (const elm of this.nodes) {
+                elm.draw(g);
+            }
             return this;
         }
     }

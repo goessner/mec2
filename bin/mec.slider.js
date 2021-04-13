@@ -1,11 +1,11 @@
 class MecSlider extends HTMLElement {
     static get observedAttributes() {
-        return ['width','min','max','step','value','bubble'];
+        return ['width', 'min', 'max', 'step', 'value', 'bubble'];
     }
 
     constructor() {
         super();
-        this._root = this.attachShadow({ mode:'open' });
+        this._root = this.attachShadow({ mode: 'open' });
     }
 
     // html slider attributes 
@@ -16,8 +16,8 @@ class MecSlider extends HTMLElement {
     get value() { return +this.getAttribute('value') || 0; }
     set value(q) {
         q = this._nfrac > 0 ? q.toFixed(this._nfrac) : q;
-        this.setAttribute('value',q);
-        this._slider.setAttribute('value',this._slider.value = q);
+        this.setAttribute('value', q);
+        this._slider.setAttribute('value', this._slider.value = q);
         this._slider.value = q;
         this.dispatchEvent(new CustomEvent('input', { detail: q }));
     }
@@ -25,37 +25,37 @@ class MecSlider extends HTMLElement {
     // https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements
     connectedCallback() { this.init(); }
     disconnectedCallback() { this.deinit(); }
-    attributeChangedCallback(name, oldval, val) {}
+    attributeChangedCallback(name, oldval, val) { }
 
     init() {
         this.bubble = this.hasAttribute("bubble");
         this._root.innerHTML = MecSlider.template({
             id: this.id,
             width: this.width,
-            height:this.height,
-            min:this.min,
-            max:this.max,
-            step:this.step,
-            value:this.value,
-            darkmode:this.darkmode,
-            bubble:this.bubble
+            height: this.height,
+            min: this.min,
+            max: this.max,
+            step: this.step,
+            value: this.value,
+            darkmode: this.darkmode,
+            bubble: this.bubble
         });
         // cache elements of shadow dom
         this._slider = this._root.querySelector('input');
         this._forbtn = this._root.querySelector('.forward');
         this._revbtn = this._root.querySelector('.reverse');
         // install instance specific function pointers from prototype methods ...
-        this._sliderInputHdl  = this.sliderInput.bind(this);
+        this._sliderInputHdl = this.sliderInput.bind(this);
         this._startForwardHdl = this.startForward.bind(this);
         this._startReverseHdl = this.startReverse.bind(this);
-        this._endForwardHdl   = this.endForward.bind(this);
-        this._endReverseHdl   = this.endReverse.bind(this);
+        this._endForwardHdl = this.endForward.bind(this);
+        this._endReverseHdl = this.endReverse.bind(this);
         // install initial event listeners
         this._slider.addEventListener("input", this._sliderInputHdl, false);
         this._forbtn.addEventListener("pointerup", this._startForwardHdl, false);
         this._revbtn.addEventListener("pointerup", this._startReverseHdl, false);
         // cache instant specific values
-        this._nfrac = Math.max(0,Math.ceil(-Math.log10(this.step)));  // number of digits after decimal point of step
+        this._nfrac = Math.max(0, Math.ceil(-Math.log10(this.step)));  // number of digits after decimal point of step
         // init value bubble
         if (this.bubble) {
             this._bubble = this._root.getElementById('bubble');
@@ -66,7 +66,7 @@ class MecSlider extends HTMLElement {
             this._slider.addEventListener("focusout", this._bubbleHideHdl, false);
         }
     }
-    deinit() { 
+    deinit() {
         // remove event listeners
         this._slider.removeEventListener("input", this.sliderInputHdl, false);
         this._forbtn.removeEventListener("pointerup", this._startForwardHdl, false);
@@ -77,7 +77,7 @@ class MecSlider extends HTMLElement {
             this._slider.removeEventListener("focusin", this._bubbleShowHdl, false);
             this._slider.removeEventListener("focusout", this._bubbleHideHdl, false);
         }
-    // delete cached data
+        // delete cached data
         delete this._bubble;
         delete this._slider;
         delete this._forbtn;
@@ -93,17 +93,17 @@ class MecSlider extends HTMLElement {
         this._bubble.style.display = 'block';
         this.placeBubble();
     }
-    hideBubble() { 
+    hideBubble() {
         this._bubble.style.display = 'none';
     }
     placeBubble() {
         const thumbWidth = 12,  // width of thumb estimated .. depends on browser
-              sliderBox = this._slider.getBoundingClientRect(),
-              bubbleBox = this._bubble.getBoundingClientRect(),
-              thumbLeft = Math.floor(sliderBox.left + thumbWidth/2),
-              thumbRange = sliderBox.width - thumbWidth;
-        this._bubble.style.left = Math.floor(thumbLeft - bubbleBox.width/2 + thumbRange*Math.max(0,Math.min(1,(this.value - this.min)/(this.max - this.min))))+'px';
-        this._bubble.style.top = Math.floor(sliderBox.top - bubbleBox.height)+'px';
+            sliderBox = this._slider.getBoundingClientRect(),
+            bubbleBox = this._bubble.getBoundingClientRect(),
+            thumbLeft = Math.floor(sliderBox.left + thumbWidth / 2),
+            thumbRange = sliderBox.width - thumbWidth;
+        this._bubble.style.left = Math.floor(thumbLeft - bubbleBox.width / 2 + thumbRange * Math.max(0, Math.min(1, (this.value - this.min) / (this.max - this.min)))) + 'px';
+        this._bubble.style.top = Math.floor(sliderBox.top - bubbleBox.height) + 'px';
         this._bubble.innerHTML = this.getAttribute('value');
     }
     startForward() {
@@ -117,7 +117,7 @@ class MecSlider extends HTMLElement {
             this._revbtn.style.color = "#888";  // show disabled !
             // focus to slider ... disable it
             this._slider.focus();
-            this._slider.setAttribute('disabled',true);
+            this._slider.setAttribute('disabled', true);
             this.showBubble();                  // needed for chrome !
 
             this.goFwd();
@@ -137,7 +137,7 @@ class MecSlider extends HTMLElement {
         window.clearTimeout(this.timeoutId);
     }
     fwdStep() {
-        let delta = this.value + this.step < this.max ? this.step : Math.max(this.max - this.value,0);
+        let delta = this.value + this.step < this.max ? this.step : Math.max(this.max - this.value, 0);
         if (delta) { // proceed ...
             this.value += delta;
             if (this._bubble)
@@ -166,7 +166,7 @@ class MecSlider extends HTMLElement {
             this._forbtn.style.color = "#888";  // show disabled !
             // focus to slider ... disable it
             this._slider.focus();
-            this._slider.setAttribute('disabled',true);
+            this._slider.setAttribute('disabled', true);
             this.showBubble();                  // needed for chrome !
 
             this.goRev();
@@ -187,7 +187,7 @@ class MecSlider extends HTMLElement {
         window.clearTimeout(this.timeoutId);
     }
     revStep() {
-        let delta = this.value - this.step >= this.min ? -this.step : -Math.max(this.min - this.value,0);
+        let delta = this.value - this.step >= this.min ? -this.step : -Math.max(this.min - this.value, 0);
         if (delta) { // proceed ...
             this.value += delta;
             if (this._bubble)
@@ -206,8 +206,8 @@ class MecSlider extends HTMLElement {
         }, 20);
     }
 
-    static template({id,width,min,max,step,value,bubble}) {
-return `
+    static template({ id, width, min, max, step, value, bubble }) {
+        return `
 <style>
    ::shadow {
        display:inline-flex; 
@@ -236,7 +236,7 @@ return `
        -moz-user-select: none;
    }
 
-   ${bubble?`
+   ${bubble ? `
    #bubble {
         color: black;
         background-color: #f8f8f888;
@@ -251,15 +251,15 @@ return `
         top: 0px;
         display: none;
         pointer-events:none`
-   :''}
+                : ''}
 </style>
 <div class="slider">
     <span class="reverse">${MecSlider.revsym}</span>
     <input type="range" min="${min}" max="${max}" value="${value}" step="${step}"/>
     <span class="forward">${MecSlider.fwdsym}</span>
-    ${bubble?`<div id="bubble">?</div>`:''}
+    ${bubble ? `<div id="bubble">?</div>` : ''}
 </div>`
-}
+    }
 }
 
 MecSlider.fwdsym = '&#9655;'

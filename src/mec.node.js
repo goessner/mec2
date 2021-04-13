@@ -77,6 +77,31 @@ mec.node = {
 
             this.g2cache = false;
         },
+        /**
+         * Remove node, if there are no dependencies to other objects.
+         * The calling app has to ensure, that `node` is in fact an entry of
+         * the `model.nodes` array.
+         * @method
+         * @param {object} node - node to remove.
+         * @returns {boolean} true, the node was removed, otherwise false in case of existing dependencies.
+         */
+        remove() {
+            const elms = this.model.nodes;
+            return this.model.hasDependents(this) ?
+                false :
+                !!elms.splice(elms.indexOf(this), 1);
+        },
+        /**
+         * Delete node and all depending elements from model.
+         * The calling app has to ensure, that `node` is in fact an entry of
+         * the `model.nodes` array.
+         * @method
+         * @param {object} node - node to remove.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        },
         // kinematics
         // current velocity state .. only used during iteration.
         get xtcur() { return this.xt + this.dxt },
@@ -267,3 +292,5 @@ mec.node = {
         .a({ dw: -Math.PI / 2, x: 0, y: -5 }).z().fill({ fs: "@nodcolor" }),
     g2Node: g2().cir({ x: 0, y: 0, r: 5, ls: "@nodcolor", fs: "@nodfill" })
 }
+
+mec.model.prototype.addPlugIn('nodes', mec.node);

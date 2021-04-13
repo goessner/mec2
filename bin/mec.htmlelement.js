@@ -3,7 +3,7 @@ class Mec2Element extends HTMLElement {
         return ['width', 'height', 'cartesian', 'grid', 'x0', 'y0',
             'darkmode', 'gravity', 'hidenodes', 'hideconstraints',
             'nodelabels', 'constraintlabels', 'loadlabels',
-            'nodeinfo', 'constraintinfo'];
+            'nodeinfo', 'constraintinfo', 'nav'];
     }
 
     constructor() {
@@ -25,6 +25,8 @@ class Mec2Element extends HTMLElement {
     set cartesian(q) { q ? this.setAttribute('cartesian', '') : this.removeAttribute('cartesian'); }
     get grid() { return this.hasAttribute('grid') || false; }
     set grid(q) { q ? this.setAttribute('grid', '') : this.removeAttribute('grid'); }
+    get nav() { return this.hasAttribute('nav') || false; }
+    set nav(q) { q ? this.setAttribute('nav', '') : this.removeAttribute('nav'); }
 
     get show() { return this._show; }
 
@@ -33,7 +35,9 @@ class Mec2Element extends HTMLElement {
 
     get gravity() { return this._model.gravity.active; }
     set gravity(q) {
-        this._gravbtn.innerHTML = q ? '&checkmark;g' : '&nbsp;&nbsp;g';
+        if (this.gravbtn) {
+            this._gravbtn.innerHTML = q ? '&checkmark;g' : '&nbsp;&nbsp;g';
+        }
         this._model.gravity.active = q;
     }
 
@@ -46,23 +50,28 @@ class Mec2Element extends HTMLElement {
             this._model.sleepMinDelta = 1;
             if (this.editing)  // do not run in edit mode ... so toggle !
                 this.editing = false;
-            this._runbtn.innerHTML = '&#10074;&#10074;';
+            if (this._runbtn) {
+                this._runbtn.innerHTML = this.updateRunBtn();
+            }
         }
         else if (!this._state.pause && q) {
             this._state.pause = true;
-            this._runbtn.innerHTML = '&#9654;';
+            if (this._runbtn) {
+                this._runbtn.innerHTML = this.updateRunBtn();
+            }
+
         }
         //  else  ... nothing to do
     }
     /*
         get editing() { return this._state.edit; }
-        set editing(q) { 
+        set editing(q) {
             if (!this._state.edit && q) {  // edit in initial pose only
                 if (this.hasInputs)
                     for (const input of this._inputs) {
                         const val0 = input.sub === 'ori' ? input.w0 : input.r0;
                         this._root.getElementById(input.id).value = val0;
-    //                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
+                        //                    input.constraint[input.sub].inputCallbk(val0);  // necessary ?
                     }
                 this._model.reset();
                 this._editbtn.innerHTML = 'drag';
@@ -72,10 +81,10 @@ class Mec2Element extends HTMLElement {
                 this._editbtn.innerHTML = 'edit';
                 this._state.edit = false;
             }
-        //  else  ... nothing to do
-    //        this.log(`editing=${this._state.edit}`)
+            //  else  ... nothing to do
+            //        this.log(`editing=${this._state.edit}`)
         }
-    */
+        */
     init() {
         // create model
         if (!this.parseModel(this.innerHTML)) return;
@@ -104,16 +113,21 @@ class Mec2Element extends HTMLElement {
                 // this._charts[idx].previewNod;
                 const data = chart.graph.funcs[0].data;
                 const pt = data.findIndex(data => data.t > chart.local_t);
-                return pt === -1
-                    ? { scl: 0 } // If point is out of bounds
+                const coord = pt === -1 ? undefined // If point is out of bounds
                     : {
-                        x: (data[pt].x - elm._chart.xmin) * (elm._chart.b / 
+                        x: (data[pt].x - elm._chart.xmin) * (elm._chart.b /
                             (elm._chart.xmax - elm._chart.xmin)) + elm._chart.x,
                         y: (data[pt].y - elm._chart.ymin) * (elm._chart.h /
                             (elm._chart.ymax - elm._chart.ymin)) + elm._chart.y,
                         // y: elm._chart.y + elm._chart.h,
                         scl: 1
                     };
+                if (!coord ||
+                    coord.y < elm._chart.y ||
+                    coord.y > elm._chart.y + elm._chart.h) {
+                    return { scl: 0 }
+                }
+                return coord;
             }
         }
 
@@ -124,7 +138,8 @@ class Mec2Element extends HTMLElement {
             dof: this._model.dof,
             gravity: this._model.gravity.active,
             inputs: this._inputs,
-            darkmode: this._show.darkmode
+            darkmode: this._show.darkmode,
+            nav: this.nav,
         });
         // cache elements of shadow dom
         this._ctx = this._root.getElementById('cnv').getContext('2d');
@@ -142,10 +157,17 @@ class Mec2Element extends HTMLElement {
         // check gravity attribute
         this.gravity = this.getAttribute('gravity') === "" ? true : false;
         // add event listeners
-        this._runbtnHdl = e => this.pausing = !this.pausing; this._runbtn.addEventListener("click", this._runbtnHdl, false);
-        this._resetbtnHdl = e => this.reset(); this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        this._runbtnHdl = this.run;
+        if (this._runbtn) {
+            this._runbtn.addEventListener("click", this._runbtnHdl, false);
+            this._resetbtnHdl = e => this.reset();
+            this._resetbtn.addEventListener("click", this._resetbtnHdl, false);
+        }
         //      this._resetbtnHdl = e => this.editing = !this.editing; this._editbtn .addEventListener("click", this._resetbtnHdl, false);
-        this._gravbtnHdl = e => this.gravity = !this.gravity; this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
+        if (this._gravbtn) {
+            this._gravbtnHdl = e => this.toggleGravity();
+            this._gravbtn.addEventListener("click", this._gravbtnHdl, false);
+        }
         // some more members
         this._interactor = canvasInteractor.create(this._ctx, { x: this.x0, y: this.y0, cartesian: this.cartesian });
         this._g = g2().clr().view(this._interactor.view);
@@ -215,6 +237,12 @@ class Mec2Element extends HTMLElement {
         delete this._logview;
     }
 
+    parseModel() {
+        try { this._model = JSON.parse(this.innerHTML); return true; }
+        catch (e) { this._root.innerHTML = e.message; }
+        return false;
+    }
+
     render() {
         for (const idx in this._chartRefs) {
             this._chartRefs[idx].render();
@@ -222,11 +250,16 @@ class Mec2Element extends HTMLElement {
         this._g.exe(this._ctx);
     }
 
-    parseModel() {
-        try { this._model = JSON.parse(this.innerHTML); return true; }
-        catch (e) { this._root.innerHTML = e.message; }
-        return false;
+    run = () => {
+        this.pausing = !this.pausing;
+        if (this._runbtn) {
+            this._runbtn.innerHTML = this.updateRunBtn();
+        }
     }
+
+    updateRunBtn = () => this._inputs.length ? '' :
+        this.pausing ? '&#9654;' : '&#10074;&#10074;';
+    toggleGravity = () => { this.gravity = !this.gravity; }
 
     reset() {
         this._model.reset();
@@ -281,16 +314,22 @@ class Mec2Element extends HTMLElement {
             this._g.exe(this._selector);
             this.render();
         }
-        // avoid unnecessary model.tick's with mechanims fully controlled by inputs .. !  
+        // avoid unnecessary model.tick's with mechanims fully controlled by inputs .. !
         if (this.pausing === false &&
             this._model.activeDriveCount - this.inputDriveCount === 0 &&
             (this._model.dof === 0 || this._model.isSleeping))
             this.pausing = true;
         //        this.log(`activeDrives=${this._model.activeDriveCount}, inputDrives=${this.inputDriveCount}, isSleeping=${this._model.isSleeping}, pausing=${this.pausing}, t=${this._model.timer.t}`)
-        this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
-        this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
+        if (this._corview) {
+            this._corview.innerHTML = this._interactor.evt.xusr.toFixed(0) + ', ' + this._interactor.evt.yusr.toFixed(0);
+        }
+        if (this._fpsview) {
+            this._fpsview.innerHTML = 'fps: ' + canvasInteractor.fps;
+        }
         //        this._egyview.innerHTML = 'E: '+(this._model.valid ? mec.to_J(this._model.energy).toFixed(2) : '-');
-        this._itrview.innerHTML = this._model.state.itrpos + '/' + this._model.state.itrvel;
+        if (this._itrview) {
+            this._itrview.innerHTML = this._model.state.itrpos + '/' + this._model.state.itrvel;
+        }
     }
 
     // standard lifecycle callbacks
@@ -305,14 +344,16 @@ class Mec2Element extends HTMLElement {
         if (this._root && this._root.getElementById('cnv')) {
             if (name === 'width') {  // todo: preserve minimum width
                 this._root.getElementById('cnv').setAttribute('width', val);
-                this._root.querySelector('.status').style.width = val + 'px';
+                if (this.nav) {
+                    this._root.querySelector('.status').style.width = val + 'px';
+                }
             }
             if (name === 'height')   // todo: preserve minimum height
                 this._root.getElementById('cnv').setAttribute('height', val);
         }
     }
 
-    static template({ width, height, darkmode, dof, gravity, inputs }) {
+    static template({ width, height, darkmode, dof, gravity, inputs, nav }) {
         return `
 <style>
     nav {
@@ -330,6 +371,12 @@ class Mec2Element extends HTMLElement {
         user-select: none;
         cursor:default;
     }
+
+    mec-slider {
+        display: inline-block;
+        width: ${width - 2}px;
+    }
+
     .right {
         text-align: right;
         vertical-align: bottom;
@@ -337,67 +384,13 @@ class Mec2Element extends HTMLElement {
     nav > span > span:hover { color:#fff; }
     nav > span > output { display:inline-block; padding:0px 1px; margin:0px 0px; }
     #cnv {
-        border:solid 1px ${darkmode ? '#777' : '#eee'}; 
+        border:solid 1px ${darkmode ? '#777' : '#eee'};
         background-color:${darkmode ? '#777' : '#eee'};
         touch-action: none;
     }
 </style>
 <div style="width:${width};">
-<nav>
-  <span class="left">
-    <svg style="margin-bottom:-5pt; padding-left: 5pt;" class="flex-shrink-0 mr-2" version="1.0" xmlns="http://www.w3.org/2000/svg" width="16pt" height="16pt" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
-    <g transform="translate(0,512) scale(0.1,-0.1)" fill="#ddd" stroke="none">
-        <path d="M1300 4786 c-345 -47 -603 -160 -734 -322 -50 -61 -115 -188 -143
-        -280 -24 -81 -23 -272 2 -369 58 -225 237 -425 380 -425 34 0 35 1 35 38 0 21
-        -5 43 -12 50 -15 15 -50 124 -94 294 -64 251 -45 366 83 493 173 171 430 243
-        823 232 286 -8 538 -52 845 -147 144 -44 205 -59 247 -60 32 0 40 4 54 33 9
-        17 34 53 55 79 22 26 39 57 39 70 0 44 -58 80 -212 130 -274 90 -481 140 -728
-        173 -156 22 -518 28 -640 11z" fill="orange"></path>
-        <path d="M3217 4489 c-159 -37 -309 -189 -346 -350 -26 -111 -8 -266 41 -364
-        27 -51 120 -148 172 -179 151 -89 371 -90 519 -3 95 56 191 188 216 298 13 57
-        13 191 0 248 -37 163 -187 313 -350 350 -53 13 -199 12 -252 0z"></path>
-        <path d="M2684 3899 c-31 -34 -183 -153 -261 -203 -139 -90 -328 -168 -520
-        -216 -24 -6 -43 -16 -43 -21 0 -6 22 -36 50 -66 55 -60 106 -157 116 -221 4
-        -27 12 -42 21 -42 8 0 51 31 96 69 202 169 431 285 685 346 39 9 72 22 72 27
-        0 6 -20 33 -45 60 -50 56 -100 152 -110 213 -14 83 -25 93 -61 54z"></path>
-        <path d="M3954 3813 c-9 -21 -29 -67 -45 -102 -16 -35 -29 -77 -29 -95 0 -34
-        23 -64 174 -233 162 -180 257 -356 300 -550 20 -90 20 -139 0 -228 -9 -38 -20
-        -90 -24 -115 -4 -25 -14 -65 -23 -90 -55 -159 -51 -190 19 -190 34 0 121 61
-        167 117 44 53 101 167 129 257 25 81 34 232 19 336 -38 258 -212 556 -471 806
-        -135 131 -189 153 -216 87z" fill="orange"></path>
-        <path d="M3659 3474 c-70 -48 -144 -66 -286 -72 -97 -3 -133 -8 -133 -17 0 -7
-        11 -37 24 -66 48 -110 125 -329 170 -484 88 -308 136 -618 162 -1052 7 -127
-        10 -129 72 -88 77 51 146 68 300 73 78 2 142 8 142 11 0 4 -18 54 -41 112
-        -208 529 -299 923 -331 1427 -13 203 -13 202 -79 156z"></path>
-        <path d="M1297 3480 c-162 -41 -309 -190 -346 -351 -13 -57 -13 -191 0 -248
-        17 -74 58 -149 116 -212 99 -106 202 -149 358 -149 156 0 264 46 364 156 86
-        94 120 189 121 336 0 150 -44 253 -153 355 -93 86 -167 115 -312 119 -60 2
-        -127 -1 -148 -6z"></path>
-        <path d="M1110 2333 c0 -149 -21 -275 -71 -425 -21 -65 -39 -122 -39 -127 0
-        -5 66 -11 148 -13 120 -4 158 -9 207 -27 33 -13 67 -25 76 -28 14 -4 15 15 15
-        164 0 186 14 266 73 416 17 43 31 81 31 86 0 5 -64 11 -142 13 -115 4 -155 9
-        -203 27 -105 40 -95 49 -95 -86z"></path>
-        <path d="M978 1621 c-152 -49 -282 -189 -317 -342 -13 -57 -13 -191 0 -248 37
-        -163 187 -313 350 -350 57 -13 191 -13 248 0 163 37 313 187 350 350 13 57 13
-        191 0 248 -25 110 -121 242 -216 298 -110 64 -292 83 -415 44z"></path>
-        <path d="M3828 1621 c-83 -27 -138 -62 -201 -130 -58 -63 -99 -138 -116 -212
-        -13 -57 -13 -191 0 -248 37 -163 187 -313 350 -350 57 -13 191 -13 248 0 163
-        37 313 187 350 350 13 57 13 191 0 248 -35 155 -166 294 -320 342 -81 25 -231
-        25 -311 0z"></path>
-    </g>
-    </svg>
-    <span>&nbsp;</span>
-    <span id="runbtn" title="run/pause"${inputs.length ? ' disabled' : ''}>&#9654;</span>
-    <span id="resetbtn" title="reset">&#8617;</span>
-    <span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>
-  </span>
-  <span class="right">
-    <output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>
-    <output id="fpsview" title="frames per second" style="min-width:3em;"></output>
-    <output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>
-    itr: <output id="itrview" title="pos/vel iterations" style="min-width:3.5em"></output>
-  </span>
-</nav>
+${nav ? Mec2Element.nav({ dof, inputs }) : ""}
 <canvas id="cnv" width="${width}" height="${height}" touch-action="none"></canvas><br>
 <span id="info" style="position:absolute;display:none;color:#222;background-color:#ffb;border:1px solid black;font:0.9em monospace;padding:0.1em;font-family:Courier;font-size:9pt;">tooltip</span>
 ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width })).join('') : ''}
@@ -405,6 +398,46 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
 </div>
 `
     }
+    static nav({ dof }) {
+        return `<nav>
+            <span class="left">
+                ${this.logo}
+                <span>&nbsp;</span>
+                ${this.runbtn({ dof })}
+                ${this.resetbtn()}
+                ${this.gravbtn()}
+            </span>
+            <span class="right">
+                ${this.corview()}
+                ${this.fpsview()}
+                ${this.dofview({ dof })}
+                ${this.itrview()}
+            </span>
+        </nav>`
+    }
+
+    static runbtn({ dof }) {
+        return `<span id="runbtn" title="run/pause">${dof > 0 ? '&#9654;' : ''}</span>`;
+    }
+    static resetbtn() {
+        return `<span id="resetbtn" title="reset">&nbsp;&nbsp;&#8617;</span>`;
+    }
+    static gravbtn() {
+        return `<span id="gravbtn" title="gravity on/off">&nbsp;&nbsp;g</span>`
+    }
+    static corview() {
+        return `<output id="corview" title="pointer cordinates" style="min-width:4.5em;">0,0</output>`;
+    }
+    static fpsview() {
+        return `<output id="fpsview" title="frames per second" style="min-width:3em;"></output>`;
+    }
+    static dofview({ dof }) {
+        return `<output id="dofview" title="degrees of freedom" style="min-width:2em;">dof: ${dof}</output>`;
+    }
+    static itrview() {
+        return `itr: <output id="itrview" title="pos/vel iterations" style="min-width:3.5em"></output>`;
+    }
+
     static slider({ input, i, width, darkmode }) {
         const sub = input.sub, cstr = input.constraint;
         input.id = 'slider_' + i;
@@ -412,13 +445,56 @@ ${inputs.length ? inputs.map((input, i) => Mec2Element.slider({ input, i, width 
             const w0 = Math.round(mec.toDeg(cstr.w0)),
                 w1 = w0 + Math.round(mec.toDeg(cstr.ori.Dw || 2 * Math.PI));
             input.w0 = w0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.ori'}" width="${width}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.ori'}" min="${w0}" max="${w1}" value="${w0}" step="2" bubble></mec-slider>`;
         }
         else { // if (sub === 'len')
             const r0 = cstr.r0, r1 = r0 + cstr.len.Dr;
             input.r0 = r0;
-            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" width="${width}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
+            return `<mec-slider id="${input.id}" title="${input.constraint.id + '.len'}" min="${r0}" max="${r1}" value="${r0}" step="1" bubble></mec-slider>`;
         }
     }
+
+    static logo = `<svg style="margin-bottom:-5pt; padding-left: 5pt;" class="flex-shrink-0 mr-2" version="1.0" xmlns="http://www.w3.org/2000/svg" width="16pt" height="16pt" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+<g transform="translate(0,512) scale(0.1,-0.1)" fill="#ddd" stroke="none">
+    <path d="M1300 4786 c-345 -47 -603 -160 -734 -322 -50 -61 -115 -188 -143
+-280 -24 -81 -23 -272 2 -369 58 -225 237 -425 380 -425 34 0 35 1 35 38 0 21
+-5 43 -12 50 -15 15 -50 124 -94 294 -64 251 -45 366 83 493 173 171 430 243
+823 232 286 -8 538 -52 845 -147 144 -44 205 -59 247 -60 32 0 40 4 54 33 9
+17 34 53 55 79 22 26 39 57 39 70 0 44 -58 80 -212 130 -274 90 -481 140 -728
+173 -156 22 -518 28 -640 11z" fill="orange"></path>
+    <path d="M3217 4489 c-159 -37 -309 -189 -346 -350 -26 -111 -8 -266 41 -364
+27 -51 120 -148 172 -179 151 -89 371 -90 519 -3 95 56 191 188 216 298 13 57
+13 191 0 248 -37 163 -187 313 -350 350 -53 13 -199 12 -252 0z"></path>
+    <path d="M2684 3899 c-31 -34 -183 -153 -261 -203 -139 -90 -328 -168 -520
+-216 -24 -6 -43 -16 -43 -21 0 -6 22 -36 50 -66 55 -60 106 -157 116 -221 4
+-27 12 -42 21 -42 8 0 51 31 96 69 202 169 431 285 685 346 39 9 72 22 72 27
+0 6 -20 33 -45 60 -50 56 -100 152 -110 213 -14 83 -25 93 -61 54z"></path>
+    <path d="M3954 3813 c-9 -21 -29 -67 -45 -102 -16 -35 -29 -77 -29 -95 0 -34
+23 -64 174 -233 162 -180 257 -356 300 -550 20 -90 20 -139 0 -228 -9 -38 -20
+-90 -24 -115 -4 -25 -14 -65 -23 -90 -55 -159 -51 -190 19 -190 34 0 121 61
+167 117 44 53 101 167 129 257 25 81 34 232 19 336 -38 258 -212 556 -471 806
+-135 131 -189 153 -216 87z" fill="orange"></path>
+    <path d="M3659 3474 c-70 -48 -144 -66 -286 -72 -97 -3 -133 -8 -133 -17 0 -7
+11 -37 24 -66 48 -110 125 -329 170 -484 88 -308 136 -618 162 -1052 7 -127
+10 -129 72 -88 77 51 146 68 300 73 78 2 142 8 142 11 0 4 -18 54 -41 112
+-208 529 -299 923 -331 1427 -13 203 -13 202 -79 156z"></path>
+    <path d="M1297 3480 c-162 -41 -309 -190 -346 -351 -13 -57 -13 -191 0 -248
+17 -74 58 -149 116 -212 99 -106 202 -149 358 -149 156 0 264 46 364 156 86
+94 120 189 121 336 0 150 -44 253 -153 355 -93 86 -167 115 -312 119 -60 2
+-127 -1 -148 -6z"></path>
+    <path d="M1110 2333 c0 -149 -21 -275 -71 -425 -21 -65 -39 -122 -39 -127 0
+-5 66 -11 148 -13 120 -4 158 -9 207 -27 33 -13 67 -25 76 -28 14 -4 15 15 15
+164 0 186 14 266 73 416 17 43 31 81 31 86 0 5 -64 11 -142 13 -115 4 -155 9
+-203 27 -105 40 -95 49 -95 -86z"></path>
+    <path d="M978 1621 c-152 -49 -282 -189 -317 -342 -13 -57 -13 -191 0 -248 37
+-163 187 -313 350 -350 57 -13 191 -13 248 0 163 37 313 187 350 350 13 57 13
+191 0 248 -25 110 -121 242 -216 298 -110 64 -292 83 -415 44z"></path>
+    <path d="M3828 1621 c-83 -27 -138 -62 -201 -130 -58 -63 -99 -138 -116 -212
+-13 -57 -13 -191 0 -248 37 -163 187 -313 350 -350 57 -13 191 -13 248 0 163
+37 313 187 350 350 13 57 13 191 0 248 -35 155 -166 294 -320 342 -81 25 -231
+25 -311 0z"></path>
+</g>
+</svg>`
 }
+
 customElements.define('mec-2', Mec2Element);
