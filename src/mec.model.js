@@ -7,6 +7,8 @@
  */
 "use strict";
 
+import { mec } from './mec.core';
+
 /**
  * Wrapper class for extending plain model objects, usually generated from a JSON object.
  * @method

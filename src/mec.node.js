@@ -7,6 +7,9 @@
  */
 "use strict";
 
+import { g2 } from 'g2-module';
+import { mec } from './mec.core';
+
 /**
  * Wrapper class for extending plain node objects, usually coming from JSON strings.
  * @method

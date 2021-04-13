@@ -9,6 +9,9 @@
  */
 "use strict";
 
+import { mec } from './mec.core';
+import { g2 } from 'g2-module';
+
 /**
  * @method
  * @param {object} - plain javascript view object.
@@ -617,9 +620,9 @@ mec.view.chart = {
             if (this.mode === 'preview') {
                 // Create references for automatic modification
                 g.nod({
-                    x: () => this.previewNod.x,
-                    y: () => this.previewNod.y,
-                    scl: () => this.previewNod.scl
+                    x: () => this.previewNod && this.previewNod.x || 0,
+                    y: () => this.previewNod && this.previewNod.y || 0,
+                    scl: () => this.previewNod && this.previewNod.scl || 0
                 });
             }
             return g;

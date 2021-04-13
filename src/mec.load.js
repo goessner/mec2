@@ -8,6 +8,9 @@
  * @requires g2.js
  */
 "use strict";
+
+import { mec } from './mec.core';
+
 /**
  * Wrapper class for extending plain load objects, usually coming from JSON objects.
  * @method
@@ -183,7 +186,6 @@ mec.load.force = {
     }
 mec.load.force.arrowLength = 45;
     mec.load.force.arrow = g2().p().m({ x: 0, y: 0 }).l({ x: 35, y: 0 }).m({ x: 45, y: 0 }).l({ x: 36, y: -3 }).l({ x: 37, y: 0 }).l({ x: 36, y: 3 }).z().drw();  // implicit arrow length ...
-
     /**
      * @param {object} - spring load.
      * @property {string} [p1] - referenced node id 1.
@@ -202,7 +204,7 @@ mec.load.force.arrowLength = 45;
          */
         validate(idx) {
             let warn = false;
-
+         
             if (!this.id)
                 warn = { mid: 'W_ELEM_ID_MISSING', elemtype: 'spring', idx };
 

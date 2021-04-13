@@ -5,6 +5,8 @@
  */
 "use strict";
 
+import { mec } from './mec.core';
+
 /**
  * @namespace mec.drive namespace for drive types of the mec library.
  * They are named and implemented after VDI 2145 and web easing functions.
@@ -75,19 +77,35 @@ mec.drive = {
                             fd: mec.drive[seg.func].fd((t - tsum) / seg.dt) * dz / Dt,
                             fdd: mec.drive[seg.func].fdd((t - tsum) / seg.dt) * dz / Dt / Dt
                         }
+                        tsum += seg.dt;
+                        zsum += dz;
                     }
-                    tsum += seg.dt;
-                    zsum += dz;
-                }
-                return {};  // error
-            };
+                    return {};  // error
+                };
 
-        for (const seg of segments) {
-            if (typeof seg.func === 'string') { // add error logging here ..
-                Dt += seg.dt;
-                z += seg.dz || 0;
-                zmin = Math.min(z, zmin);
-                zmax = Math.max(z, zmax);
+            for (const seg of segments) {
+                if (typeof seg.func === 'string') { // add error logging here ..
+                    Dt += seg.dt;
+                    z += seg.dz || 0;
+                    zmin = Math.min(z, zmin);
+                    zmax = Math.max(z, zmax);
+                }
+            }
+            Dz = zmax - zmin;
+            //        console.log({Dt,Dz,zmin,zmax,segof:segof(0.5*Dt).f})
+            return {
+                f: (q) => (segof(q * Dt).f - zmin) / Dz,
+                fd: (q) => segof(q * Dt).fd / Dz,
+                fdd: (q) => 0
+            }
+        },
+        // todo .. test valid velocity and acceleration signs with bouncing !!
+        bounce(drv) {
+            if (typeof drv === 'string') drv = mec.drive[drv];
+            return {
+                f: q => drv.f(q < 0.5 ? 2 * q : 2 - 2 * q),
+                fd: q => drv.fd(q < 0.5 ? 2 * q : 2 - 2 * q) * (q < 0.5 ? 1 : -1),
+                fdd: q => drv.fdd(q < 0.5 ? 2 * q : 2 - 2 * q) * (q < 0.5 ? 1 : -1)
             }
         }
         Dz = zmax - zmin;
@@ -123,7 +141,7 @@ mec.drive = {
     { f: q => q * q * q * q, fd: q => 4 * q * q * q, fdd: q => 12 * q * q },
     { f: q => q * q * q * q * q, fd: q => 5 * q * q * q * q, fdd: q => 20 * q * q * q }],
 
-    inPot(n) { return this.pot[n]; },
+        inPot(n) { return this.pot[n]; },
 
     outPot(n) {
         const fn = this.pot[n];
