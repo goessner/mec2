@@ -2,10 +2,11 @@ import { g2 } from 'g2-module';
 
 export const mec: IMec;
 export interface IModel {
-    id: string
+    id?: string,
+    gravity?: boolean,
     nodes: INodes[],
-    views: IView[],
     constraints: IConstraints[]
+    views?: IView[],
 }
 
 export interface IViewExtended extends IView, IMecElement, IMecG2Drawable {
@@ -252,52 +253,51 @@ export interface IMecPlugIns {
     "constraints": IConstraintExtended[]
 }
 
-export interface IMecModel {
-    extend<T>(model: Object, env: IMec | T): IMec | T,
-    prototype: {
-        constructor<T>(env: IMec | T): void,
-        init(): IMecModel,
-        plugIns: Partial<IMecPlugIns>,
-        addPlugIn(name: string, plugIn: IMecPlugin): void,
-        forAllPlugins(fn: (elm: Object, plugIn: IMecPlugin, key: string) => T): void | T,
-        notifyValid(msg: string): boolean,
-        reset(): IMecModel,
-        previos(): IMecModel,
-        asm(): IMecModel,
-        pose(): IMecModel,
-        tick(dt?: number): IMecModel,
-        stop(): IMecModel,
-        readonly dof: number,
-        readonly hasGravity: boolean,
-        valid: boolean, // getter and setter
-        msg(): string,
-        readonly info(): void,
-        itrpos: number, // getter and setter
-        itrvel: number, // getter and setter
-        sleepMinDelta: number, // setter
-        readonly isSleeping: boolean,
-        readonly activeDriveCount: number,
-        readonly hasActiveDrives: boolean,
-        readonly inputControlledDrives: { constraint: IConstraintExtended, sub: 'ori' | 'len' }[],
-        readonly isActive: boolean,
-        readonly energy: number,
-        readonly cog: { x: number, y: number },
-        hasDependents(elem: IMecElement): boolean,
-        dependentsOf(elem: IMecElement, deps: Object): Object,
-        purgeElements(elems: { [string]: IMecElement }): void,
-        elementById(id: string): IMecElement,
-        add(plugIn: string, element: IMecElement): void,
-        asJSON(): string,
-        applyLoads(): IMecModel,
-        asmPos(): boolean,
-        posStep(): boolean,
-        asmVel(): boolean,
-        velStep(): boolean,
-        pre(): IMecModel,
-        itr(): IMecModel,
-        post(): IMecModel,
-        draw(g: g2): IMecModel,
-    }
+export interface IMecModel extends IModel {
+    extend<T>(model: Object, env?: IMec | T): IMec | T,
+    constructor<T>(env: IMec | T): void,
+    init(): IMecModel,
+    gravity: boolean,
+    plugIns: Partial<IMecPlugIns>,
+    addPlugIn(name: string, plugIn: IMecPlugin): void,
+    forAllPlugins(fn: (elm: Object, plugIn: IMecPlugin, key: string) => T): void | T,
+    notifyValid(msg: string): boolean,
+    reset(): IMecModel,
+    previos(): IMecModel,
+    asm(): IMecModel,
+    pose(): IMecModel,
+    tick(dt?: number): IMecModel,
+    stop(): IMecModel,
+    readonly dof: number,
+    readonly hasGravity: boolean,
+    valid: boolean, // getter and setter
+    msg(): string,
+    readonly info(): void,
+    itrpos: number, // getter and setter
+    itrvel: number, // getter and setter
+    sleepMinDelta: number, // setter
+    readonly isSleeping: boolean,
+    readonly activeDriveCount: number,
+    readonly hasActiveDrives: boolean,
+    readonly inputControlledDrives: { constraint: IConstraintExtended, sub: 'ori' | 'len' }[],
+    readonly isActive: boolean,
+    readonly energy: number,
+    readonly cog: { x: number, y: number },
+    hasDependents(elem: IMecElement): boolean,
+    dependentsOf(elem: IMecElement, deps: Object): Object,
+    purgeElements(elems: { [string]: IMecElement }): void,
+    elementById(id: string): IMecElement,
+    add(plugIn: string, element: IMecElement): void,
+    asJSON(): string,
+    applyLoads(): IMecModel,
+    asmPos(): boolean,
+    posStep(): boolean,
+    asmVel(): boolean,
+    velStep(): boolean,
+    pre(): IMecModel,
+    itr(): IMecModel,
+    post(): IMecModel,
+    draw(g: g2): IMecModel,
 }
 
 export interface IMec {
@@ -401,11 +401,11 @@ export interface IMec {
     mixin(obj: Object, ...protos: any): any
     assignGetters(obj: Object, getters: any): void,
     messageString(msg: string): string,
-    model?: IMecModel
-    node?: IMecNode,
-    constraint?: IMecConstraint,
-    drive?: IMecDrive,
-    view?: IMecView,
+    model: IMecModel
+    node: IMecNode,
+    constraint: IMecConstraint,
+    drive: IMecDrive,
+    view: IMecView,
 }
 interface IAnalyzeScl extends IAnalyze {
     scl: number

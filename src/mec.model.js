@@ -67,7 +67,7 @@ mec.model = {
         },
         plugIns: {},
         addPlugIn(name, plugIn) {
-            // TODO define interface ? 
+            // TODO define interface ?
             // if (!plugIn ||
             //     !plugIn.extend ||
             //     !plugIn.init ||
@@ -83,7 +83,7 @@ mec.model = {
          * Run function on alle plugIns.
          * This function is used to run a specific function on all PlugIns.
          * These PlugIns have to provide said function themselves.
-         * 
+         *
          * @param {object} fn - Function to be run on all plugins
          * @example
          * // This example runs the reset function on all elements of all PlugIns
@@ -316,7 +316,7 @@ mec.model = {
         get hasActiveDrives() { return this.activeDriveCount > 0; },
         /**
          * Array of objects referencing constraints owning at least one input controlled drive.
-         * The array objects are structured like so: 
+         * The array objects are structured like so:
          * { constraint: <constraint reference>,
          *   sub: <string of `['ori', 'len']`
          * }
@@ -356,7 +356,7 @@ mec.model = {
             return e;
         },
         /**
-         * center of gravity 
+         * center of gravity
          */
         get cog() {
             var center = { x: 0, y: 0 }, m = 0;
@@ -379,7 +379,7 @@ mec.model = {
          * @returns {boolean} true in case of existing dependents.
          */
         hasDependents(elem) {
-            // TODO why return the last occurence? Why not stop at the first? 
+            // TODO why return the last occurence? Why not stop at the first?
             let dependency = false;
             this.forAllPlugIns((elm) => dependency = elm.dependsOn(elem) || dependency)
             return dependency;
@@ -427,7 +427,7 @@ mec.model = {
             for (const shape of this.shapes)
                 if (shape.dependsOn(elem))
                     deps.shapes.push(shape);
-                for 
+                for
             }
         },
 */
@@ -579,7 +579,7 @@ mec.model = {
             for (const node of this.nodes)
                 node.pre_0();
             // Apply external loads.
-            for (const load of this.loads)
+            for (const load of this.loads || [])
                 load.apply();
             // pre process nodes
             for (const node of this.nodes)
