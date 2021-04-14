@@ -1,6 +1,12 @@
 import { g2 } from 'g2-module';
 
 export const mec: IMec;
+export interface IModel {
+    id: string
+    nodes: INodes[],
+    views: IView[],
+    constraints: IConstraints[]
+}
 
 export interface IViewExtended extends IView, IMecElement, IMecG2Drawable {
     asJSON: string,
