@@ -14,7 +14,7 @@
     "javascript"
   ],
   "main": "./index.js",
-  "typings": "./src/mec2.d.ts",
+  "typings": "./src/mec.d.ts",
   "files": [
     "index.js",
     "src/mec.d.ts",
