@@ -143,6 +143,7 @@ mec.shape.flt = {
     draw(g) {
         g.nodflt({ x: () => this.p.x, y: () => this.p.y, w: this.w0 || 0 });
     }
+}
 
 /**
  * @param {object} - slider shape.
