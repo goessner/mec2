@@ -78,9 +78,12 @@ export interface IConstraint {
 }
 
 export interface IConstraintExtended extends IConstraint, IMecElement, IMecG2Drawable {
-    ori: {
-        inputCallbk(number): () => void,
+    ori: IMecConstraintType & {
+        inputCallbk?(number): () => void,
     },
+    len: IMecConstraintType & {
+        inputCallbk?(number): () => void,
+    }
     assignRefs(): void,
     initVector(): void,
     angle(w: number): number,
@@ -419,8 +422,12 @@ interface IAnalyze {
     name: string,
     unit: string,
 }
+
 interface IMecConstraintType {
     type: 'const' | 'free' | 'drive',
+    Dt?: number,
+    Dw?: number,
+    input?: number;
 }
 
 interface IMecG2Drawable {
