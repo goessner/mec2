@@ -73,7 +73,8 @@ export interface IConstraint {
     id: string,
     p1: string,
     p2: string,
-    ori: MecConstraintType,
+    ori: IMecConstraintType,
+    len: IMecConstraintType,
 }
 
 export interface IConstraintExtended extends IConstraint, IMecElement, IMecG2Drawable {
@@ -120,12 +121,12 @@ export interface IConstraintExtended extends IConstraint, IMecElement, IMecG2Dra
     len_vel(dt: number): boolean,
     len_impulse_vel(impulse: number): void,
     len_apply_Q(lambda: number): void,
-    init_ori_free(ori: MecConstraintType): void,
-    init_ori_const(ori: MecConstraintType): void,
-    init_ori_drive(ori: MecConstraintType): void,
-    init_len_free(len: MecConstraintType): void,
-    init_len_const(len: MecConstraintType): void,
-    init_len_drive(len: MecConstraintType): void,
+    init_ori_free(ori: IMecConstraintType): void,
+    init_ori_const(ori: IMecConstraintType): void,
+    init_ori_drive(ori: IMecConstraintType): void,
+    init_len_free(len: IMecConstraintType): void,
+    init_len_const(len: IMecConstraintType): void,
+    init_len_drive(len: IMecConstraintType): void,
     asJson: string,
     showInfo: boolean,
     infos: {
@@ -419,8 +420,7 @@ interface IAnalyze {
     unit: string,
 }
 interface MecConstraintType {
-    ori?: 'const' | 'free' | 'drive',
-    len?: 'const' | 'free' | 'drive',
+    type: 'const' | 'free' | 'drive',
 }
 
 interface IMecG2Drawable {
