@@ -1,6 +1,6 @@
 {
   "name": "mec2-module",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "mec2 - a physics library for simulating planar mechanisms via corrective impulses",
   "keywords": [
     "vector",
