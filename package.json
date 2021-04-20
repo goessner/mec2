@@ -1,6 +1,6 @@
 {
-  "name": "mec2",
-  "version": "0.9.5",
+  "name": "mec2-module",
+  "version": "0.10.4",
   "description": "mec2 - a physics library for simulating planar mechanisms via corrective impulses",
   "keywords": [
     "vector",
@@ -13,16 +13,28 @@
     "2d",
     "javascript"
   ],
-  "main": "mec2.js",
+  "main": "./index.js",
+  "typings": "./src/mec.d.ts",
+  "files": [
+    "index.js",
+    "src/mec.d.ts",
+    "src/mec.core.js",
+    "src/mec.node.js",
+    "src/mec.constraint.js",
+    "src/mec.drive.js",
+    "src/mec.model.js",
+    "src/mec.shape.js",
+    "src/mec.view.js"
+  ],
   "scripts": {
     "build": "npm run minify && npm run jsdoc && npm run gzip && npm run cpsamp",
     "update": "npm run concat && npm run minify && npm run mec2html",
-    "concat": "concat ./src/mec.core.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.view.js ./src/mec.shape.js ./src/mec.model.js ./src/mec.msg.en.js >mec2.js",
-    "minify": "uglifyjs ./src/mec.core.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.view.js ./src/mec.shape.js ./src/mec.model.js ./src/mec.msg.en.js -o ./mec2.min.js --comments -m",
+    "concat": "concat ./src/mec.core.js ./src/mec.model.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.view.js ./src/mec.shape.js ./src/mec.msg.en.js >mec2.js",
+    "minify": "uglifyjs ./src/mec.core.js ./src/mec.model.js ./src/mec.node.js ./src/mec.constraint.js ./src/mec.drive.js ./src/mec.load.js ./src/mec.view.js ./src/mec.shape.js ./src/mec.msg.en.js -o ./mec2.min.js --comments -m",
     "jsdoc": "jsdoc2md ./mec2.js > ./doc/api.md",
     "gzip": "7z -tgzip a ./mec2.min.js.gz ./mec2.min.js",
     "cpsamp": "copyfiles -f ./examples/*.html ../goessner.github.io/g2/examples",
-    "mec2html": "concat ./bin/g2.js ./bin/g2.selector.js ./bin/canvasInteractor.js ./mec2.js ./bin/mec.slider.js ./bin/mec.htmlelement.js > ./mec2.html.js"
+    "mec2html": "concat ./bin/g2.js ./bin/g2.chart.element.js ./bin/g2.selector.js ./bin/canvasInteractor.js ./mec2.js ./bin/mec.slider.js ./bin/mec.htmlelement.js > ./mec2.html.js"
   },
   "author": "Stefan Goessner <fang03@web.de>",
   "repository": {
@@ -36,5 +48,8 @@
     "jslint": "^0.9.5",
     "uglify-es": "^3.3.9"
   },
-  "microjam": {}
+  "microjam": {},
+  "dependencies": {
+    "g2-module": "~3.0.4"
+  }
 }

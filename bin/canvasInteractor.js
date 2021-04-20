@@ -9,8 +9,8 @@
 const canvasInteractor = {
     create() {
         const o = Object.create(this.prototype);
-        o.constructor.apply(o,arguments); 
-        return o; 
+        o.constructor.apply(o, arguments);
+        return o;
     },
     // global static tickTimer properties
     fps: '?',
@@ -22,7 +22,7 @@ const canvasInteractor = {
     tick(time) {
         canvasInteractor.fpsCount(time);
         for (const instance of canvasInteractor.instances) {
-            instance.notify('tick',{t:time,dt:(time-instance.t)/1000,dirty:instance.dirty});
+            instance.notify('tick', { t: time, dt: (time - instance.t) / 1000, dirty: instance.dirty });
             instance.t = time;
             instance.dirty = false;
         }
@@ -34,16 +34,16 @@ const canvasInteractor = {
             canvasInteractor.tick(canvasInteractor.fpsOrigin = performance.now());
     },
     remove(instance) {
-        canvasInteractor.instances.splice(canvasInteractor.instances.indexOf(instance),1);
+        canvasInteractor.instances.splice(canvasInteractor.instances.indexOf(instance), 1);
         if (canvasInteractor.instances.length === 0)   // last instance removed ...
             cancelAnimationFrame(canvasInteractor.rafid);
     },
     fpsCount(time) {
         if (time - canvasInteractor.fpsOrigin > 1000) {  // one second interval reached ...
-            let fps = ~~(canvasInteractor.frames*1000/(time - canvasInteractor.fpsOrigin) + 0.5); // ~~ as Math.floor()
+            let fps = ~~(canvasInteractor.frames * 1000 / (time - canvasInteractor.fpsOrigin) + 0.5); // ~~ as Math.floor()
             if (fps !== canvasInteractor.fps)
                 for (const instance of canvasInteractor.instances)
-                    instance.notify('fps',canvasInteractor.fps=fps);
+                    instance.notify('fps', canvasInteractor.fps = fps);
             canvasInteractor.fpsOrigin = time;
             canvasInteractor.frames = 0;
         }
@@ -51,15 +51,15 @@ const canvasInteractor = {
     },
 
     prototype: {
-        constructor(ctx, {x,y,scl,cartesian}) {
+        constructor(ctx, { x, y, scl, cartesian }) {
             // canvas interaction properties
             this.ctx = ctx;
-            this.view = {x:x||0,y:y||0,scl:scl||1,cartesian:cartesian||false};
+            this.view = { x: x || 0, y: y || 0, scl: scl || 1, cartesian: cartesian || false };
             this.evt = {
                 type: false,
                 basetype: false,
-                x: -2, y:-2,
-                xi: 0, yi:0,
+                x: -2, y: -2,
+                xi: 0, yi: 0,
                 dx: 0, dy: 0,
                 btn: 0,
                 xbtn: 0, ybtn: 0,
@@ -103,11 +103,11 @@ const canvasInteractor = {
         // canvas interaction interface
         handleEvent(e) {
             if (e.type in this && (e.isPrimary || e.type === 'wheel')) {  // can I handle events of type e.type .. ?
-                let bbox = e.target.getBoundingClientRect && e.target.getBoundingClientRect() || {left:0, top:0},
+                let bbox = e.target.getBoundingClientRect && e.target.getBoundingClientRect() || { left: 0, top: 0 },
                     x = e.clientX - Math.floor(bbox.left),
                     y = e.clientY - Math.floor(bbox.top),
-//                    x = Math.round(e.clientX - Math.floor(bbox.left)),
-//                    y = Math.round(e.clientY - Math.floor(bbox.top)),
+                    //                    x = Math.round(e.clientX - Math.floor(bbox.left)),
+                    //                    y = Math.round(e.clientY - Math.floor(bbox.top)),
                     btn = e.buttons !== undefined ? e.buttons : e.button || e.which;
 
                 this.evt.type = e.type;
@@ -117,20 +117,20 @@ const canvasInteractor = {
                 this.evt.dx = this.evt.dy = 0;
                 this.evt.x = x;
                 this.evt.y = this.view.cartesian ? this.ctx.canvas.height - y : y;
-                this.evt.xusr = (this.evt.x - this.view.x)/this.view.scl;
-                this.evt.yusr = (this.evt.y - this.view.y)/this.view.scl;
+                this.evt.xusr = (this.evt.x - this.view.x) / this.view.scl;
+                this.evt.yusr = (this.evt.y - this.view.y) / this.view.scl;
                 this.evt.dxusr = this.evt.dyusr = 0;
                 this.evt.dbtn = btn - this.evt.btn;
                 this.evt.btn = btn;
-                this.evt.delta = Math.max(-1,Math.min(1,e.deltaY||e.wheelDelta)) || 0;
+                this.evt.delta = Math.max(-1, Math.min(1, e.deltaY || e.wheelDelta)) || 0;
 
                 if (this.isDefaultPreventer(e.type))
                     e.preventDefault();
                 this[e.type]();  // handle specific event .. ?
-                this.notify(this.evt.type,this.evt);
-//                console.log('notify:'+this.evt.type)
-//                this.notify('pointer',this.evt);
-//                console.log({l:e.target.offsetLeft,t:e.target.offsetTop})
+                this.notify(this.evt.type, this.evt);
+                //                console.log('notify:'+this.evt.type)
+                //                this.notify('pointer',this.evt);
+                //                console.log({l:e.target.offsetLeft,t:e.target.offsetTop})
             }
             else
                 console.log(e)
@@ -139,8 +139,8 @@ const canvasInteractor = {
             this.evt.dx = this.evt.x - this.evt.xi;
             this.evt.dy = this.evt.y - this.evt.yi;
             if (this.evt.btn === 1) {    // pointerdown state ...
-                this.evt.dxusr = this.evt.dx/this.view.scl;  // correct usr coordinates ...
-                this.evt.dyusr = this.evt.dy/this.view.scl;
+                this.evt.dxusr = this.evt.dx / this.view.scl;  // correct usr coordinates ...
+                this.evt.dyusr = this.evt.dy / this.view.scl;
                 this.evt.xusr -= this.evt.dxusr;  // correct usr coordinates ...
                 this.evt.yusr -= this.evt.dyusr;
                 if (!this.evt.hit) {      // perform panning ...
@@ -154,70 +154,70 @@ const canvasInteractor = {
             // view, geometry or graphics might be modified ...
             this.dirty = true;
         },
-        pointerdown() { 
+        pointerdown() {
             this.evt.xbtn = this.evt.x;
             this.evt.ybtn = this.evt.y;
         },
-        pointerup() { 
-            this.evt.type = this.evt.x===this.evt.xbtn && this.evt.y===this.evt.ybtn ? 'click' : 'pointerup';
+        pointerup() {
+            this.evt.type = this.evt.x === this.evt.xbtn && this.evt.y === this.evt.ybtn ? 'click' : 'pointerup';
             this.evt.xbtn = this.evt.x;
             this.evt.ybtn = this.evt.y;
         },
-        pointerleave() { 
+        pointerleave() {
             this.evt.inside = false;
         },
-        pointerenter() { 
+        pointerenter() {
             this.evt.inside = true;
         },
         wheel() {
-            let scl = this.evt.delta>0?8/10:10/8;
-            this.view.x = this.evt.x + scl*(this.view.x - this.evt.x);
-            this.view.y = this.evt.y + scl*(this.view.y - this.evt.y);
+            let scl = this.evt.delta > 0 ? 8 / 10 : 10 / 8;
+            this.view.x = this.evt.x + scl * (this.view.x - this.evt.x);
+            this.view.y = this.evt.y + scl * (this.view.y - this.evt.y);
             this.evt.eps /= scl;
             this.view.scl *= scl;
             this.dirty = true;
         },
         isDefaultPreventer(type) {
-            return ['pointermove','pointerdown','pointerup','wheel'].includes(type);
+            return ['pointermove', 'pointerdown', 'pointerup', 'wheel'].includes(type);
         },
-        pntToUsr: function(p) { 
-            let vw = this.view; 
-            p.x = (p.x - vw.x)/vw.scl; 
-            p.y = (p.y - vw.y)/vw.scl; 
-            return p; 
+        pntToUsr: function (p) {
+            let vw = this.view;
+            p.x = (p.x - vw.x) / vw.scl;
+            p.y = (p.y - vw.y) / vw.scl;
+            return p;
         },
         // tickTimer interface
         startTimer() {
-            this.notify('timerStart',this);
+            this.notify('timerStart', this);
             this.time0 = this.fpsOrigin = performance.now();
             canvasInteractor.add(this);
             return this;
         },
         endTimer() {
             canvasInteractor.remove(this);
-            this.notify('timerEnd',this.t/1000);
+            this.notify('timerEnd', this.t / 1000);
             return this;
         },
         // observable interface
-        notify(key,val) {
-            if (this.signals && this.signals[key]) 
-                for (let hdl of this.signals[key]) 
+        notify(key, val) {
+            if (this.signals && this.signals[key])
+                for (let hdl of this.signals[key])
                     hdl(val);
             return this;
         },
-        on(key,handler) {   // support array of keys as first argument.
+        on(key, handler) {   // support array of keys as first argument.
             if (Array.isArray(key))
-                for (let k of key) 
-                    this.on(k,handler);
+                for (let k of key)
+                    this.on(k, handler);
             else
-                ((this.signals || (this.signals = {})) && this.signals[key] || (this.signals[key]=[])).push(handler);
-            
+                ((this.signals || (this.signals = {})) && this.signals[key] || (this.signals[key] = [])).push(handler);
+
             return this;
         },
-        remove(key,handler) {
+        remove(key, handler) {
             const idx = (this.signals && this.signals[key]) ? this.signals[key].indexOf(handler) : -1;
             if (idx >= 0)
-                this.signals[key].splice(idx,1);
+                this.signals[key].splice(idx, 1);
         }
     }
 };

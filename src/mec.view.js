@@ -9,6 +9,9 @@
  */
 "use strict";
 
+import { mec } from './mec.core';
+import { g2 } from 'g2-module';
+
 /**
  * @method
  * @param {object} - plain javascript view object.
@@ -18,10 +21,38 @@
 mec.view = {
     extend(view) {
         if (view.as && mec.view[view.as]) {
-            Object.setPrototypeOf(view, mec.view[view.as]);
+            const o = Object.assign({}, this.prototype, mec.view[view.as])
+            Object.setPrototypeOf(view, o);
             view.constructor();
         }
         return view;
+    },
+
+    prototype: {
+        /**
+         * Remove view, if there are no other objects depending on it.
+         * The calling app has to ensure, that `view` is in fact an entry of
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to remove.
+         */
+        remove() {
+            const elms = this.model.shapes;
+            return this.model.hasDependents(this) ?
+                false :
+                !!elms.splice(elms.indexOf(this), 1);
+        },
+        /**
+         * Delete view and all dependent elements from model.
+         * The calling app has to ensure, that `view` is in fact an entry of
+         * the `model.views` array.
+         * @method
+         * @param {object} view - view to delete.
+         */
+        purge() {
+            this.model.purgeElements(this.model.dependentsOf(this));
+            return this.remove();
+        }
     }
 }
 
@@ -123,8 +154,8 @@ mec.view.vector = {
                 return { mid: 'E_SHOW_VEC_ANCHOR_MISSING', elemtype: 'view as vector', id: this.id, idx, name: 'at' };
         }
         else {
-            if (this.model.nodeById(this.at)) {
-                let at = this.model.nodeById(this.at);
+            if (this.model.nodes.find(e => e.id === this.at)) {
+                let at = this.model.nodes.find(e => e.id === this.at);
                 Object.defineProperty(this, 'anchor', { get: () => at['pos'], enumerable: true, configurable: true });
             }
             else if (this.at in this.of)
@@ -222,18 +253,18 @@ mec.view.trace = {
         if (this.show && !(this.show in this.of))
             return { mid: 'E_ALY_INVALID_PROP', elemtype: 'view as trace', id: this.id, idx, reftype: this.of, name: this.show };
 
-        if (this.ref && !this.model.constraintById(this.ref))
+        if (this.ref && !this.model.constraints.find(e => e.id === this.ref))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'view as trace', id: this.id, idx, reftype: 'constraint', name: this.ref };
         else
-            this.ref = this.model.constraintById(this.ref);
+            this.ref = this.model.constraints.find(e => e.id === this.ref);
 
         // (deprecated !)
         if (this.p) {
-            if (!this.model.nodeById(this.p))
+            if (!this.model.nodes.find(e => e.id === this.p))
                 return { mid: 'E_ELEM_INVALID_REF', elemtype: 'trace', id: this.id, idx, reftype: 'node', name: this.p };
             else {
                 this.show = 'pos';
-                this.of = this.model.nodeById(this.p);
+                this.of = this.model.nodes.find(e => e.id === this.p);
             }
         }
 
@@ -343,8 +374,6 @@ mec.view.info = {
             return { mid: 'E_ELEM_MISSING', elemtype: 'view as info', id: this.id, idx, reftype: 'element', name: 'of' };
         if (!this.model.elementById(this.of))
             return { mid: 'E_ELEM_INVALID_REF', elemtype: 'view as info', id: this.id, idx, reftype: 'element', name: this.of };
-        else
-            this.of = this.model.elementById(this.of);
 
         if (this.show && !(this.show in this.of))
             return { mid: 'E_ALY_PROP_INVALID', elemtype: 'view as infot', id: this.id, idx, reftype: this.of, name: this.show };
@@ -359,7 +388,14 @@ mec.view.info = {
      */
     init(model, idx) {
         this.model = model;
+        this.assignRefs();
         this.model.notifyValid(this.validate(idx));
+    },
+    assignRefs()
+    {
+        if (typeof this.of === string) {
+            this.of = this.model.elementById(this.of);
+        }
     },
     dependsOn(elem) {
         return this.of === elem;
@@ -584,12 +620,14 @@ mec.view.chart = {
             if (this.mode === 'preview') {
                 // Create references for automatic modification
                 g.nod({
-                    x: () => this.previewNod.x,
-                    y: () => this.previewNod.y,
-                    scl: () => this.previewNod.scl
+                    x: () => this.previewNod && this.previewNod.x || 0,
+                    y: () => this.previewNod && this.previewNod.y || 0,
+                    scl: () => this.previewNod && this.previewNod.scl || 0
                 });
             }
             return g;
         }
     }
 }
+
+mec.model.prototype.addPlugIn('views', mec.view);
